@@ -1,0 +1,75 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+
+import Home from './pages/Home'
+import Login from './component/Login'
+import User from './pages/User'
+import CompanyPage from './component/master/CompanyPage'
+import Layout from './component/Layout'
+import BranchPage from './component/master/Branch'
+import HotelPage from './component/master/Hotels'
+import Users from './component/master/Users'
+import RoleMasterPage from './component/master/RoleMAsterPAge'
+import UserRoleAccess from './component/master/UserRoleAccess'
+import AmenitiesPage from './component/master/AmenitiesPage'
+
+import RoomMasterPage from './component/master/RoomPage'
+import BookingMasterPage from './component/master/BookingMasterPage'
+import FloorPage from './component/master/FloorPage'
+import HotelInventory from './pages/HotelInventory'
+import RoomsMaster from './component/master/RoomsMaster'
+import BookingMaster from './component/master/BookingMaster'
+import Dashboard from './component/master/Dashboard'
+import RoomDetailsPage from './pages/RoomDetailsPAge'
+import BookingDetails from './pages/BookingDetails'
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* LOGIN */}
+        <Route path="/login" element={<Login />} />
+
+        {/* COMMON LAYOUT */}
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+
+          <Route path="users" element={<User />} />
+          <Route path="/master/dashboard" element={<Dashboard />} />
+
+          <Route path="/master/companies" element={<CompanyPage />} />
+          <Route path="/master/branch" element={<BranchPage />} />
+          <Route path="/master/users" element={<Users />} />
+          <Route path="/master/hotel" element={<HotelPage />} />
+          <Route path="/master/roles" element={<RoleMasterPage />} />
+          <Route path="/master/userRoleAccess" element={<UserRoleAccess />} />
+          <Route path="/master/amenities" element={<AmenitiesPage />} />
+          <Route path="/master/rooms" element={<RoomsMaster />} />
+          <Route path="/master/booking" element={<BookingMasterPage />} />
+          <Route path="/master/floors" element={<FloorPage />} />
+          <Route path="/master/hotel-inventory" element={<HotelInventory />} />
+          <Route path="/master/bookings" element={<BookingMaster />} />
+          {/* ROOM DETAILS (Supports both singular/plural paths to prevent typos) */}
+          <Route
+            path="/room-details/:hotelId/:status"
+            element={<RoomDetailsPage />}
+          />
+          <Route
+            path="/rooms-details/:hotelId/:status"
+            element={<RoomDetailsPage />}
+          />
+          {/* <Route
+            path="/rooms-details/:hotelId/:status"
+            element={<RoomDetailsPage />}
+          /> */}
+
+          <Route
+            path="/booking-details/:hotelId/:statusType"
+            element={<BookingDetails />}
+          />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  )
+}
+
+export default App

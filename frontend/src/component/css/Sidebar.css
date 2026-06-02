@@ -1,0 +1,44 @@
+.page-sidebar {
+  width: 250px;
+  transition: 0.3s;
+  background: #1e1e2f; /* dark modern blue */
+  color: #fff;
+}
+
+.page-sidebar.collapsed {
+  width: 70px;
+}
+
+/* hide text in collapsed mode */
+.page-sidebar.collapsed span {
+  display: none;
+}
+
+/* center icons */
+.page-sidebar.collapsed a {
+  justify-content: center;
+}
+
+/* submenu hide */
+.page-sidebar.collapsed .sidebar-submenu {
+  display: none !important;
+}
+
+.sidebar {
+  background-color: #1e1e2f;
+}
+
+/* menu item style */
+.sidebar-menu li a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+/* collapse button */
+.collapse-btn {
+  cursor: pointer;
+  padding: 10px;
+  text-align: right;
+}
