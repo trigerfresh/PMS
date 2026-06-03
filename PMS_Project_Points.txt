@@ -9,3 +9,5 @@ Project Points.
 4. Font size less change font size.
 5.social media platform, home remove, Remember me and remember password remove, Add images to the login page, Lost Password Change to forgot password
 ====================================================
+
+

@@ -115,9 +115,9 @@ const HotelPage = () => {
       setBranches(res.data.data)
 
       setCounts({
-        totalHotels: res.data.counts?.totalHotels || 0,
-        approvedHotels: res.data.counts?.approvedHotels || 0,
-        deletedHotels: res.data.counts?.deletedHotels || 0,
+        totalHotels: res.data.data.filter((h) => h.active == 0).length,
+        approvedHotels: res.data.data.filter((h) => h.active == 0).length,
+        deletedHotels: res.data.data.filter((h) => h.active == 1).length,
       })
     } catch (err) {
       setError('Failed to load branches.', err)
@@ -440,6 +440,22 @@ const HotelPage = () => {
       }
 
       alert('Failed to download Excel')
+    }
+  }
+
+  const handleRestore = async (id) => {
+    try {
+      await axios.put(
+        `http://localhost:5000/api/hotels/restore/${id}`,
+        {},
+        getAuthHeaders(),
+      )
+
+      alert('Hotel restored successfully!')
+      fetchBranches()
+    } catch (err) {
+      console.log(err)
+      alert('Restore failed!')
     }
   }
 
@@ -902,12 +918,24 @@ const HotelPage = () => {
                               Edit
                             </Dropdown.Item>
 
-                            <Dropdown.Item
-                              onClick={() => handleDelete(branch.id)}
-                            >
-                              <FaTrashAlt className="me-2 text-danger" />
-                              Delete
-                            </Dropdown.Item>
+                            {/* 🔴 ACTIVE = 0 → SHOW NORMAL DELETE */}
+                            {branch.active == 0 && (
+                              <Dropdown.Item
+                                onClick={() => handleDelete(branch.id)}
+                              >
+                                <FaTrashAlt className="me-2 text-danger" />
+                                Delete
+                              </Dropdown.Item>
+                            )}
+
+                            {/* 🟢 ACTIVE = 1 → ONLY RESTORE */}
+                            {branch.active == 1 && (
+                              <Dropdown.Item
+                                onClick={() => handleRestore(branch.id)}
+                              >
+                                ♻️ Restore
+                              </Dropdown.Item>
+                            )}
                           </Dropdown.Menu>
                         </Dropdown>
                       </td>

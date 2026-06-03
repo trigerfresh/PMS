@@ -11,6 +11,9 @@ import {
 import { FaEye, FaPen, FaSearch, FaTrashAlt } from 'react-icons/fa'
 import Dropdown from 'react-bootstrap/Dropdown'
 import Modal from 'react-bootstrap/Modal'
+import Tabs from 'react-bootstrap/Tabs'
+import Tab from 'react-bootstrap/Tab'
+import axios from 'axios'
 
 export default function FloorPage() {
   const [hotels, setHotels] = useState([])
@@ -25,8 +28,7 @@ export default function FloorPage() {
 
   const [showModal, setShowModal] = useState(false)
   const [viewFloor, setViewFloor] = useState(null)
-
-  const [selectedHotel, setSelectedHotel] = useState(null)
+  const [floorStatus, setFloorStatus] = useState('0')
   const [statusFilter, setStatusFilter] = useState('all')
   const [counts, setCounts] = useState({
     totalHotels: 0,
@@ -65,10 +67,14 @@ export default function FloorPage() {
   //   setFloors(res.data.data || [])
   // }
 
-  const loadFloors = async (hid, search = searchFields) => {
+  const loadFloors = async (
+    hid,
+    search = searchFields,
+    status = floorStatus,
+  ) => {
     if (!hid) return setFloors([])
 
-    const res = await getFloorsByHotel(hid, search)
+    const res = await getFloorsByHotel(hid, search, status)
     setFloors(res.data.data || [])
   }
 
@@ -106,8 +112,10 @@ export default function FloorPage() {
 
   // when hotel changes
   useEffect(() => {
-    loadFloors(hotelId)
-  }, [hotelId])
+    if (hotelId) {
+      loadFloors(hotelId, searchFields, floorStatus)
+    }
+  }, [hotelId, floorStatus])
 
   // ================= RESET =================
   const reset = () => {
@@ -133,7 +141,7 @@ export default function FloorPage() {
     }
 
     reset()
-    loadFloors(hotelId)
+    loadFloors(hotelId, searchFields, floorStatus)
   }
 
   // ================= EDIT =================
@@ -146,8 +154,14 @@ export default function FloorPage() {
   // ================= DELETE =================
   const handleDelete = async (id) => {
     if (!window.confirm('Delete floor?')) return
+
     await deleteFloor(id)
-    loadFloors(hotelId)
+    loadFloors(hotelId, searchFields, floorStatus)
+  }
+
+  const handleRestore = async (id) => {
+    await axios.put(`http://localhost:5000/api/floor/restore/${id}`)
+    loadFloors(hotelId, searchFields, floorStatus)
   }
 
   return (
@@ -249,6 +263,11 @@ export default function FloorPage() {
         </form>
       )}
 
+      <Tabs activeKey={floorStatus} onSelect={(k) => setFloorStatus(k)}>
+        <Tab eventKey="0" title="Active Floors" />
+        <Tab eventKey="1" title="Deleted Floors" />
+      </Tabs>
+
       {/* TABLE */}
       <div className="card">
         <div className="card-body">
@@ -293,10 +312,22 @@ export default function FloorPage() {
                           Edit
                         </Dropdown.Item>
 
-                        <Dropdown.Item onClick={() => handleDelete(f.floor_id)}>
-                          <FaTrashAlt className="me-2 text-danger" />
-                          Delete
-                        </Dropdown.Item>
+                        {floorStatus === '0' && (
+                          <Dropdown.Item
+                            onClick={() => handleDelete(f.floor_id)}
+                          >
+                            <FaTrashAlt className="me-2 text-danger" />
+                            Delete
+                          </Dropdown.Item>
+                        )}
+
+                        {floorStatus === '1' && (
+                          <Dropdown.Item
+                            onClick={() => handleRestore(f.floor_id)}
+                          >
+                            ♻ Restore
+                          </Dropdown.Item>
+                        )}
                       </Dropdown.Menu>
                     </Dropdown>
                   </td>

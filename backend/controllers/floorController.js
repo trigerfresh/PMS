@@ -121,14 +121,46 @@ exports.deleteFloor = async (req, res) => {
 
     await pool.request().input('id', sql.Int, id).query(`
         UPDATE floor_master
-        SET active = '1',
-            updated_on = GETDATE()
+        SET 
+          active = '1',
+          updated_on = GETDATE()
         WHERE floor_id = @id
       `)
 
-    res.json({ message: 'Floor deleted successfully' })
+    res.json({
+      success: true,
+      message: 'Floor moved to trash successfully',
+    })
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    })
+  }
+}
+
+exports.restoreFloor = async (req, res) => {
+  try {
+    const { id } = req.params
+    const pool = await poolPromise
+
+    await pool.request().input('id', sql.Int, id).query(`
+        UPDATE floor_master
+        SET 
+          active = '0',
+          updated_on = GETDATE()
+        WHERE floor_id = @id 
+      `)
+
+    res.json({
+      success: true,
+      message: 'Floor restored successfully',
+    })
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    })
   }
 }
 

@@ -9,7 +9,7 @@ router.post('/floor', floorController.createFloor)
 router.get('/floors/:hotel_id', floorController.getFloorsByHotel)
 router.put('/floor/:id', floorController.updateFloor)
 router.delete('/floor/:id', floorController.deleteFloor)
-
+router.put('/floor/restore/:id', floorController.restoreFloor)
 //search
 // router.get('/hotel/:hotel_id', floorController.getFloorsByHotel)
 // ================= ROOMS BY FLOOR =================

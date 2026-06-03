@@ -12,6 +12,7 @@ require('./config/db')
 app.use(cors())
 app.use(express.json())
 app.use('/uploads', express.static('uploads'))
+const foodRoutes = require('./routes/foodRoutes')
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'))
@@ -32,6 +33,13 @@ app.use('/api', require('./routes/bookingsRoutes'))
 const roomRoutes = require('./routes/roomsRoutes')
 
 app.use('/api', roomRoutes)
+app.use('/api/foods', foodRoutes)
+app.use('/api', require('./routes/primaryCategoriesRoutes'))
+app.use('/api', require('./routes/categoriesRoutes'))
+
+app.use('/api', require('./routes/subCategoriesRoutes'))
+
+app.use('/api', require('./routes/productRoutes'))
 
 app.get('/', (req, res) => {
   res.send('API Running')

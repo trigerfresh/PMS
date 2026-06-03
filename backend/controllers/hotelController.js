@@ -399,12 +399,10 @@ exports.deleteHotel = async (req, res) => {
   try {
     const pool = await poolPromise
 
-    const checkHotel = await pool.request().input('id', sql.Int, req.params.id)
-      .query(`
-        SELECT id
-        FROM hotel
-        WHERE id = @id
-      `)
+    const checkHotel = await pool
+      .request()
+      .input('id', sql.Int, req.params.id)
+      .query(`SELECT id FROM hotel WHERE id = @id`)
 
     if (checkHotel.recordset.length === 0) {
       return res.status(404).json({
@@ -415,15 +413,12 @@ exports.deleteHotel = async (req, res) => {
 
     await pool
       .request()
-
       .input('id', sql.Int, req.params.id)
-
       .input('updated_by', sql.Int, req.user.id)
-
       .input('updated_on', sql.DateTime2, new Date()).query(`
         UPDATE hotel
-        SET
-          active = '1',
+        SET 
+          active = 1,
           updated_by = @updated_by,
           updated_on = @updated_on
         WHERE id = @id
@@ -431,11 +426,9 @@ exports.deleteHotel = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Hotel deleted successfully',
+      message: 'Hotel moved to trash (soft deleted)',
     })
   } catch (error) {
-    console.log(error)
-
     return res.status(500).json({
       success: false,
       error: error.message,
@@ -767,6 +760,35 @@ exports.exportHotels = async (req, res) => {
   } catch (error) {
     console.log(error)
 
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+    })
+  }
+}
+
+exports.restoreHotel = async (req, res) => {
+  try {
+    const pool = await poolPromise
+
+    await pool
+      .request()
+      .input('id', sql.Int, req.params.id)
+      .input('updated_by', sql.Int, req.user.id)
+      .input('updated_on', sql.DateTime2, new Date()).query(`
+        UPDATE hotel
+        SET 
+          active = 0,
+          updated_by = @updated_by,
+          updated_on = @updated_on
+        WHERE id = @id
+      `)
+
+    return res.status(200).json({
+      success: true,
+      message: 'Hotel restored successfully',
+    })
+  } catch (error) {
     return res.status(500).json({
       success: false,
       error: error.message,

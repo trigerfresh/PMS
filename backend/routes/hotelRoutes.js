@@ -54,4 +54,6 @@ router.get('/', authMiddleware, hotelController.getHotels)
 // SOFT DELETE
 router.delete('/:id', authMiddleware, hotelController.deleteHotel)
 
+router.put('/restore/:id', authMiddleware, hotelController.restoreHotel)
+
 module.exports = router

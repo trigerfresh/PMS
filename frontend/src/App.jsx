@@ -21,6 +21,11 @@ import BookingMaster from './component/master/BookingMaster'
 import Dashboard from './component/master/Dashboard'
 import RoomDetailsPage from './pages/RoomDetailsPAge'
 import BookingDetails from './pages/BookingDetails'
+import FoodMaster from './component/master/FoodMaster'
+import PrimaryCategories from './component/master/PrimaryCategories'
+import Categories from './component/master/Categories'
+import SubCategories from './component/master/SubCategories'
+import ProductPage from './pages/Product'
 
 function App() {
   return (
@@ -66,6 +71,19 @@ function App() {
             path="/booking-details/:hotelId/:statusType"
             element={<BookingDetails />}
           />
+
+          <Route
+            path="/master/primaryCategories"
+            element={<PrimaryCategories />}
+          />
+
+          <Route path="/products" element={<ProductPage />} />
+
+          <Route path="/master/subcategories" element={<SubCategories />} />
+
+          <Route path="/master/categories" element={<Categories />} />
+
+          <Route path="/master/foodMaster" element={<FoodMaster />} />
         </Route>
       </Routes>
     </BrowserRouter>
