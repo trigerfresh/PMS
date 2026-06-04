@@ -252,3 +252,47 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ message: err.message })
   }
 }
+
+exports.getDeletedUsers = async (req, res) => {
+  try {
+    const pool = await poolPromise
+
+    const result = await pool.request().query(`
+      SELECT 
+        u.*,
+        b.branch_name,
+        c.company_name
+      FROM users u
+      LEFT JOIN branch b ON u.branch_id = b.id
+      LEFT JOIN companies c ON u.company_id = c.id
+      WHERE u.active = '1'
+      ORDER BY u.id DESC
+    `)
+
+    res.json({
+      success: true,
+      data: result.recordset,
+    })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
+exports.restoreUser = async (req, res) => {
+  try {
+    const pool = await poolPromise
+
+    await pool.request().input('id', sql.Int, req.params.id).query(`
+        UPDATE users
+        SET active='0'
+        WHERE id=@id
+      `)
+
+    res.json({
+      success: true,
+      message: 'User restored successfully',
+    })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}

@@ -4,27 +4,44 @@ exports.createCategory = async (req, res) => {
   try {
     const { category_name, pcat_id } = req.body
 
+    const image = req.file ? req.file.filename : null
+
     const pool = await poolPromise
 
     await pool
       .request()
       .input('name', sql.NVarChar, category_name)
-      .input('pcat_id', sql.BigInt, pcat_id).query(`
-        INSERT INTO categories (
+      .input('pcat_id', sql.BigInt, pcat_id)
+      .input('image', sql.NVarChar, image).query(`
+        INSERT INTO categories
+        (
           category_name,
           pcat_id,
+          image,
           active,
           created_on
         )
-        VALUES (@name, @pcat_id, '0', GETDATE())
+        VALUES
+        (
+          @name,
+          @pcat_id,
+          @image,
+          '0',
+          GETDATE()
+        )
       `)
 
-    res.json({ success: true, message: 'Category created' })
+    res.json({
+      success: true,
+      message: 'Category created',
+    })
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message })
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    })
   }
 }
-
 exports.getCategories = async (req, res) => {
   try {
     const pool = await poolPromise
@@ -33,6 +50,7 @@ exports.getCategories = async (req, res) => {
       SELECT 
         c.id,
         c.category_name,
+        c.image,
         c.pcat_id,
         p.primary_categories_name,
         c.active
@@ -70,23 +88,44 @@ exports.updateCategory = async (req, res) => {
     const { id } = req.params
     const { category_name, pcat_id } = req.body
 
+    const image = req.file ? req.file.filename : null
+
+    let query = `
+      UPDATE categories
+      SET category_name = @name,
+          pcat_id = @pcat_id,
+          modified_on = GETDATE()
+    `
+
+    if (image) {
+      query += `, image = @image`
+    }
+
+    query += ` WHERE id = @id`
+
     const pool = await poolPromise
 
-    await pool
+    const request = pool
       .request()
-      .input('id', sql.Int, id)
+      .input('id', sql.BigInt, id)
       .input('name', sql.NVarChar, category_name)
-      .input('pcat_id', sql.BigInt, pcat_id).query(`
-        UPDATE categories
-        SET category_name = @name,
-            pcat_id = @pcat_id,
-            modified_on = GETDATE()
-        WHERE id = @id
-      `)
+      .input('pcat_id', sql.BigInt, pcat_id)
 
-    res.json({ success: true, message: 'Category updated' })
+    if (image) {
+      request.input('image', sql.NVarChar, image)
+    }
+
+    await request.query(query)
+
+    res.json({
+      success: true,
+      message: 'Category updated',
+    })
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message })
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    })
   }
 }
 
@@ -125,5 +164,30 @@ exports.restoreCategory = async (req, res) => {
     res.json({ success: true, message: 'Category restored' })
   } catch (err) {
     res.status(500).json({ success: false, message: err.message })
+  }
+}
+
+exports.getPrimaryCategoryDropdown = async (req, res) => {
+  try {
+    const pool = await poolPromise
+
+    const result = await pool.request().query(`
+      SELECT
+        id,
+        primary_categories_name
+      FROM primary_categories
+      WHERE active = '0'
+      ORDER BY primary_categories_name
+    `)
+
+    res.json({
+      success: true,
+      data: result.recordset,
+    })
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    })
   }
 }

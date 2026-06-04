@@ -1,58 +1,120 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { Tabs, Tab, Dropdown } from 'react-bootstrap'
+import SearchPanel from '../../utils/filterPanel'
+import { FaSearch, FaPlus, FaArrowLeft } from 'react-icons/fa'
+import './Company.css'
 
 const BASE_URL = 'http://localhost:5000/api/primary-category'
 
 export default function PrimaryCategories() {
   const [name, setName] = useState('')
   const [editId, setEditId] = useState(null)
+  const [image, setImage] = useState(null)
+  const [existingImage, setExistingImage] = useState('')
 
   const [activeList, setActiveList] = useState([])
   const [deletedList, setDeletedList] = useState([])
 
+  const [showSearch, setShowSearch] = useState(false)
+  const [showForm, setShowForm] = useState(false)
+
+  const [searchFields, setSearchFields] = useState([
+    {
+      field: 'primary_categories_name',
+      keyword: '',
+    },
+  ])
+
+  const [dateFilter, setDateFilter] = useState({
+    from: '',
+    to: '',
+  })
   const [key, setKey] = useState('active')
 
   // ================= LOAD =================
   const loadData = async () => {
-    const res = await axios.get(BASE_URL)
-    const data = res.data.data || []
+    try {
+      const res = await axios.get(BASE_URL)
+      const data = res.data.data || []
 
-    setActiveList(data.filter((i) => i.active === '0'))
-    setDeletedList(data.filter((i) => i.active === '1'))
+      setActiveList(data.filter((i) => i.active === '0'))
+      setDeletedList(data.filter((i) => i.active === '1'))
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   useEffect(() => {
     loadData()
   }, [])
 
+  const searchOptions = [
+    {
+      value: 'primary_categories_name',
+      label: 'Category Name',
+    },
+  ]
+
   // ================= CREATE / UPDATE =================
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    const payload = {
-      primary_categories_name: name,
-    }
+    try {
+      const formData = new FormData()
+      formData.append('primary_categories_name', name)
 
-    if (editId) {
-      await axios.put(`${BASE_URL}/${editId}`, payload)
-    } else {
-      await axios.post(BASE_URL, payload)
-    }
+      if (image) {
+        formData.append('image', image)
+      }
 
+      if (editId) {
+        await axios.put(`${BASE_URL}/${editId}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+      } else {
+        await axios.post(BASE_URL, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+      }
+
+      resetForm()
+      loadData()
+    } catch (err) {
+      console.log(err)
+      alert('Error saving primary category')
+    }
+  }
+
+  // ================= RESET / CLOSE FORM =================
+  const resetForm = () => {
     setName('')
+    setImage(null)
     setEditId(null)
-    loadData()
+    setExistingImage('')
+    setShowForm(false)
+
+    const fileInput = document.getElementById('primary-image')
+    if (fileInput) {
+      fileInput.value = ''
+    }
   }
 
   // ================= EDIT =================
   const handleEdit = (item) => {
     setEditId(item.id)
     setName(item.primary_categories_name)
+    setExistingImage(item.image || '')
+    setShowForm(true)
   }
 
   // ================= DELETE =================
   const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete?')) return
     await axios.delete(`${BASE_URL}/${id}`)
     loadData()
   }
@@ -63,105 +125,359 @@ export default function PrimaryCategories() {
     loadData()
   }
 
+  // ================= SEARCH =================
+  const handleSearch = async () => {
+    try {
+      let params = {}
+      searchFields.forEach((item) => {
+        if (item.keyword.trim() !== '') {
+          params[item.field] = item.keyword
+        }
+      })
+
+      const res = await axios.get(`${BASE_URL}/search`, { params })
+      const data = res.data.data || []
+
+      setActiveList(data.filter((i) => i.active === '0'))
+      setDeletedList(data.filter((i) => i.active === '1'))
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  const resetSearch = async () => {
+    setSearchFields([
+      {
+        field: 'primary_categories_name',
+        keyword: '',
+      },
+    ])
+    loadData()
+  }
+
+  const downloadExcel = async () => {
+    const res = await axios.get(`${BASE_URL}/export/excel`, {
+      responseType: 'blob',
+    })
+
+    const url = window.URL.createObjectURL(new Blob([res.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', 'primary_categories.xlsx')
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  }
+
   return (
-    <div className="container mt-4">
-      <h3>Primary Category Master</h3>
+    <div className="page-container">
+      {/* HEADER SECTION */}
+      <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <h1
+          className="page-title mb-0"
+          style={{
+            fontSize: '25px',
+          }}
+        >
+          {showForm
+            ? editId
+              ? 'Update Details'
+              : 'Add Primary Category'
+            : 'Primary Category Master'}{' '}
+          {!showForm && (
+            <span className="text-success">({activeList.length})</span>
+          )}
+        </h1>
 
-      {/* ================= FORM ================= */}
-      <form onSubmit={handleSubmit} className="card p-3 mb-3">
-        <div className="d-flex gap-2 align-items-center">
-          <input
-            className="form-control form-control-sm" // smaller input
-            style={{ maxWidth: '250px' }} // limit width
-            placeholder="Category Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
+        <div className="page-actions d-flex gap-3 align-items-center">
+          {!showForm && (
+            <button
+              type="button"
+              className="search-btn shadow-sm rounded-3"
+              onClick={() => setShowSearch(!showSearch)}
+              style={{
+                padding: '6px 14px',
+                backgroundColor: '#00baf2',
+                border: 'none',
+                color: '#ffff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontWeight: '500',
+                transition: 'all 0.2s',
+              }}
+            >
+              <FaSearch /> {showSearch ? 'Hide Search' : 'Search'}
+            </button>
+          )}
 
-          <button className="btn btn-primary btn-sm text-nowrap">
-            {editId ? 'Update' : 'Add'}
+          <button
+            type="button"
+            className={`btn shadow-sm rounded-3 text-white d-flex align-items-center gap-2 px-4 py-2 ${
+              showForm ? 'btn-danger' : 'btn-primary'
+            }`}
+            onClick={() => {
+              if (showForm) {
+                resetForm()
+              } else {
+                setShowForm(true)
+                setShowSearch(false)
+              }
+            }}
+            style={{
+              border: 'none',
+              fontWeight: '500',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            {showForm ? (
+              <>
+                <FaArrowLeft /> Back to List
+              </>
+            ) : (
+              <>
+                <FaPlus /> Create New
+              </>
+            )}
           </button>
         </div>
-      </form>
+      </div>
 
-      {/* ================= TABS ================= */}
-      <Tabs activeKey={key} onSelect={(k) => setKey(k)} className="mb-3">
-        {/* ACTIVE */}
-        <Tab eventKey="active" title="Active">
-          <table className="table table-bordered">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Action</th>
-              </tr>
-            </thead>
+      {/* VIEW 1: FORM LAYOUT */}
+      {showForm ? (
+        <div className="card shadow-sm border-primary">
+          <div className="card-header bg-primary text-white py-2 fw-semibold">
+            {editId
+              ? 'Edit Primary Category Details'
+              : 'Add New Primary Category'}
+          </div>
+          <form onSubmit={handleSubmit} className="card-body p-4">
+            <div className="row g-3">
+              <div className="col-md-6">
+                <label className="form-label small fw-bold">
+                  Primary Category Name <span className="text-danger">*</span>
+                </label>
+                <input
+                  className="form-control form-control-sm"
+                  placeholder="Enter Category Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
 
-            <tbody>
-              {activeList.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.id}</td>
-                  <td>{item.primary_categories_name}</td>
-                  <td>
-                    <Dropdown>
-                      <Dropdown.Toggle
-                        variant="secondary"
-                        size="sm"
-                        id={`dropdown-${item.id}`}
-                      >
+              <div className="col-md-6">
+                <label className="form-label small fw-bold">
+                  Category Image
+                </label>
+                <input
+                  id="primary-image"
+                  type="file"
+                  className="form-control form-control-sm"
+                  accept="image/*"
+                  onChange={(e) => setImage(e.target.files[0])}
+                />
+              </div>
+
+              {editId && existingImage && (
+                <div className="col-md-6">
+                  <div className="p-2 border rounded d-inline-flex align-items-center gap-2 bg-light">
+                    <img
+                      src={`http://localhost:5000/uploads/${existingImage}`}
+                      alt="Current"
+                      width="55"
+                      height="55"
+                      style={{ objectFit: 'cover', borderRadius: '4px' }}
+                    />
+                    <div style={{ fontSize: '12px' }} className="text-muted">
+                      <span className="fw-bold d-block">Current Image:</span>
+                      {existingImage}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
+              <button
+                type="button"
+                className="btn btn-light btn-sm px-4 border"
+                onClick={resetForm}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="btn btn-success btn-sm px-5 fw-bold"
+              >
+                {editId ? 'Update Changes' : 'Save Record'}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : (
+        /* VIEW 2: TABS TABLE LIST (Fixed structure width attributes) */
+        <>
+          {showSearch && (
+            <SearchPanel
+              searchFields={searchFields}
+              setSearchFields={setSearchFields}
+              onSearch={handleSearch}
+              onReset={resetSearch}
+              searchOptions={searchOptions}
+              dateFilter={dateFilter}
+              setDateFilter={setDateFilter}
+              onDownloadExcel={downloadExcel}
+            />
+          )}
+
+          <Tabs
+            activeKey={key}
+            onSelect={(k) => setKey(k)}
+            className="mb-3 custom-bootstrap-tabs"
+            style={{ overflow: 'visible', flexWrap: 'wrap' }}
+          >
+            {/* ACTIVE TAB */}
+            <Tab eventKey="active" title="Active">
+              <div className="table-responsive" style={{ overflowX: 'auto' }}>
+                <table className="table table-bordered table-striped bg-white shadow-sm align-middle mb-0">
+                  <thead className="table">
+                    <tr>
+                      <th style={{ width: '80px' }}>ID</th>
+                      <th>Name</th>
+                      <th style={{ width: '150px' }}>Image</th>
+                      <th style={{ width: '120px' }} className="text-center">
                         Action
-                      </Dropdown.Toggle>
-
-                      <Dropdown.Menu>
-                        <Dropdown.Item onClick={() => handleEdit(item)}>
-                          ✏️ Edit
-                        </Dropdown.Item>
-
-                        <Dropdown.Item
-                          onClick={() => handleDelete(item.id)}
-                          className="text-danger"
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activeList.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan="4"
+                          className="text-center text-muted py-3 small"
                         >
-                          🗑️ Delete
-                        </Dropdown.Item>
-                      </Dropdown.Menu>
-                    </Dropdown>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Tab>
+                          No records found.
+                        </td>
+                      </tr>
+                    ) : (
+                      activeList.map((item) => (
+                        <tr key={item.id}>
+                          <td>{item.id}</td>
+                          <td className="fw-semibold">
+                            {item.primary_categories_name}
+                          </td>
+                          <td>
+                            {item.image ? (
+                              <img
+                                src={`http://localhost:5000/uploads/${item.image}`}
+                                alt=""
+                                width="45"
+                                height="45"
+                                style={{
+                                  objectFit: 'cover',
+                                  borderRadius: '5px',
+                                }}
+                              />
+                            ) : (
+                              <span className="text-muted small">—</span>
+                            )}
+                          </td>
+                          <td className="text-center">
+                            <Dropdown>
+                              <Dropdown.Toggle
+                                variant="outline-secondary"
+                                size="sm"
+                                className='bg-secondary text-white'
 
-        {/* DELETED */}
-        <Tab eventKey="deleted" title="Deleted">
-          <table className="table table-bordered">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Action</th>
-              </tr>
-            </thead>
+                              >
+                                Action
+                              </Dropdown.Toggle>
+                              <Dropdown.Menu>
+                                <Dropdown.Item onClick={() => handleEdit(item)}>
+                                  ✏️ Edit
+                                </Dropdown.Item>
+                                <Dropdown.Item
+                                  onClick={() => handleDelete(item.id)}
+                                  className="text-danger"
+                                >
+                                  🗑️ Delete
+                                </Dropdown.Item>
+                              </Dropdown.Menu>
+                            </Dropdown>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </Tab>
 
-            <tbody>
-              {deletedList.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.id}</td>
-                  <td>{item.primary_categories_name}</td>
-                  <td>
-                    <button
-                      className="btn btn-sm btn-success"
-                      onClick={() => handleRestore(item.id)}
-                    >
-                      Restore
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Tab>
-      </Tabs>
+            {/* DELETED TAB */}
+            <Tab eventKey="deleted" title="Deleted">
+              <div className="table-responsive" style={{ overflowX: 'auto' }}>
+                <table className="table table-bordered table-striped bg-white shadow-sm align-middle mb-0">
+                  <thead className="table-dark">
+                    <tr>
+                      <th style={{ width: '80px' }}>ID</th>
+                      <th>Name</th>
+                      <th style={{ width: '150px' }}>Image</th>
+                      <th style={{ width: '120px' }} className="text-center">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {deletedList.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan="4"
+                          className="text-center text-muted py-3 small"
+                        >
+                          No deleted records.
+                        </td>
+                      </tr>
+                    ) : (
+                      deletedList.map((item) => (
+                        <tr key={item.id}>
+                          <td>{item.id}</td>
+                          <td>{item.primary_categories_name}</td>
+                          <td>
+                            {item.image ? (
+                              <img
+                                src={`http://localhost:5000/uploads/${item.image}`}
+                                alt=""
+                                width="45"
+                                height="45"
+                                style={{
+                                  objectFit: 'cover',
+                                  borderRadius: '5px',
+                                }}
+                              />
+                            ) : (
+                              <span className="text-muted small">—</span>
+                            )}
+                          </td>
+                          <td className="text-center">
+                            <button
+                              className="btn btn-sm btn-success px-3"
+                              onClick={() => handleRestore(item.id)}
+                            >
+                              Restore
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </Tab>
+          </Tabs>
+        </>
+      )}
     </div>
   )
 }

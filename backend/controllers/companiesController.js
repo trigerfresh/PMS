@@ -543,3 +543,106 @@ exports.exportCompanies = async (req, res) => {
     })
   }
 }
+
+exports.restoreCompany = async (req, res) => {
+  try {
+    const pool = await poolPromise
+
+    await pool
+      .request()
+      .input('id', sql.Int, req.params.id)
+      .input('modified_by', sql.VarChar(sql.MAX), String(req.user.id))
+      .input('modified_on', sql.DateTime, new Date()).query(`
+        UPDATE companies
+        SET
+          active = '0',
+          modified_by = @modified_by,
+          modified_on = @modified_on
+        WHERE id = @id
+      `)
+
+    return res.status(200).json({
+      success: true,
+      message: 'Company restored successfully',
+    })
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+    })
+  }
+}
+
+exports.getDeletedCompanies = async (req, res) => {
+  try {
+    const pool = await poolPromise
+
+    const { searchFields, fromDate, toDate } = req.query
+
+    let whereClause = "WHERE active = '1'"
+    const request = pool.request()
+
+    // Search Filters (same as getCompanies)
+    if (searchFields) {
+      const fields = JSON.parse(searchFields)
+      const conditions = []
+
+      fields.forEach((item, index) => {
+        const paramName = `search${index}`
+
+        switch (item.field) {
+          case 'companyName':
+            conditions.push(`company_name LIKE @${paramName}`)
+            break
+
+          case 'contactPersonName':
+            conditions.push(`contact_person LIKE @${paramName}`)
+            break
+
+          case 'emailId':
+            conditions.push(`email_id LIKE @${paramName}`)
+            break
+
+          case 'contactNo':
+            conditions.push(`contact_no LIKE @${paramName}`)
+            break
+
+          case 'city':
+            conditions.push(`city_name LIKE @${paramName}`)
+            break
+        }
+
+        request.input(paramName, sql.VarChar, `%${item.keyword}%`)
+      })
+
+      if (conditions.length > 0) {
+        whereClause += ` AND (${conditions.join(' OR ')})`
+      }
+    }
+
+    // Date filter
+    if (fromDate && toDate) {
+      whereClause += ` AND CAST(deleted_on AS DATE) BETWEEN @fromDate AND @toDate`
+
+      request.input('fromDate', sql.Date, fromDate)
+      request.input('toDate', sql.Date, toDate)
+    }
+
+    const result = await request.query(`
+      SELECT *
+      FROM companies
+      ${whereClause}
+      ORDER BY id DESC
+    `)
+
+    return res.status(200).json({
+      success: true,
+      data: result.recordset,
+    })
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+    })
+  }
+}

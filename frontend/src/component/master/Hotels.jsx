@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-import { FaPlus, FaSearch, FaPen, FaTrashAlt, FaEye } from 'react-icons/fa' // Import icons
+import { FaPlus, FaSearch, FaPen, FaTrashAlt, FaEye, FaArrowLeft } from 'react-icons/fa' // Import icons
 import SearchPanel from '../../utils/FilterPanel'
 import {
   Alert,
@@ -461,39 +461,74 @@ const HotelPage = () => {
 
   return (
     <div className="page-container">
-      <div className="page-header">
+      <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <h1
-          className="page-title"
+          className="page-title mb-0"
           style={{
             fontSize: '25px',
           }}
         >
-          Hotel Management{' '}
-          <span className="text-success">({branches.length})</span>
+          {showForm
+            ? isEditing
+              ? 'Edit Hotel'
+              : 'Create Hotel'
+            : 'Hotel Management'}{' '}
+          {!showForm && <span className="text-success">({branches.length})</span>}
         </h1>
-        <div
-          className="page-actions "
-          style={{
-            position: 'relative',
-            left: '80%',
-          }}
-        >
+        <div className="page-actions d-flex gap-3 align-items-center">
+          {!showForm && (
+            <button
+              type="button"
+              className="search-btn shadow-sm rounded-3"
+              onClick={() => setShowSearch(!showSearch)}
+              style={{
+                padding: '6px 14px',
+                backgroundColor: '#00baf2',
+                border: 'none',
+                color: '#ffff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontWeight: '500',
+                transition: 'all 0.2s'
+              }}
+            >
+              <FaSearch /> {showSearch ? 'Hide Search' : 'Search'}
+            </button>
+          )}
           <button
-            className="search-btn btn-success p-2 me-2" // Changed class name
-            onClick={() => setShowSearch(!showSearch)}
-          >
-            <FaSearch /> {showSearch ? 'Hide Search' : 'Search'}
-          </button>
-          <button
-            className="btn-primary p-2" // Changed class name
+            type="button"
+            className={`${showForm ? 'btn-danger' : 'btn-primary'} shadow-sm rounded-3`}
             onClick={() => {
-              resetForm()
-              // setIsEditing(null);
-              setShowSearch(false)
-              setShowForm(true)
+              if (showForm) {
+                resetForm()
+                setShowForm(false)
+              } else {
+                resetForm()
+                setShowSearch(false)
+                setShowForm(true)
+              }
+            }}
+            style={{
+              padding: '6px 14px',
+              border: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontWeight: '500',
+              transition: 'all 0.2s',
+              color: '#fff'
             }}
           >
-            <FaPlus /> Create New
+            {showForm ? (
+              <>
+                <FaArrowLeft /> Back to List
+              </>
+            ) : (
+              <>
+                <FaPlus /> Create New
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -511,68 +546,21 @@ const HotelPage = () => {
         />
       )}
 
-      <div className="mb-4">
-        <Tabs
-          id="hotel-status-tabs"
-          activeKey={statusFilter} // Aapka current state variable ('all', 'approved', 'deleted')
-          onSelect={(key) => setStatusFilter(key)} // Tab change hone par state update hogi
-          className="mb-3 d-flex gap-2" // Tabs ke beech mein spacing ke liye custom gap
-        >
-          {/* TOTAL HOTELS */}
-          <Tab
-            eventKey="all"
-            title={
-              <div className="text-center px-3 py-1">
-                <small
-                  className="d-block text-uppercase fw-semibold"
-                  style={{ fontSize: '0.75rem' }}
-                >
-                  Total Hotels
-                </small>
-                <strong className="fs-4 d-block mt-1 ">
-                  {counts.totalHotels}
-                </strong>
-              </div>
-            }
-          />
-
-          {/* APPROVED HOTELS */}
-          <Tab
-            eventKey="approved"
-            title={
-              <div className="text-center px-3 py-1">
-                <small
-                  className="d-block text-uppercase fw-semibold"
-                  style={{ fontSize: '0.75rem' }}
-                >
-                  Approved Hotels
-                </small>
-                <strong className="fs-4 d-block mt-1">
-                  {counts.approvedHotels}
-                </strong>
-              </div>
-            }
-          />
-
-          {/* DELETED HOTELS */}
-          <Tab
-            eventKey="deleted"
-            title={
-              <div className="text-center px-3 py-1">
-                <small
-                  className="d-block text-uppercase fw-semibold"
-                  style={{ fontSize: '0.75rem' }}
-                >
-                  Deleted Hotels
-                </small>
-                <strong className="fs-4 d-block mt-1">
-                  {counts.deletedHotels}
-                </strong>
-              </div>
-            }
-          />
-        </Tabs>
-      </div>
+      {!showForm && (
+        <div className="mb-4">
+          <Tabs
+            id="hotel-status-tabs"
+            activeKey={statusFilter}
+            onSelect={(key) => setStatusFilter(key)}
+            className="mb-3 custom-bootstrap-tabs"
+            style={{ overflow: 'visible', flexWrap: 'wrap' }}
+          >
+            <Tab eventKey="all" title={`Total Hotels (${counts.totalHotels})`} />
+            <Tab eventKey="approved" title={`Approved Hotels (${counts.approvedHotels})`} />
+            <Tab eventKey="deleted" title={`Deleted Hotels (${counts.deletedHotels})`} />
+          </Tabs>
+        </div>
+      )}
 
       {showForm && (
         <Card className="branch-card p-2">
@@ -870,11 +858,9 @@ const HotelPage = () => {
               hover
               bordered
               responsive
-              bordered
-              hover
               className="list-table align-middle"
             >
-              <thead className="table-secondary">
+              <thead className="table">
                 <tr>
                   <th>Hotel Name</th>
                   <th>Branch Name</th>
@@ -900,9 +886,10 @@ const HotelPage = () => {
                       <td className="text-center">
                         <Dropdown>
                           <Dropdown.Toggle
-                            variant="secondary"
+                            variant="outline-secondary"
                             size="sm"
                             id={`dropdown-${branch.id}`}
+                            className="bg-secondary text-white shadow-sm border"
                           >
                             Action
                           </Dropdown.Toggle>

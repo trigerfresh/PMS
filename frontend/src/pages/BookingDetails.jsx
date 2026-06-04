@@ -10,6 +10,7 @@ import {
   Col,
   Modal,
 } from 'react-bootstrap'
+import { FaArrowLeft } from 'react-icons/fa'
 
 const API_URL = 'http://localhost:5000'
 
@@ -166,17 +167,37 @@ const BookingDetails = () => {
   const floorWiseBookings = groupBookingsByFloor()
 
   return (
-    <Container className="py-3">
-      <Button
-        variant="outline-secondary"
-        size="sm"
-        className="mb-3"
-        onClick={() => navigate(-1)}
-      >
-        ← Back to Dashboard
-      </Button>
+    <div className="page-container">
+      {/* HEADER */}
+      <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <h1
+          className="page-title mb-0"
+          style={{ fontSize: '25px' }}
+        >
+          {getTitle()}{' '}
+          <span className="text-success">({bookings.length})</span>
+        </h1>
 
-      <h4 className="text-capitalize mb-4 fw-bold">{getTitle()}</h4>
+        <div className="page-actions d-flex gap-3 align-items-center">
+          <button
+            type="button"
+            className="btn-danger shadow-sm rounded-3"
+            onClick={() => navigate(-1)}
+            style={{
+              padding: '6px 14px',
+              border: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontWeight: '500',
+              transition: 'all 0.2s',
+              color: '#fff',
+            }}
+          >
+            <FaArrowLeft /> Back to Dashboard
+          </button>
+        </div>
+      </div>
 
       {loading ? (
         <div className="text-center py-4">
@@ -313,7 +334,7 @@ const BookingDetails = () => {
           )}
         </Modal.Footer>
       </Modal>
-    </Container>
+    </div>
   )
 }
 

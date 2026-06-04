@@ -19,6 +19,7 @@ import {
   FaArrowLeft,
   FaSearch,
   FaCreativeCommonsRemix,
+  FaEye,
 } from 'react-icons/fa'
 import SearchPanel from '../../utils/filterPanel'
 import { ToastContainer, toast } from 'react-toastify'
@@ -46,6 +47,7 @@ const BookingMaster = () => {
   const [showSearch, setShowSearch] = useState(false)
   const [showView, setShowView] = useState(false)
   const [viewData, setViewData] = useState(null)
+  // const [deletedBookings, setDeletedBookings] = useState([])
 
   const [formData, setFormData] = useState({
     booking_id: null,
@@ -224,6 +226,43 @@ const BookingMaster = () => {
   const handleView = (b) => {
     setViewData(b)
     setShowView(true)
+  }
+
+  // const fetchDeletedBookings = async () => {
+  //   try {
+  //     const token = localStorage.getItem('token')
+  //     const res = await axios.get(
+  //       'http://localhost:5000/api/deleted-bookings',
+  //       {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       },
+  //     )
+  //     setDeletedBookings(res.data.data || [])
+  //   } catch (err) {
+  //     console.log('Deleted booking error:', err.message)
+  //   }
+  // }
+
+  const handleRestore = async (bookingId) => {
+    if (window.confirm('Are you sure you want to restore this booking?')) {
+      try {
+        const token = localStorage.getItem('token')
+        await axios.put(
+          `http://localhost:5000/api/bookings/restore/${bookingId}`,
+          {},
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        )
+        toast.success('Booking restored successfully')
+        fetchBookings() // Refresh active bookings
+        fetchDeletedBookings() // Refresh deleted bookings
+        fetchBookingCounts() // Refresh counts
+      } catch (err) {
+        toast.error(err.response?.data?.message || 'Restore failed')
+        console.log('Restore error:', err.message)
+      }
+    }
   }
 
   const handleCheckout = async (bookingId) => {
@@ -677,10 +716,14 @@ const BookingMaster = () => {
       price_per_day: b.price_per_day || '',
       status: b.status || 'Booked',
       payment_status: b.payment_status || 'Pending',
+
       user_profile_pic: null,
       adhar_card_pic: null,
+      pan_card_pic: null,
+
       old_user_profile_pic: b.user_profile_pic || '',
       old_adhar_card_pic: b.adhar_card_pic || '',
+      old_pan_card_pic: b.pan_card_pic || '', // ✅ ADD THIS
     })
 
     // IMPORTANT
@@ -874,24 +917,82 @@ const BookingMaster = () => {
 
   // ================= UI RENDERING =================
   return (
-    <div className="container-fluid p-4">
+    <div className="page-container">
       <ToastContainer position="top-right" />
+
+      {/* UNIFIED HEADER */}
+      <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <h1 className="page-title mb-0" style={{ fontSize: '25px' }}>
+          {showForm
+            ? isEdit
+              ? 'Update Booking Details'
+              : 'Add New Booking'
+            : 'Booking Management'}{' '}
+          {!showForm && (
+            <span className="text-success">({bookings.length})</span>
+          )}
+        </h1>
+
+        <div className="page-actions d-flex gap-3 align-items-center">
+          {!showForm && (
+            <button
+              type="button"
+              className="search-btn shadow-sm rounded-3"
+              onClick={() => setShowSearch(!showSearch)}
+              style={{
+                padding: '6px 14px',
+                backgroundColor: '#00baf2',
+                border: 'none',
+                color: '#fff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontWeight: '500',
+                transition: 'all 0.2s',
+              }}
+            >
+              <FaSearch /> {showSearch ? 'Hide Search' : 'Search'}
+            </button>
+          )}
+          <button
+            type="button"
+            className={`shadow-sm rounded-3 ${showForm ? 'btn-danger' : 'btn-primary'}`}
+            onClick={() => {
+              if (showForm) {
+                setShowForm(false)
+                resetForm()
+              } else {
+                resetForm()
+                setShowForm(true)
+              }
+            }}
+            style={{
+              padding: '6px 14px',
+              border: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontWeight: '500',
+              transition: 'all 0.2s',
+              color: '#fff',
+            }}
+          >
+            {showForm ? (
+              <>
+                <FaArrowLeft /> Back to List
+              </>
+            ) : (
+              <>
+                <FaPlus /> Create New
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
       {showForm ? (
         /* ================= 1. FORM VIEW (Full Screen) ================= */
         <div>
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h3>{isEdit ? 'Update Booking Details' : 'Add New Booking'}</h3>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setShowForm(false)
-                resetForm()
-              }}
-            >
-              <FaArrowLeft className="me-2" /> Back to List
-            </Button>
-          </div>
-
           <Card className="p-4 shadow-sm">
             <Form onSubmit={handleSubmit}>
               <Row className="g-3">
@@ -1115,6 +1216,13 @@ const BookingMaster = () => {
                             )
                           }
                         />
+                        {formData.old_adhar_card_pic && (
+                          <img
+                            src={`http://localhost:5000/uploads/${formData.old_adhar_card_pic}`}
+                            width="80"
+                            className="mt-2 border rounded"
+                          />
+                        )}
                       </Col>
 
                       <Col md={3}>
@@ -1130,6 +1238,13 @@ const BookingMaster = () => {
                             )
                           }
                         />
+                        {formData.old_user_profile_pic && (
+                          <img
+                            src={`http://localhost:5000/uploads/${formData.old_user_profile_pic}`}
+                            width="80"
+                            className="mt-2 border rounded"
+                          />
+                        )}
                       </Col>
 
                       <Col md={3}>
@@ -1145,6 +1260,13 @@ const BookingMaster = () => {
                             )
                           }
                         />
+                        {formData.old_pan_card_pic && (
+                          <img
+                            src={`http://localhost:5000/uploads/${formData.old_pan_card_pic}`}
+                            width="80"
+                            className="mt-2 border rounded"
+                          />
+                        )}
                       </Col>
                     </Row>
 
@@ -1321,36 +1443,6 @@ const BookingMaster = () => {
       ) : (
         /* ================= 2. TABLE LIST VIEW (Full Screen) ================= */
         <div>
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2>Booking Management</h2>
-            <div
-              style={{
-                position: 'relative',
-                left: '16%',
-              }}
-            >
-              <button
-                className="search-btn btn-success p-2 me-2" // Changed class name
-                onClick={() => setShowSearch(!showSearch)}
-                style={{
-                  borderRadius: '10%',
-                }}
-              >
-                <FaSearch /> {showSearch ? 'Hide Search' : 'Search'}
-              </button>
-            </div>
-
-            <Button
-              variant="primary"
-              onClick={() => {
-                resetForm()
-                setShowForm(true) // Click karte hi Table gayab aur sirf Form dikhega
-              }}
-            >
-              <FaPlus className="me-2" /> Create New Booking
-            </Button>
-          </div>
-
           {showSearch && (
             <SearchPanel
               searchFields={searchFields}
@@ -1364,129 +1456,81 @@ const BookingMaster = () => {
             />
           )}
 
-          <Row>
-            <div className="mb-4">
-              <Tabs
-                id="booking-filter-tabs"
-                activeKey={filterType} // Aapka existing state variable (e.g., 'all', 'current', etc.)
-                onSelect={(k) => setFilterType(k)} // Tab click hone par filterType state update hogi
-                className="mb-3 d-flex gap-2" // Tabs ke beech me spacing ke liye custom gap
-              >
-                {/* TOTAL BOOKINGS */}
-                <Tab
-                  eventKey="all"
-                  title={
-                    <div className="text-center">
-                      <small
-                        className="d-block text-uppercase fw-semibold"
-                        style={{ fontSize: '0.75rem' }}
-                      >
-                        Total Bookings
-                      </small>
-                      <strong className="fs-4 d-block mt-1">
-                        {bookingCounts.total_bookings}
-                      </strong>
-                    </div>
-                  }
-                />
+          <Tabs
+            id="booking-filter-tabs"
+            activeKey={filterType} // Aapka existing state variable (e.g., 'all', 'current', etc.)
+            onSelect={(k) => setFilterType(k)} // Tab click hone par filterType state update hogi
+            className="mb-3 custom-bootstrap-tabs"
+          >
+            {/* TOTAL BOOKINGS */}
+            <Tab
+              eventKey="all"
+              title={`Total Bookings (${bookingCounts?.total_bookings || 0})`}
+            />
 
-                {/* CURRENT BOOKINGS */}
-                <Tab
-                  eventKey="current"
-                  title={
-                    <div className="text-center ">
-                      <small
-                        className=" d-block text-uppercase fw-semibold"
-                        style={{ fontSize: '0.75rem' }}
-                      >
-                        Current Bookings
-                      </small>
-                      <strong className="fs-4 d-block mt-1">
-                        {bookingCounts.current_bookings}
-                      </strong>
-                    </div>
-                  }
-                />
+            {/* CURRENT BOOKINGS */}
+            <Tab
+              eventKey="current"
+              title={`Current Bookings (${bookingCounts?.current_bookings || 0})`}
+            />
 
-                {/* CANCELLED BOOKINGS */}
-                <Tab
-                  eventKey="cancelled"
-                  title={
-                    <div className="text-center">
-                      <small
-                        className=" d-block text-uppercase fw-semibold"
-                        style={{ fontSize: '0.75rem' }}
-                      >
-                        Cancelled Bookings
-                      </small>
-                      <strong className="fs-4 d-block mt-1 ">
-                        {bookingCounts.cancelled_bookings}
-                      </strong>
-                    </div>
-                  }
-                />
+            {/* CANCELLED BOOKINGS */}
+            <Tab
+              eventKey="cancelled"
+              title={`Cancelled Bookings (${bookingCounts?.cancelled_bookings || 0})`}
+            />
 
-                {/* DELETED BOOKINGS */}
-                {/* <Tab
-                  eventKey="deleted"
-                  title={
-                    <div className="text-center px-2">
-                      <small
-                        className="d-block text-uppercase fw-semibold"
-                        style={{ fontSize: '0.75rem' }}
-                      >
-                        Deleted Bookings
-                      </small>
-                      <strong className="fs-4 d-block mt-1">
-                        {bookingCounts.deleted_bookings}
-                      </strong>
-                    </div> 
-                  }
-                />*/}
+            <Tab
+              eventKey="reserved"
+              title={`Reserved Bookings (${bookingCounts?.reserved_bookings || 0})`}
+            />
 
-                <Tab
-                  eventKey="reserved"
-                  title={
-                    <div className="text-center">
-                      <small
-                        className="d-block text-uppercase fw-semibold"
-                        style={{ fontSize: '0.75rem' }}
-                      >
-                        Reserved Bookings
-                      </small>
+            <Tab
+              eventKey="checkedout"
+              title={`Vacant Bookings (${bookingCounts?.checkedout_bookings || 0})`}
+            />
 
-                      <strong className="fs-4 d-block mt-1">
-                        {bookingCounts.reserved_bookings}
-                      </strong>
-                    </div>
-                  }
-                />
+            <Tab
+              eventKey="deleted"
+              title={`Deleted Bookings (${bookingCounts?.deleted_bookings || 0})`}
+            >
+              <Table>
+                <thead>
+                  <tr>
+                    <th>Room No</th>
+                    <th>Guest</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {deletedBookings.map((b) => (
+                    <tr key={b.booking_id}>
+                      <td>{b.room_no}</td>
+                      <td>{b.guest_name}</td>
+                      <td>
+                        <Button
+                          variant="success"
+                          size="sm"
+                          onClick={() => handleRestore(b.booking_id)}
+                        >
+                          Restore
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </Tab>
+          </Tabs>
 
-                <Tab
-                  eventKey="checkedout"
-                  title={
-                    <div className="text-center">
-                      <small
-                        className="d-block text-uppercase fw-semibold"
-                        style={{ fontSize: '0.75rem' }}
-                      >
-                        Vacant Bookings
-                      </small>
-
-                      <strong className="fs-4 d-block mt-1">
-                        {bookingCounts.checkedout_bookings}
-                      </strong>
-                    </div>
-                  }
-                />
-              </Tabs>
-            </div>
-          </Row>
-
-          <Card className="shadow-sm">
-            <h4 className="">Bookings List</h4>
-            <Table bordered hover responsive>
-              <thead className="table-light">
+          <Card className="branch-card">
+            <h4 className="p-3 mb-0 border-bottom">Bookings List</h4>
+            <Table
+              bordered
+              hover
+              className="list-table align-middle mb-0"
+            >
+              <thead className="table">
                 <tr>
                   <th>Room No</th>
                   <th>Guest</th>
@@ -1539,13 +1583,13 @@ const BookingMaster = () => {
 
                         {getCheckoutStatus(b.check_out_date, b.status) ===
                           'overdue' && (
-                          <span className="badge bg-danger ms-2">Overdue</span>
-                        )}
+                            <span className="badge bg-danger ms-2">Overdue</span>
+                          )}
 
                         {getCheckoutStatus(b.check_out_date, b.status) ===
                           'soon' && (
-                          <span className="badge bg-warning ms-2">Soon</span>
-                        )}
+                            <span className="badge bg-warning ms-2">Soon</span>
+                          )}
                       </td>{' '}
                       <td>
                         <span
@@ -1578,21 +1622,25 @@ const BookingMaster = () => {
                           <FaTrashAlt />
                         </Button>
                       </td> */}
-                      <td>
+                      <td className="text-center">
                         <Dropdown>
-                          <Dropdown.Toggle variant="secondary" size="sm">
+                          <Dropdown.Toggle
+                            variant="outline-secondary"
+                            size="sm"
+                            className="bg-secondary text-white shadow-sm border"
+                          >
                             Action
                           </Dropdown.Toggle>
 
                           <Dropdown.Menu>
                             {/* VIEW */}
                             <Dropdown.Item onClick={() => handleView(b)}>
-                              View
+                              <FaEye className="me-2 text-info" /> View
                             </Dropdown.Item>
 
                             {/* EDIT */}
                             <Dropdown.Item onClick={() => handleEdit(b)}>
-                              Edit
+                              <FaPen className="me-2 text-primary" /> Edit
                             </Dropdown.Item>
 
                             <Dropdown.Item
@@ -1617,10 +1665,10 @@ const BookingMaster = () => {
 
                             {/* DELETE */}
                             <Dropdown.Item
-                              // className="text-danger"
+                              className="text-danger"
                               onClick={() => handleDelete(b.booking_id)}
                             >
-                              Delete
+                              <FaTrashAlt className="me-2" /> Delete
                             </Dropdown.Item>
                           </Dropdown.Menu>
                         </Dropdown>
@@ -1691,7 +1739,7 @@ const BookingMaster = () => {
                   Math.ceil(
                     (new Date(viewData.check_out_date) -
                       new Date(viewData.check_in_date)) /
-                      (1000 * 60 * 60 * 24),
+                    (1000 * 60 * 60 * 24),
                   ),
                 )}
               </p>

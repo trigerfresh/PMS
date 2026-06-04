@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
-import { Tabs, Tab, Dropdown, Modal } from 'react-bootstrap'
+import { Tabs, Tab, Dropdown, Modal, Table } from 'react-bootstrap'
+import SearchPanel from '../utils/filterPanel'
+import { FaSearch, FaPlus, FaArrowLeft, FaPen, FaTrashAlt, FaEye } from 'react-icons/fa'
 
 const PRODUCT_URL = 'http://localhost:5000/api/product'
 const PRIMARY_URL = 'http://localhost:5000/api/primary-category'
@@ -22,6 +24,7 @@ export default function ProductPage() {
   const [products, setProducts] = useState([])
   const [activeList, setActiveList] = useState([])
   const [deletedList, setDeletedList] = useState([])
+  const [showSearch, setShowSearch] = useState(false)
 
   const [primaryList, setPrimaryList] = useState([])
   const [categoryList, setCategoryList] = useState([])
@@ -66,6 +69,44 @@ export default function ProductPage() {
   const [endTime, setEndTime] = useState('')
 
   const [tab, setTab] = useState('active')
+  const [searchFields, setSearchFields] = useState([
+    {
+      field: 'product_name',
+      keyword: '',
+    },
+  ])
+
+  const [dateFilter, setDateFilter] = useState({
+    from: '',
+    to: '',
+  })
+
+  const productSearchOptions = [
+    {
+      value: 'product_name',
+      label: 'Product Name',
+    },
+    {
+      value: 'primary_categories_name',
+      label: 'Primary Category',
+    },
+    {
+      value: 'category_name',
+      label: 'Category',
+    },
+    {
+      value: 'subcategory_name',
+      label: 'Subcategory',
+    },
+    {
+      value: 'gst',
+      label: 'GST',
+    },
+    {
+      value: 'price',
+      label: 'Price',
+    },
+  ]
 
   // NEW: Form toggle state (Page handling ke liye)
   const [showForm, setShowForm] = useState(false)
@@ -109,6 +150,50 @@ export default function ProductPage() {
         return [...prev, day]
       }
     })
+  }
+
+  const handleSearch = async () => {
+    try {
+      let params = {}
+
+      searchFields.forEach((item) => {
+        if (item.keyword.trim() !== '') {
+          params[item.field] = item.keyword
+        }
+      })
+
+      const res = await axios.get('http://localhost:5000/api/product/search', {
+        params,
+      })
+
+      const data = res.data.data || []
+
+      setActiveList(data.filter((x) => x.active === '0'))
+      setDeletedList(data.filter((x) => x.active === '1'))
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  const resetSearch = async () => {
+    try {
+      setSearchFields([
+        {
+          field: 'product_name',
+          keyword: '',
+        },
+      ])
+
+      const res = await axios.get(PRODUCT_URL)
+
+      const data = res.data.data || []
+
+      setProducts(data)
+      setActiveList(data.filter((x) => x.active === '0'))
+      setDeletedList(data.filter((x) => x.active === '1'))
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   // ================= SAVE =================
@@ -224,29 +309,114 @@ export default function ProductPage() {
     loadProducts()
   }
 
+  const handleDownloadExcel = async () => {
+    try {
+      const response = await axios.get(
+        'http://localhost:5000/api/product/excel',
+        {
+          responseType: 'blob',
+        },
+      )
+
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+
+      const link = document.createElement('a')
+
+      link.href = url
+      link.setAttribute('download', 'products.xlsx')
+
+      document.body.appendChild(link)
+
+      link.click()
+
+      link.remove()
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
   return (
-    <div className="container mt-4">
-      {/* Dynamic Header with Actions */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h3>
+    <div className="page-container">
+      {/* UNIFIED HEADER */}
+      <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <h1
+          className="page-title mb-0"
+          style={{ fontSize: '25px' }}
+        >
           {showForm
             ? editId
               ? 'Edit Product'
               : 'Add New Product'
-            : 'Product Master'}
-        </h3>
-        {!showForm && (
+            : 'Product Master'}{' '}
+          {!showForm && <span className="text-success">({activeList.length})</span>}
+        </h1>
+
+        <div className="page-actions d-flex gap-3 align-items-center">
+          {!showForm && (
+            <button
+              type="button"
+              className="search-btn shadow-sm rounded-3"
+              onClick={() => setShowSearch(!showSearch)}
+              style={{
+                padding: '6px 14px',
+                backgroundColor: '#00baf2',
+                border: 'none',
+                color: '#fff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontWeight: '500',
+                transition: 'all 0.2s',
+              }}
+            >
+              <FaSearch /> {showSearch ? 'Hide Search' : 'Search'}
+            </button>
+          )}
           <button
-            className="btn btn-primary"
+            type="button"
+            className={`shadow-sm rounded-3 ${showForm ? 'btn-danger' : 'btn-primary'}`}
             onClick={() => {
-              resetForm()
-              setShowForm(true)
+              if (showForm) {
+                resetForm()
+                setShowForm(false)
+              } else {
+                resetForm()
+                setShowSearch(false)
+                setShowForm(true)
+              }
+            }}
+            style={{
+              padding: '6px 14px',
+              border: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontWeight: '500',
+              transition: 'all 0.2s',
+              color: '#fff',
             }}
           >
-            + Add Product
+            {showForm ? (
+              <><FaArrowLeft /> Back to List</>
+            ) : (
+              <><FaPlus /> Create New</>
+            )}
           </button>
-        )}
+        </div>
       </div>
+
+      {showSearch && (
+        <SearchPanel
+          searchFields={searchFields}
+          setSearchFields={setSearchFields}
+          dateFilter={dateFilter}
+          setDateFilter={setDateFilter}
+          onSearch={handleSearch}
+          onReset={resetSearch}
+          searchOptions={productSearchOptions}
+          onDownloadExcel={handleDownloadExcel}
+        />
+      )}
 
       {/* ================= CONDITIONAL RENDERING: FORM VIEW ================= */}
       {showForm ? (
@@ -475,16 +645,17 @@ export default function ProductPage() {
         </form>
       ) : (
         /* ================= CONDITIONAL RENDERING: TABLE LIST VIEW ================= */
-        <div className="card p-3 shadow-sm border-0 rounded-3">
+        <div className="card branch-card">
           <Tabs
             activeKey={tab}
             onSelect={(k) => setTab(k)}
-            className="border-bottom-0"
+            className="mb-3 custom-bootstrap-tabs"
+            style={{ overflow: 'visible', flexWrap: 'wrap' }}
           >
-            <Tab eventKey="active" title="Active Products">
+            <Tab eventKey="active" title={`Active Products (${activeList.length})`}>
               <div className="table-responsive">
-                <table className="table table-hover align-middle mt-3">
-                  <thead className="table-light">
+                <Table hover bordered responsive className="list-table align-middle mb-0">
+                  <thead className="table">
                     <tr>
                       <th>ID</th>
                       <th>Primary</th>
@@ -514,20 +685,23 @@ export default function ProductPage() {
                             (Number(item.price) * Number(item.gst)) / 100
                           ).toFixed(2)}
                         </td>
-                        <td>
+                        <td className="text-center">
                           <Dropdown>
                             <Dropdown.Toggle
                               variant="outline-secondary"
                               size="sm"
+                              className="bg-secondary text-white shadow-sm border"
                             >
                               Action
                             </Dropdown.Toggle>
                             <Dropdown.Menu>
                               <Dropdown.Item onClick={() => handleView(item)}>
+                                <FaEye className="me-2 text-info" />
                                 View
                               </Dropdown.Item>
 
                               <Dropdown.Item onClick={() => handleEdit(item)}>
+                                <FaPen className="me-2 text-primary" />
                                 Edit
                               </Dropdown.Item>
 
@@ -535,6 +709,7 @@ export default function ProductPage() {
                                 className="text-danger"
                                 onClick={() => handleDelete(item.id)}
                               >
+                                <FaTrashAlt className="me-2" />
                                 Delete
                               </Dropdown.Item>
                             </Dropdown.Menu>
@@ -550,14 +725,14 @@ export default function ProductPage() {
                       </tr>
                     )}
                   </tbody>
-                </table>
+                </Table>
               </div>
             </Tab>
 
-            <Tab eventKey="deleted" title="Deleted Products">
+            <Tab eventKey="deleted" title={`Deleted Products (${deletedList.length})`}>
               <div className="table-responsive">
-                <table className="table table-hover align-middle mt-3">
-                  <thead className="table-light">
+                <Table hover bordered responsive className="list-table align-middle mb-0">
+                  <thead className="table">
                     <tr>
                       <th>ID</th>
                       <th>Product Name</th>
@@ -574,13 +749,21 @@ export default function ProductPage() {
                         <td>{item.product_name}</td>
                         <td>{item.gst}</td>
                         <td>{item.price}</td>
-                        <td>
-                          <button
-                            className="btn btn-success btn-sm"
-                            onClick={() => handleRestore(item.id)}
-                          >
-                            Restore
-                          </button>
+                        <td className="text-center">
+                          <Dropdown>
+                            <Dropdown.Toggle
+                              variant="outline-secondary"
+                              size="sm"
+                              className="bg-secondary text-white shadow-sm border"
+                            >
+                              Action
+                            </Dropdown.Toggle>
+                            <Dropdown.Menu>
+                              <Dropdown.Item onClick={() => handleRestore(item.id)}>
+                                ♻️ Restore
+                              </Dropdown.Item>
+                            </Dropdown.Menu>
+                          </Dropdown>
                         </td>
                       </tr>
                     ))}
@@ -592,7 +775,7 @@ export default function ProductPage() {
                       </tr>
                     )}
                   </tbody>
-                </table>
+                </Table>
               </div>
             </Tab>
           </Tabs>

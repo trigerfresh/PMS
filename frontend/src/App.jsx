@@ -49,7 +49,7 @@ function App() {
           <Route path="/master/userRoleAccess" element={<UserRoleAccess />} />
           <Route path="/master/amenities" element={<AmenitiesPage />} />
           <Route path="/master/rooms" element={<RoomsMaster />} />
-          <Route path="/master/booking" element={<BookingMasterPage />} />
+          {/* <Route path="/master/booking" element={<BookingMasterPage />} /> */}
           <Route path="/master/floors" element={<FloorPage />} />
           <Route path="/master/hotel-inventory" element={<HotelInventory />} />
           <Route path="/master/bookings" element={<BookingMaster />} />

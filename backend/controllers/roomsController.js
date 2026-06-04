@@ -398,3 +398,54 @@ exports.getAvailableRooms = async (req, res) => {
     })
   }
 }
+
+exports.getDeletedRooms = async (req, res) => {
+  try {
+    const pool = await poolPromise
+
+    const result = await pool.request().query(`
+      SELECT
+        r.*,
+        h.hotel_name,
+        f.floor_name
+      FROM room_masters r
+      LEFT JOIN hotel h ON r.hotel_id = h.id
+      LEFT JOIN floor_master f ON r.floor_id = f.floor_id
+      WHERE r.active = '1'
+      ORDER BY r.room_id DESC
+    `)
+
+    res.json({
+      success: true,
+      data: result.recordset,
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    })
+  }
+}
+
+exports.restoreRoom = async (req, res) => {
+  try {
+    const pool = await poolPromise
+
+    await pool.request().input('roomId', sql.Int, req.params.roomId).query(`
+        UPDATE room_masters
+        SET active='0',
+            updated_on=GETDATE()
+        WHERE room_id=@roomId
+      `)
+
+    res.json({
+      success: true,
+      message: 'Room restored successfully',
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    })
+  }
+}

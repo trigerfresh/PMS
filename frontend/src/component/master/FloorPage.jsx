@@ -13,6 +13,7 @@ import Dropdown from 'react-bootstrap/Dropdown'
 import Modal from 'react-bootstrap/Modal'
 import Tabs from 'react-bootstrap/Tabs'
 import Tab from 'react-bootstrap/Tab'
+import Table from 'react-bootstrap/Table'
 import axios from 'axios'
 
 export default function FloorPage() {
@@ -165,37 +166,50 @@ export default function FloorPage() {
   }
 
   return (
-    <div className="container mt-4">
-      <div className="heading d-flex align-items-center justify-content-center">
-        {' '}
-        <h3>Floor Master</h3>
-      </div>
-      <div className="d-flex align-items-center gap-3 mb-3">
-        <h3 className="mb-0">Select Hotel</h3>
-
-        <select
-          className="form-select form-select-sm w-auto"
-          value={hotelId}
-          onChange={(e) => setHotelId(e.target.value)}
-          style={{ minWidth: '180px' }}
-        >
-          <option value="">Select Hotel</option>
-          {hotels.map((h) => (
-            <option key={h.id} value={h.id}>
-              {h.hotel_name}
-            </option>
-          ))}
-        </select>
-
-        <div
+    <div className="page-container">
+      <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <h1
+          className="page-title mb-0"
           style={{
-            position: 'relative',
-            left: '50%',
+            fontSize: '25px',
           }}
         >
+          {editId ? 'Edit Floor' : 'Floor Master'}
+        </h1>
+
+        <div className="page-actions d-flex gap-3 align-items-center">
+          <div className="d-flex align-items-center gap-2">
+            <span className="text-muted fw-semibold">Hotel:</span>
+            <select
+              className="form-select"
+              value={hotelId}
+              onChange={(e) => setHotelId(e.target.value)}
+              style={{ minWidth: '180px' }}
+            >
+              <option value="">Select Hotel</option>
+              {hotels.map((h) => (
+                <option key={h.id} value={h.id}>
+                  {h.hotel_name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <button
-            className="search-btn btn-success p-2 me-2" // Changed class name
+            type="button"
+            className="search-btn shadow-sm rounded-3"
             onClick={() => setShowSearch(!showSearch)}
+            style={{
+              padding: '6px 14px',
+              backgroundColor: '#00baf2',
+              border: 'none',
+              color: '#ffff',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontWeight: '500',
+              transition: 'all 0.2s',
+            }}
           >
             <FaSearch /> {showSearch ? 'Hide Search' : 'Search'}
           </button>
@@ -263,16 +277,21 @@ export default function FloorPage() {
         </form>
       )}
 
-      <Tabs activeKey={floorStatus} onSelect={(k) => setFloorStatus(k)}>
+      <Tabs
+        activeKey={floorStatus}
+        onSelect={(k) => setFloorStatus(k)}
+        className="mb-3 custom-bootstrap-tabs"
+        style={{ overflow: 'visible', flexWrap: 'wrap' }}
+      >
         <Tab eventKey="0" title="Active Floors" />
         <Tab eventKey="1" title="Deleted Floors" />
       </Tabs>
 
       {/* TABLE */}
-      <div className="card">
-        <div className="card-body">
-          <table className="table">
-            <thead>
+      <div className="card branch-card">
+        <div className="card-body p-0">
+          <Table hover bordered responsive className="list-table align-middle mb-0">
+            <thead className="table">
               <tr>
                 <th>Floor No</th>
                 <th>Floor Name</th>
@@ -289,9 +308,10 @@ export default function FloorPage() {
                   <td className="text-center">
                     <Dropdown>
                       <Dropdown.Toggle
-                        variant="secondary"
+                        variant="outline-secondary"
                         size="sm"
                         id={`dropdown-${f.floor_id}`}
+                        className="bg-secondary text-white shadow-sm border"
                       >
                         Action
                       </Dropdown.Toggle>
@@ -334,7 +354,7 @@ export default function FloorPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </Table>
         </div>
       </div>
 

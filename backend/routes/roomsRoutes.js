@@ -20,6 +20,12 @@ router.post(
 // ================= GET ALL ROOMS =================
 router.get('/rooms', roomController.getRooms)
 
+// Deleted Rooms
+router.get('/rooms/deleted', roomController.getDeletedRooms)
+
+// Restore Room
+router.put('/rooms/restore/:roomId', roomController.restoreRoom)
+
 //search routes
 router.get('/rooms/search', roomController.searchRooms)
 

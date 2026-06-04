@@ -145,13 +145,6 @@ const Sidebar = () => {
                   </li>
 
                   <li>
-                    <a onClick={() => handleNavigate('/master/bookings')}>
-                      <FaHotel className="submenu-icon me-1" />
-                      Bookings
-                    </a>
-                  </li>
-
-                  <li>
                     <a
                       onClick={() =>
                         handleNavigate('/master/primaryCategories')
@@ -250,7 +243,14 @@ const Sidebar = () => {
                   <li>
                     <a href="#!" onClick={() => handleNavigate('/products')}>
                       <FaBox className="submenu-icon me-1" />
-                      Product
+                      Food
+                    </a>
+                  </li>
+
+                  <li>
+                    <a onClick={() => handleNavigate('/master/bookings')}>
+                      <FaHotel className="submenu-icon me-1" />
+                      Bookings
                     </a>
                   </li>
                 </ul>

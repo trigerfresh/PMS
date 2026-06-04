@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 // import SearchPanel from '../../utils/FilterPanel'
-import { FaPen, FaTrashAlt, FaEye, FaPlus, FaSearch } from 'react-icons/fa' // Added FaPlus, FaSearch
+import { FaPen, FaTrashAlt, FaEye, FaPlus, FaSearch, FaArrowLeft } from 'react-icons/fa'
 import {
   Alert,
   Button,
@@ -12,6 +12,7 @@ import {
   Modal,
   Row,
   Table,
+  Dropdown,
 } from 'react-bootstrap'
 import defaultImg from './download.jfif'
 
@@ -589,36 +590,72 @@ const Users = () => {
         </Modal.Footer>
       </Modal>
 
-      <div className="page-header">
+      {/* UNIFIED HEADER */}
+      <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <h1
-          className="page-title"
-          style={{
-            fontSize: '25px',
-          }}
+          className="page-title mb-0"
+          style={{ fontSize: '25px' }}
         >
-          User Management <span className="text-success">({users.length})</span>
+          {showForm
+            ? isEditing
+              ? `Edit User - ${isEditing.name || isEditing.fullname || isEditing.first_name}`
+              : 'Create New User'
+            : 'User Management'}{' '}
+          {!showForm && <span className="text-success">({users.length})</span>}
         </h1>
-        <div className="page-actions">
-          {/* <button
-            className="search-btn"
-            onClick={() => setShowSearch(!showSearch)}
-          >
-            <FaSearch /> {showSearch ? 'Hide Search' : 'Search'}
-          </button> */}
+
+        <div className="page-actions d-flex gap-3 align-items-center">
+          {!showForm && (
+            <button
+              type="button"
+              className="search-btn shadow-sm rounded-3"
+              onClick={() => setShowSearch(!showSearch)}
+              style={{
+                padding: '6px 14px',
+                backgroundColor: '#00baf2',
+                border: 'none',
+                color: '#fff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontWeight: '500',
+                transition: 'all 0.2s',
+              }}
+            >
+              <FaSearch /> {showSearch ? 'Hide Search' : 'Search'}
+            </button>
+          )}
           <button
-            className="btn-primary p-2"
+            type="button"
+            className={`shadow-sm rounded-3 ${showForm ? 'btn-danger' : 'btn-primary'}`}
             onClick={() => {
-              resetForm()
-              setIsEditing(null)
-              setShowForm(true)
-              setShowSearch(false)
+              if (showForm) {
+                setShowForm(false)
+                setIsEditing(null)
+                resetForm()
+              } else {
+                resetForm()
+                setIsEditing(null)
+                setShowForm(true)
+                setShowSearch(false)
+              }
             }}
             style={{
-              position: 'relative',
-              left: '80%',
+              padding: '6px 14px',
+              border: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontWeight: '500',
+              transition: 'all 0.2s',
+              color: '#fff',
             }}
           >
-            <FaPlus /> Create New
+            {showForm ? (
+              <><FaArrowLeft /> Back to List</>
+            ) : (
+              <><FaPlus /> Create New</>
+            )}
           </button>
         </div>
       </div>
@@ -636,14 +673,7 @@ const Users = () => {
         />
       )}
       {showForm && (
-        <Card className="user-card">
-          <h2 className="card-header mb-4">
-            {isEditing ? (
-              <span>Edit User - {isEditing.name}</span>
-            ) : (
-              'Create New User'
-            )}
-          </h2>
+        <Card className="user-card p-4 shadow-sm">
           {Object.keys(validationErrors).length > 0 && (
             <Alert variant="danger">
               Please fix the validation errors below.
@@ -939,11 +969,10 @@ const Users = () => {
               {/* </Col> */}
             </Row>
 
-            <div className="form-actions d-flex justify-content-end">
+            <div className="form-actions d-flex justify-content-end gap-2 mt-4">
               <Button
                 type="button"
                 variant="secondary"
-                className="me-2"
                 onClick={() => {
                   setShowForm(false)
                   setIsEditing(null)
@@ -952,7 +981,7 @@ const Users = () => {
               >
                 Cancel
               </Button>
-              <Button type="submit" className="primary">
+              <Button type="submit" variant="success" className="px-4">
                 {isEditing ? 'Update User' : 'Save User'}
               </Button>
             </div>
@@ -972,8 +1001,8 @@ const Users = () => {
               {error}
             </Alert>
           ) : (
-            <Table responsive bordered hover className="list-table">
-              <thead className="table-secondary">
+            <Table responsive bordered hover className="list-table align-middle mb-0">
+              <thead className="table">
                 <tr>
                   <th>Name</th>
                   <th>Email ID</th>
@@ -1027,28 +1056,32 @@ const Users = () => {
                       </td>{' '}
                       <td>{user.phone || 'N/A'}</td>
                       <td>
-                        <div className="table-actions">
-                          <button
-                            className="icon-btn view btn-success "
-                            onClick={() => handleView(user)}
-                            title="View"
-                          >
-                            <FaEye />
-                          </button>
-                          <button
-                            className="icon-btn edit btn-primary m-1"
-                            onClick={() => handleEdit(user)}
-                            title="Edit"
-                          >
-                            <FaPen />
-                          </button>
-                          <button
-                            className="icon-btn delete btn-danger m-1"
-                            onClick={() => handleDelete(user.id)}
-                            title="Delete"
-                          >
-                            <FaTrashAlt />
-                          </button>
+                        <div className="text-center">
+                          <Dropdown>
+                            <Dropdown.Toggle
+                              variant="outline-secondary"
+                              size="sm"
+                              className="bg-secondary text-white shadow-sm border"
+                            >
+                              Action
+                            </Dropdown.Toggle>
+                            <Dropdown.Menu>
+                              <Dropdown.Item onClick={() => handleView(user)}>
+                                <FaEye className="me-2 text-info" /> View
+                              </Dropdown.Item>
+
+                              <Dropdown.Item onClick={() => handleEdit(user)}>
+                                <FaPen className="me-2 text-primary" /> Edit
+                              </Dropdown.Item>
+
+                              <Dropdown.Item
+                                className="text-danger"
+                                onClick={() => handleDelete(user.id)}
+                              >
+                                <FaTrashAlt className="me-2" /> Delete
+                              </Dropdown.Item>
+                            </Dropdown.Menu>
+                          </Dropdown>
                         </div>
                       </td>
                     </tr>

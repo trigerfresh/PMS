@@ -1906,3 +1906,94 @@ router.put('/bookings/cancel/:id', async (req, res) => {
 })
 module.exports = router
 //correct code booking master backend
+
+/* =========================
+   RESTORE BOOKING
+========================= */
+router.put('/bookings/restore/:id', async (req, res) => {
+  try {
+    const pool = await poolPromise
+    const bookingId = parseInt(req.params.id)
+
+    // Get booking
+    const bookingResult = await pool
+      .request()
+      .input('booking_id', sql.Int, bookingId).query(`
+        SELECT room_id,status
+        FROM booking_masters
+        WHERE booking_id=@booking_id
+          AND active='1'
+      `)
+
+    if (bookingResult.recordset.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Deleted booking not found',
+      })
+    }
+
+    const booking = bookingResult.recordset[0]
+    const roomId = booking.room_id
+
+    // Check room status
+    const roomCheck = await pool.request().input('room_id', sql.Int, roomId)
+      .query(`
+        SELECT status
+        FROM room_masters
+        WHERE room_id=@room_id
+      `)
+
+    if (!roomCheck.recordset.length) {
+      return res.status(404).json({
+        success: false,
+        message: 'Room not found',
+      })
+    }
+
+    const roomStatus = roomCheck.recordset[0].status
+
+    if (roomStatus === 'Occupied' || roomStatus === 'Reserved') {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot restore. Room already ${roomStatus}`,
+      })
+    }
+
+    // Restore booking
+    await pool.request().input('booking_id', sql.Int, bookingId).query(`
+        UPDATE booking_masters
+        SET active='0',
+            updated_on=GETDATE()
+        WHERE booking_id=@booking_id
+      `)
+
+    // Update room status
+    let newRoomStatus = 'Occupied'
+
+    if (booking.status && booking.status.toLowerCase() === 'reserved') {
+      newRoomStatus = 'Reserved'
+    }
+
+    await pool
+      .request()
+      .input('room_id', sql.Int, roomId)
+      .input('room_status', sql.VarChar, newRoomStatus).query(`
+        UPDATE room_masters
+        SET status=@room_status,
+            updated_on=GETDATE()
+        WHERE room_id=@room_id
+      `)
+
+    res.json({
+      success: true,
+      message: 'Booking restored successfully',
+    })
+  } catch (err) {
+    console.log(err)
+
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    })
+  }
+})

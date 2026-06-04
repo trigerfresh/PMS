@@ -109,3 +109,38 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+/* Adjust form/content spacing from the top header */
+.page-wrapper .page-body-wrapper .page-body {
+  padding-top: 60px !important;
+}
+
+/* Tabs styling: hide scrollbar, add borders, prevent text wrap */
+.custom-bootstrap-tabs {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  overflow: hidden !important; /* Force hide any sliders */
+  flex-wrap: nowrap !important;
+}
+.custom-bootstrap-tabs::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.custom-bootstrap-tabs .nav-link {
+  border: 1px solid #ccc !important;
+  margin-right: 5px;
+  border-radius: 4px !important;
+  white-space: nowrap !important;
+  background-color: #f8f9fa;
+  color: #333;
+  flex-shrink: 0 !important; /* Prevent shrinking which causes wrapping */
+  min-width: max-content;
+  padding: 6px 12px !important; /* Reduce padding to decrease height */
+  font-size: 14px; /* Slightly smaller text for better proportion */
+}
+.custom-bootstrap-tabs .nav-link.active {
+  border-color: #0d6efd !important;
+  background-color: #0d6efd !important;
+  color: #fff !important;
+}

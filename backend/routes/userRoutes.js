@@ -8,6 +8,8 @@ const {
   getUserById,
   updateUser,
   deleteUser,
+  getDeletedUsers,
+  restoreUser,
 } = require('../controllers/userController')
 
 // multer config
@@ -25,6 +27,8 @@ const upload = multer({ storage })
 // CREATE USER
 router.post('/', upload.single('profile_image'), createUser)
 
+router.put('/restore/:id', restoreUser)
+router.get('/deleted', getDeletedUsers)
 // UPDATE USER
 router.put('/:id', upload.single('profile_image'), updateUser)
 

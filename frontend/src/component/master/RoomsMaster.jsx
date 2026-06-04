@@ -43,6 +43,7 @@ const RoomsMaster = () => {
   const [showViewModal, setShowViewModal] = useState(false)
   const [selectedRoom, setSelectedRoom] = useState(null)
   const [showSettingsModal, setShowSettingsModal] = useState(false)
+  const [deletedRooms, setDeletedRooms] = useState([])
 
   const [previewImages, setPreviewImages] = useState({
     room_photo1: '',
@@ -105,6 +106,43 @@ const RoomsMaster = () => {
   //   }
   // }
 
+  const fetchDeletedRooms = async () => {
+    try {
+      const res = await axios.get(
+        'http://localhost:5000/api/rooms/deleted',
+        getAuthHeader(),
+      )
+
+      setDeletedRooms(res.data.data)
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  const handleRestore = async (roomId) => {
+    const confirmRestore = window.confirm(
+      'Are you sure you want to restore this room?',
+    )
+
+    if (!confirmRestore) return
+
+    try {
+      await axios.put(
+        `http://localhost:5000/api/rooms/restore/${roomId}`,
+        {},
+        getAuthHeader(),
+      )
+
+      alert('Room restored successfully')
+
+      fetchRooms()
+      fetchDeletedRooms()
+    } catch (err) {
+      console.log(err)
+      alert('Restore failed')
+    }
+  }
+
   const calculateStats = (data) => ({
     totalRooms: data.length,
 
@@ -130,6 +168,9 @@ const RoomsMaster = () => {
       setRooms(
         allRooms.filter((r) => r.status?.toLowerCase() === 'maintenance'),
       )
+    }
+    if (type === 'deleted') {
+      setRooms(deletedRooms)
     }
   }
 
@@ -224,6 +265,7 @@ const RoomsMaster = () => {
   useEffect(() => {
     fetchRooms()
     fetchHotels()
+    fetchDeletedRooms()
     fetchRoomStats()
   }, [])
 
@@ -419,6 +461,7 @@ const RoomsMaster = () => {
       )
       alert('Room deleted successfully')
       fetchRooms()
+      fetchDeletedRooms()
     } catch (err) {
       console.log(err)
       alert(err.response?.data?.message || 'Delete failed')
@@ -427,23 +470,80 @@ const RoomsMaster = () => {
 
   return (
     <div className="page-container">
-      {showForm ? (
-        <div>
-          {/* Form Header with Back Button (Settings Icon Removed) */}
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <h2>{isEditing ? 'Edit Room Details' : 'Add New Room'}</h2>
-            <Button
-              variant="secondary"
-              onClick={() => {
+      {/* UNIFIED HEADER */}
+      <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <h1 className="page-title mb-0" style={{ fontSize: '25px' }}>
+          {showForm
+            ? isEditing
+              ? 'Edit Room Details'
+              : 'Add New Room'
+            : 'Room Management'}{' '}
+          {!showForm && <span className="text-success">({rooms.length})</span>}
+        </h1>
+
+        <div className="page-actions d-flex gap-3 align-items-center">
+          {!showForm && (
+            <button
+              type="button"
+              className="search-btn shadow-sm rounded-3"
+              onClick={() => setShowSearch(!showSearch)}
+              style={{
+                padding: '6px 14px',
+                backgroundColor: '#00baf2',
+                border: 'none',
+                color: '#fff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontWeight: '500',
+                transition: 'all 0.2s',
+              }}
+            >
+              <FaSearch /> {showSearch ? 'Hide Search' : 'Search'}
+            </button>
+          )}
+          <button
+            type="button"
+            className={`shadow-sm rounded-3 ${
+              showForm ? 'btn-danger' : 'btn-primary'
+            }`}
+            onClick={() => {
+              if (showForm) {
                 setShowForm(false)
                 setIsEditing(false)
                 resetForm()
-              }}
-            >
-              <FaArrowLeft className="me-2" /> Back to List
-            </Button>
-          </div>
+              } else {
+                resetForm()
+                setIsEditing(false)
+                setShowForm(true)
+              }
+            }}
+            style={{
+              padding: '6px 14px',
+              border: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontWeight: '500',
+              transition: 'all 0.2s',
+              color: '#fff',
+            }}
+          >
+            {showForm ? (
+              <>
+                <FaArrowLeft /> Back to List
+              </>
+            ) : (
+              <>
+                <FaPlus /> Create New
+              </>
+            )}
+          </button>
+        </div>
+      </div>
 
+      {showForm ? (
+        <div>
           <Card className="p-4 shadow-sm">
             <Form onSubmit={handleSaveAndNext}>
               <Row className="g-3">
@@ -707,29 +807,8 @@ const RoomsMaster = () => {
           </Modal>
         </div>
       ) : (
-        /* TABLE LIST SCREEN (Remained same) */
+        /* TABLE LIST SCREEN */
         <div>
-          <div className="page-header d-flex justify-content-between align-items-center mb-3">
-            <h3>Room Management</h3>
-            <button
-              className="search-btn btn-success p-2 me-2"
-              onClick={() => setShowSearch(!showSearch)}
-              style={{ position: 'relative', left: '23%', borderRadius: '10%' }}
-            >
-              <FaSearch /> {showSearch ? 'Hide Search' : 'Search'}
-            </button>
-            <button
-              className="btn btn-primary"
-              onClick={() => {
-                resetForm()
-                setIsEditing(false)
-                setShowForm(true)
-              }}
-            >
-              <FaPlus /> Create New
-            </button>
-          </div>
-
           {showSearch && (
             <SearchPanel
               searchFields={searchFields}
@@ -742,54 +821,42 @@ const RoomsMaster = () => {
             />
           )}
 
-          <div className="row ms-3">
-            <Tabs
-              activeKey={selectedStat}
-              onSelect={(k) => handleStatClick(k)}
-              className="mb-3 d-flex gap-2"
-            >
-              <Tab
-                eventKey="total"
-                title={
-                  <span>
-                    Total Rooms <br />
-                    <b>{roomStats.totalRooms}</b>
-                  </span>
-                }
-              />
-              <Tab
-                eventKey="occupied"
-                title={
-                  <span>
-                    Occupied Rooms <br />
-                    <b>{roomStats.occupiedRooms}</b>
-                  </span>
-                }
-              />
-              <Tab
-                eventKey="available"
-                title={
-                  <span>
-                    Available Rooms <br />
-                    <b>{roomStats.availableRooms}</b>
-                  </span>
-                }
-              />
-              <Tab
-                eventKey="maintenance"
-                title={
-                  <span>
-                    Maintenance Rooms <br />
-                    <b>{roomStats.maintenanceRooms}</b>
-                  </span>
-                }
-              />
-            </Tabs>
-          </div>
+          <Tabs
+            activeKey={selectedStat}
+            onSelect={(k) => handleStatClick(k)}
+            className="mb-3 custom-bootstrap-tabs"
+            style={{ overflow: 'visible', flexWrap: 'wrap' }}
+          >
+            <Tab
+              eventKey="total"
+              title={`Total Rooms (${roomStats.totalRooms})`}
+            />
+            <Tab
+              eventKey="occupied"
+              title={`Occupied (${roomStats.occupiedRooms})`}
+            />
+            <Tab
+              eventKey="available"
+              title={`Available (${roomStats.availableRooms})`}
+            />
+            <Tab
+              eventKey="maintenance"
+              title={`Maintenance (${roomStats.maintenanceRooms})`}
+            />
+            <Tab
+              eventKey="deleted"
+              title={`Deleted (${deletedRooms.length})`}
+            />
+          </Tabs>
 
-          <Card className="shadow-sm">
-            <Table bordered hover responsive className="mb-0">
-              <thead className="table-light">
+          <Card className="branch-card">
+            <Table
+              bordered
+              hover
+              responsive
+              className="list-table align-middle mb-0"
+            >
+              <thead className="table">
                 <tr>
                   <th>Hotel Name</th>
                   <th>Floor Name</th>
@@ -813,25 +880,37 @@ const RoomsMaster = () => {
                       <td>
                         <Dropdown align="end">
                           <Dropdown.Toggle
-                            variant="secondary"
+                            variant="outline-secondary"
                             size="sm"
-                            id="dropdown-action"
+                            id={`dropdown-${room.room_id}`}
+                            className="bg-secondary text-white shadow-sm border"
                           >
-                            Actions
+                            Action
                           </Dropdown.Toggle>
                           <Dropdown.Menu>
                             <Dropdown.Item onClick={() => handleView(room)}>
                               <FaEye className="me-2 text-primary" /> View
                             </Dropdown.Item>
-                            <Dropdown.Item onClick={() => handleEdit(room)}>
-                              <FaPen className="me-2 text-warning" /> Edit
-                            </Dropdown.Item>
+                            {selectedStat !== 'deleted' && (
+                              <Dropdown.Item onClick={() => handleEdit(room)}>
+                                <FaPen className="me-2 text-warning" /> Edit
+                              </Dropdown.Item>
+                            )}
                             <Dropdown.Divider />
-                            <Dropdown.Item
-                              onClick={() => handleDelete(room.room_id)}
-                            >
-                              <FaTrashAlt className="me-2" /> Delete
-                            </Dropdown.Item>
+                            {selectedStat === 'deleted' ? (
+                              <Dropdown.Item
+                                onClick={() => handleRestore(room.room_id)}
+                              >
+                                Restore Room
+                              </Dropdown.Item>
+                            ) : (
+                              <Dropdown.Item
+                                onClick={() => handleDelete(room.room_id)}
+                              >
+                                <FaTrashAlt className="me-2" />
+                                Delete
+                              </Dropdown.Item>
+                            )}
                           </Dropdown.Menu>
                         </Dropdown>
                       </td>

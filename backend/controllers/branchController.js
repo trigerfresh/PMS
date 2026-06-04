@@ -178,11 +178,23 @@ exports.getBranches = async (req, res) => {
   try {
     const pool = await poolPromise
 
+    const { status } = req.query
+
+    let where = ''
+
+    if (status === 'active') {
+      where = "WHERE active = '0'"
+    } else if (status === 'deleted') {
+      where = "WHERE active = '1'"
+    } else {
+      where = '' // all
+    }
+
     const result = await pool.request().query(`
       SELECT *
       FROM branch
-      WHERE active = '0'
-      ORDER BY id DESC
+      ${where}
+      ORDER BY id ASC
     `)
 
     return res.status(200).json({
@@ -402,6 +414,122 @@ exports.exportBranches = async (req, res) => {
     res.status(500).json({
       message: 'Excel export failed',
       error: err.message,
+    })
+  }
+}
+
+exports.restoreBranch = async (req, res) => {
+  try {
+    const pool = await poolPromise
+
+    await pool
+      .request()
+      .input('id', sql.Int, req.params.id)
+      .input('modified_by', sql.Int, req.user.id)
+      .input('modified_on', sql.DateTime2, new Date()).query(`
+        UPDATE branch
+        SET
+          active = '0',
+          modified_by = @modified_by,
+          modified_on = @modified_on
+        WHERE id = @id
+      `)
+
+    return res.status(200).json({
+      success: true,
+      message: 'Branch restored successfully',
+    })
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+    })
+  }
+}
+
+exports.getDeletedBranches = async (req, res) => {
+  try {
+    const pool = await poolPromise
+
+    const { searchFields, fromDate, toDate } = req.query
+
+    let whereClause = "WHERE active = '1'"
+    const request = pool.request()
+
+    // -------------------------
+    // SEARCH FILTER
+    // -------------------------
+    if (searchFields) {
+      const fields = JSON.parse(searchFields)
+
+      const conditions = []
+
+      fields.forEach((item, index) => {
+        const paramName = `search${index}`
+
+        switch (item.field) {
+          case 'branchName':
+            conditions.push(`branch_name LIKE @${paramName}`)
+            break
+
+          case 'branchCode':
+            conditions.push(`branch_code LIKE @${paramName}`)
+            break
+
+          case 'city':
+            conditions.push(`city LIKE @${paramName}`)
+            break
+
+          case 'email':
+            conditions.push(`email LIKE @${paramName}`)
+            break
+
+          case 'phone':
+            conditions.push(`phone LIKE @${paramName}`)
+            break
+
+          default:
+            break
+        }
+
+        request.input(paramName, sql.VarChar, `%${item.keyword}%`)
+      })
+
+      if (conditions.length > 0) {
+        whereClause += ` AND (${conditions.join(' OR ')})`
+      }
+    }
+
+    // -------------------------
+    // DATE FILTER (optional)
+    // -------------------------
+    if (fromDate && toDate) {
+      whereClause += ` AND CAST(disabled_on AS DATE) BETWEEN @fromDate AND @toDate`
+
+      request.input('fromDate', sql.Date, fromDate)
+      request.input('toDate', sql.Date, toDate)
+    }
+
+    // -------------------------
+    // QUERY
+    // -------------------------
+    const result = await request.query(`
+      SELECT *
+      FROM branch
+      ${whereClause}
+      ORDER BY id DESC
+    `)
+
+    return res.status(200).json({
+      success: true,
+      data: result.recordset,
+    })
+  } catch (error) {
+    console.log('GET DELETED BRANCH ERROR:', error)
+
+    return res.status(500).json({
+      success: false,
+      error: error.message,
     })
   }
 }

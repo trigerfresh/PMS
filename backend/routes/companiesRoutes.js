@@ -25,8 +25,18 @@ router.post(
   upload.single('logo'),
   companyController.createCompany,
 )
+
+router.put('/restore/:id', authMiddleware, companyController.restoreCompany)
+
 // READ ALL
 router.get('/', authMiddleware, companyController.getCompanies)
+
+// GET DELETED COMPANIES
+router.get(
+  '/deleted/list',
+  authMiddleware,
+  companyController.getDeletedCompanies,
+)
 
 router.get('/export', authMiddleware, companyController.exportCompanies)
 

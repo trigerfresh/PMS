@@ -7,6 +7,7 @@ import {
   FaTrashAlt,
   FaEye,
   FaEllipsisV,
+  FaArrowLeft,
 } from 'react-icons/fa' // Import icons
 import SearchPanel from '../../utils/FilterPanel'
 import {
@@ -20,6 +21,8 @@ import {
   Row,
   Table,
   Modal,
+  Tabs,
+  Tab,
 } from 'react-bootstrap'
 
 const BranchPage = () => {
@@ -33,6 +36,13 @@ const BranchPage = () => {
   const [validationErrors, setValidationErrors] = useState({})
   const [showView, setShowView] = useState(false)
   const [viewData, setViewData] = useState(null)
+
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [counts, setCounts] = useState({
+    totalBranches: 0,
+    approvedBranches: 0,
+    deletedBranches: 0,
+  })
 
   const initialFormData = {
     branchName: '',
@@ -81,11 +91,24 @@ const BranchPage = () => {
         params.fromDate = dateFilter.from
         params.toDate = dateFilter.to
       }
+      if (statusFilter === 'approved') {
+        params.status = 'active'
+      } else if (statusFilter === 'deleted') {
+        params.status = 'deleted'
+      }
       const res = await axios.get(`http://localhost:5000/api/branch`, {
         params,
         ...getAuthHeaders(),
       })
       setBranches(res.data.data)
+
+      const all = res.data.data
+
+      setCounts({
+        totalBranches: all.length,
+        approvedBranches: all.filter((b) => b.active == 0).length,
+        deletedBranches: all.filter((b) => b.active == 1).length,
+      })
     } catch (err) {
       if (err.response?.status === 401) {
         localStorage.removeItem('token')
@@ -118,6 +141,9 @@ const BranchPage = () => {
 
   useEffect(() => {
     fetchBranches()
+  }, [searchFields, dateFilter, statusFilter])
+
+  useEffect(() => {
     fetchCompanies()
   }, [])
 
@@ -279,7 +305,28 @@ const BranchPage = () => {
         if (err.response?.status === 401) {
           localStorage.removeItem('token')
           window.location.href = '/login'
-        } else alert('Delete operation failed!')
+        } else {
+          alert('Delete failed!')
+        }
+      }
+    }
+  }
+
+  const handleRestore = async (id) => {
+    try {
+      await axios.put(
+        `http://localhost:5000/api/branch/restore/${id}`,
+        {},
+        getAuthHeaders(),
+      )
+      alert('Branch restored successfully!')
+      fetchBranches()
+    } catch (err) {
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token')
+        window.location.href = '/login'
+      } else {
+        alert('Restore failed!')
       }
     }
   }
@@ -346,42 +393,76 @@ const BranchPage = () => {
 
   return (
     <div className="page-container">
-      <div className="page-header">
+      <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <h1
-          className="page-title"
+          className="page-title mb-0"
           style={{
             fontSize: '25px',
           }}
         >
-          Branch Management{' '}
-          <span className="text-success">({branches.length})</span>
+          {showForm
+            ? isEditing
+              ? 'Edit Branch'
+              : 'Create Branch'
+            : 'Branch Management'}{' '}
+          {!showForm && (
+            <span className="text-success">({branches.length})</span>
+          )}
         </h1>
-        <div className="page-actions">
+        <div className="page-actions d-flex gap-3 align-items-center">
+          {!showForm && (
+            <button
+              type="button"
+              className="search-btn shadow-sm rounded-3"
+              onClick={() => setShowSearch(!showSearch)}
+              style={{
+                padding: '6px 14px',
+                backgroundColor: '#00baf2',
+                border: 'none',
+                color: '#ffff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontWeight: '500',
+                transition: 'all 0.2s',
+              }}
+            >
+              <FaSearch /> {showSearch ? 'Hide Search' : 'Search'}
+            </button>
+          )}
           <button
-            className="search-btn btn-success p-2 me-2" // Changed class name
-            onClick={() => setShowSearch(!showSearch)}
-            style={{
-              position: 'relative',
-              left: '80%',
-              borderRadius: '10%',
-            }}
-          >
-            <FaSearch /> {showSearch ? 'Hide Search' : 'Search'}
-          </button>
-          <button
-            className="btn-primary p-2" // Changed class name
+            type="button"
+            className={`${showForm ? 'btn-danger' : 'btn-primary'} shadow-sm rounded-3`}
             onClick={() => {
-              resetForm()
-              // setIsEditing(null);
-              setShowSearch(false)
-              setShowForm(true)
+              if (showForm) {
+                resetForm()
+                setShowForm(false)
+              } else {
+                resetForm()
+                setShowSearch(false)
+                setShowForm(true)
+              }
             }}
             style={{
-              position: 'relative',
-              left: '80%',
+              padding: '6px 14px',
+              border: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontWeight: '500',
+              transition: 'all 0.2s',
+              color: '#fff',
             }}
           >
-            <FaPlus /> Create New
+            {showForm ? (
+              <>
+                <FaArrowLeft /> Back to List
+              </>
+            ) : (
+              <>
+                <FaPlus /> Create New
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -591,6 +672,31 @@ const BranchPage = () => {
         </Card>
       )}
 
+      {/* Branch Status Tabs */}
+      {!showForm && (
+        <div className="mb-4">
+          <Tabs
+            id="branch-status-tabs"
+            activeKey={statusFilter}
+            onSelect={(key) => setStatusFilter(key)}
+            className="mb-3 custom-bootstrap-tabs"
+          >
+            <Tab
+              eventKey="all"
+              title={`Total Branches (${counts.totalBranches})`}
+            />
+            <Tab
+              eventKey="approved"
+              title={`Approved Branches (${counts.approvedBranches})`}
+            />
+            <Tab
+              eventKey="deleted"
+              title={`Deleted Branches (${counts.deletedBranches})`}
+            />
+          </Tabs>
+        </div>
+      )}
+
       {/* Branch List Table */}
       {!showForm && (
         <Card className="branch-card">
@@ -607,11 +713,9 @@ const BranchPage = () => {
               hover
               bordered
               responsive
-              bordered
-              hover
               className="list-table align-middle"
             >
-              <thead className="table-secondary">
+              <thead className="table">
                 <tr>
                   <th>Branch Name</th>
                   <th>Address</th>
@@ -636,10 +740,10 @@ const BranchPage = () => {
                       <td>
                         <Dropdown align="end">
                           <Dropdown.Toggle
-                            variant="secondary"
+                            variant="outline-secondary"
                             size="sm"
                             id={`dropdown-${branch.id}`}
-                            className="shadow-sm border"
+                            className="bg-secondary text-white shadow-sm border"
                           >
                             Action
                           </Dropdown.Toggle>
@@ -665,14 +769,25 @@ const BranchPage = () => {
                               Edit
                             </Dropdown.Item>
 
-                            {/* DELETE */}
-                            <Dropdown.Item
-                              onClick={() => handleDelete(branch.id)}
-                              className="text-danger"
-                            >
-                              <FaTrashAlt className="me-2" />
-                              Delete
-                            </Dropdown.Item>
+                            {/* 🔴 ACTIVE = 0 → SHOW NORMAL DELETE */}
+                            {branch.active == 0 && (
+                              <Dropdown.Item
+                                onClick={() => handleDelete(branch.id)}
+                                className="text-danger"
+                              >
+                                <FaTrashAlt className="me-2" />
+                                Delete
+                              </Dropdown.Item>
+                            )}
+
+                            {/* 🟢 ACTIVE = 1 → ONLY RESTORE */}
+                            {branch.active == 1 && (
+                              <Dropdown.Item
+                                onClick={() => handleRestore(branch.id)}
+                              >
+                                ♻️ Restore
+                              </Dropdown.Item>
+                            )}
                           </Dropdown.Menu>
                         </Dropdown>
                       </td>

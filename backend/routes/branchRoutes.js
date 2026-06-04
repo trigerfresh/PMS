@@ -7,6 +7,10 @@ const authMiddleware = require('../middleware/authMiddleware')
 // CREATE
 router.post('/', authMiddleware, branchController.createBranch)
 
+router.put('/restore/:id', authMiddleware, branchController.restoreBranch)
+
+router.get('/deleted/list', authMiddleware, branchController.getDeletedBranches)
+
 // GET ALL
 router.get('/', authMiddleware, branchController.getBranches)
 

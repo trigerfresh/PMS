@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { getRooms, createRoom, updateRoom, deleteRoom } from './api/roomApi'
 import { getHotels } from './api/hotelsApi'
+import { FaPlus, FaArrowLeft, FaPen, FaTrashAlt } from 'react-icons/fa'
+import Dropdown from 'react-bootstrap/Dropdown'
+import Table from 'react-bootstrap/Table'
 
 export default function RoomMasterPage() {
   const [rooms, setRooms] = useState([])
@@ -94,30 +97,57 @@ export default function RoomMasterPage() {
   }
 
   return (
-    <div className="container mt-4">
-      {/* HEADER */}
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h3
-          className="fw-bold text-primary mt-4"
+    <div className="page-container">
+      {/* HEADER SECTION */}
+      <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <h1
+          className="page-title mb-0"
           style={{
-            position: 'relative',
-            left: '35%',
+            fontSize: '25px',
           }}
         >
-          Room Master
-        </h3>
+          {showForm
+            ? editId
+              ? 'Update Room'
+              : 'Add Room'
+            : 'Room Master'}{' '}
+          {!showForm && (
+            <span className="text-success">({rooms.length})</span>
+          )}
+        </h1>
 
-        {/* ADD NEW BUTTON */}
-
-        <button
-          className="btn btn-success"
-          onClick={() => {
-            resetForm()
-            setShowForm(!showForm)
-          }}
-        >
-          + Add New Room
-        </button>
+        <div className="page-actions d-flex gap-3 align-items-center">
+          <button
+            type="button"
+            className={`btn shadow-sm rounded-3 text-white d-flex align-items-center gap-2 px-4 py-2 ${
+              showForm ? 'btn-danger' : 'btn-primary'
+            }`}
+            onClick={() => {
+              if (showForm) {
+                resetForm()
+                setShowForm(false)
+              } else {
+                resetForm()
+                setShowForm(true)
+              }
+            }}
+            style={{
+              border: 'none',
+              fontWeight: '500',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            {showForm ? (
+              <>
+                <FaArrowLeft /> Back to List
+              </>
+            ) : (
+              <>
+                <FaPlus /> Create New
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* ================= FORM ================= */}
@@ -226,55 +256,69 @@ export default function RoomMasterPage() {
       )}
 
       {/* ================= TABLE ================= */}
-      <div className="card shadow-sm">
-        <div className="card-body table-responsive">
-          <table className="table table-striped table-hover">
-            <thead className="table-dark">
-              <tr>
-                <th>ID</th>
-                <th>Hotel</th>
-                <th>Room No</th>
-                <th>Type</th>
-                <th>Price</th>
-                <th>Capacity</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {rooms.map((r) => (
-                <tr key={r.room_id}>
-                  <td>{r.room_id}</td>
-                  <td>{r.hotel_name}</td>
-                  <td>{r.room_no}</td>
-                  <td>{r.room_type}</td>
-                  <td>{r.price}</td>
-                  <td>{r.capacity}</td>
-                  <td>
-                    <span className="badge bg-info">{r.status}</span>
-                  </td>
-                  <td>
-                    <button
-                      className="btn btn-sm btn-primary m-2"
-                      onClick={() => handleEdit(r)}
-                    >
-                      Edit
-                    </button>
-
-                    <button
-                      className="btn btn-sm btn-danger"
-                      onClick={() => handleDelete(r.room_id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
+      {!showForm && (
+        <div className="card branch-card">
+          <div className="card-body p-0">
+            <Table hover bordered responsive className="list-table align-middle mb-0">
+              <thead className="table">
+                <tr>
+                  <th>ID</th>
+                  <th>Hotel</th>
+                  <th>Room No</th>
+                  <th>Type</th>
+                  <th>Price</th>
+                  <th>Capacity</th>
+                  <th>Status</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody>
+                {rooms.map((r) => (
+                  <tr key={r.room_id}>
+                    <td>{r.room_id}</td>
+                    <td>{r.hotel_name}</td>
+                    <td>{r.room_no}</td>
+                    <td>{r.room_type}</td>
+                    <td>{r.price}</td>
+                    <td>{r.capacity}</td>
+                    <td>
+                      <span className="badge bg-info">{r.status}</span>
+                    </td>
+                    <td className="text-center">
+                      <Dropdown>
+                        <Dropdown.Toggle
+                          variant="outline-secondary"
+                          size="sm"
+                          id={`dropdown-${r.room_id}`}
+                          className="bg-secondary text-white shadow-sm border"
+                        >
+                          Action
+                        </Dropdown.Toggle>
+
+                        <Dropdown.Menu>
+                          <Dropdown.Item onClick={() => handleEdit(r)}>
+                            <FaPen className="me-2 text-primary" />
+                            Edit
+                          </Dropdown.Item>
+
+                          <Dropdown.Item
+                            onClick={() => handleDelete(r.room_id)}
+                            className="text-danger"
+                          >
+                            <FaTrashAlt className="me-2" />
+                            Delete
+                          </Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

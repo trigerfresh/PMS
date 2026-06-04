@@ -8,6 +8,7 @@ import {
   FaTimes,
   FaEllipsisV,
   FaStreetView,
+  FaArrowLeft,
 } from 'react-icons/fa'
 import SearchPanel from '../../utils/FilterPanel'
 import {
@@ -36,6 +37,13 @@ const CompanyPage = () => {
   const [validationErrors, setValidationErrors] = useState({})
   const [showViewModal, setShowViewModal] = useState(false)
   const [selectedCompany, setSelectedCompany] = useState(null)
+
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [counts, setCounts] = useState({
+    totalCompanies: 0,
+    approvedCompanies: 0,
+    deletedCompanies: 0,
+  })
 
   const [formData, setFormData] = useState({
     companyName: '',
@@ -110,19 +118,33 @@ const CompanyPage = () => {
         params.toDate = dateFilter.to
       }
 
-      const response = await axios.get('http://localhost:5000/api/companies', {
+      let url = 'http://localhost:5000/api/companies'
+
+      // 🔥 IMPORTANT: switch API based on tab
+      if (statusFilter === 'deleted') {
+        url = 'http://localhost:5000/api/companies/deleted/list'
+      }
+
+      const response = await axios.get(url, {
         params,
         ...getAuthHeaders(),
       })
 
-      setCompanies(response.data.data)
+      const data = response.data.data
+
+      setCompanies(data)
+
+      // counts
+      setCounts({
+        totalCompanies: response.data.data.length,
+        approvedCompanies: response.data.data.filter((c) => c.active == 0)
+          .length,
+        deletedCompanies: response.data.data.filter((c) => c.active == 1)
+          .length,
+      })
     } catch (err) {
-      if (err.response?.status === 401) {
-        localStorage.removeItem('token')
-        window.location.href = '/login'
-      } else {
-        setError(err.response?.data?.message || 'Failed to fetch companies.')
-      }
+      console.log(err)
+      setError(err.response?.data?.message || 'Failed to fetch companies.')
     } finally {
       setLoading(false)
     }
@@ -134,7 +156,7 @@ const CompanyPage = () => {
 
   useEffect(() => {
     fetchCompanies()
-  }, [searchFields, dateFilter])
+  }, [searchFields, dateFilter, statusFilter])
 
   // --- Form Handlers ---
   const handleInputChange = (e) => {
@@ -483,8 +505,27 @@ const CompanyPage = () => {
           localStorage.removeItem('token')
           window.location.href = '/login'
         } else {
-          alert(`Delete failed: ${e.response?.data?.message || 'Server error'}`)
+          alert('Delete failed!')
         }
+      }
+    }
+  }
+
+  const handleRestore = async (id) => {
+    try {
+      await axios.put(
+        `http://localhost:5000/api/companies/restore/${id}`,
+        {},
+        getAuthHeaders(),
+      )
+      alert('Company restored successfully!')
+      fetchCompanies()
+    } catch (e) {
+      if (e.response?.status === 401) {
+        localStorage.removeItem('token')
+        window.location.href = '/login'
+      } else {
+        alert('Restore failed!')
       }
     }
   }
@@ -551,46 +592,76 @@ const CompanyPage = () => {
   return (
     <div className="page-container">
       {/* Header */}
-      <div className="page-header">
+      <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <h1
-          className="page-title"
+          className="page-title mb-0"
           style={{
             fontSize: '25px',
           }}
         >
-          Company Management{' '}
-          <span className="text-success">({companies.length})</span>
+          {showForm
+            ? isEditing
+              ? 'Edit Company'
+              : 'Create Company'
+            : 'Company Management'}{' '}
+          {!showForm && (
+            <span className="text-success">({companies.length})</span>
+          )}
         </h1>
-        <div className="page-actions">
+        <div className="page-actions d-flex gap-3 align-items-center">
+          {!showForm && (
+            <button
+              type="button"
+              className="search-btn shadow-sm rounded-3"
+              onClick={() => setShowSearch(!showSearch)}
+              style={{
+                padding: '6px 14px',
+                backgroundColor: '#00baf2',
+                border: 'none',
+                color: '#ffff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontWeight: '500',
+                transition: 'all 0.2s',
+              }}
+            >
+              <FaSearch /> {showSearch ? 'Hide Search' : 'Search'}
+            </button>
+          )}
           <button
             type="button"
-            className="search-btn"
-            onClick={() => setShowSearch(!showSearch)}
-            style={{
-              position: 'relative',
-              left: '76%',
-              padding: '6px',
-              backgroundColor: '#00baf2',
-              border: 'none',
-              color: '#ffff',
-            }}
-          >
-            <FaSearch /> {showSearch ? 'Hide Search' : 'Search'}
-          </button>
-          <button
-            type="button"
-            className="btn-primary p-1"
+            className={`${showForm ? 'btn-danger' : 'btn-primary'} shadow-sm rounded-3`}
             onClick={() => {
-              resetForm()
-              setShowForm(true)
-              setShowSearch(false)
+              if (showForm) {
+                resetForm()
+                setShowForm(false)
+              } else {
+                resetForm()
+                setShowForm(true)
+                setShowSearch(false)
+              }
             }}
             style={{
-              position: 'relative',
-              left: '80%',
+              padding: '6px 14px',
+              border: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontWeight: '500',
+              transition: 'all 0.2s',
+              color: '#fff',
             }}
           >
-            <FaPlus /> Create New
+            {showForm ? (
+              <>
+                <FaArrowLeft /> Back to List
+              </>
+            ) : (
+              <>
+                <FaPlus /> Create New
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -631,7 +702,8 @@ const CompanyPage = () => {
               <Tabs
                 activeKey={activeTab}
                 onSelect={() => {}}
-                className="mb-3"
+                className="mb-3 custom-bootstrap-tabs"
+                style={{ overflow: 'visible', flexWrap: 'wrap' }}
                 fill
               >
                 {/* Company Details Tab */}
@@ -1157,6 +1229,31 @@ const CompanyPage = () => {
         </Card>
       )}
 
+      {/* Company Status Tabs */}
+      {!showForm && (
+        <div className="mb-4">
+          <Tabs
+            activeKey={statusFilter}
+            onSelect={(key) => setStatusFilter(key)}
+          >
+            <Tab
+              eventKey="all"
+              title={`Total Companies (${counts.totalCompanies})`}
+            />
+
+            <Tab
+              eventKey="approved"
+              title={`Active Companies (${counts.approvedCompanies})`}
+            />
+
+            <Tab
+              eventKey="deleted"
+              title={`Deleted Companies (${counts.deletedCompanies})`}
+            />
+          </Tabs>
+        </div>
+      )}
+
       {/* Company List Table */}
       {!showForm && (
         <Card>
@@ -1171,7 +1268,7 @@ const CompanyPage = () => {
           ) : (
             <div className="table-responsive">
               <Table bordered hover className="list-table align-middle">
-                <thead className="table-secondary">
+                <thead className="table">
                   <tr>
                     <th>Company</th>
                     <th>Contact Person</th>
@@ -1199,9 +1296,10 @@ const CompanyPage = () => {
                         <td className="text-center">
                           <Dropdown>
                             <Dropdown.Toggle
-                              variant="secondary"
+                              variant="outline-secondary"
                               size="sm"
                               id={`dropdown-${company.id}`}
+                              className="bg-secondary text-white"
                               style={{
                                 border: '1px solid #ddd',
                               }}
@@ -1224,13 +1322,25 @@ const CompanyPage = () => {
                                 Edit
                               </Dropdown.Item>
 
-                              <Dropdown.Item
-                                onClick={() => handleDelete(company.id)}
-                                className="text-danger"
-                              >
-                                <FaTrashAlt className="me-2" />
-                                Delete
-                              </Dropdown.Item>
+                              {/* 🔴 ACTIVE = 0 → SHOW NORMAL DELETE */}
+                              {company.active == 0 && (
+                                <Dropdown.Item
+                                  onClick={() => handleDelete(company.id)}
+                                  className="text-danger"
+                                >
+                                  <FaTrashAlt className="me-2" />
+                                  Delete
+                                </Dropdown.Item>
+                              )}
+
+                              {/* 🟢 ACTIVE = 1 → ONLY RESTORE */}
+                              {company.active == 1 && (
+                                <Dropdown.Item
+                                  onClick={() => handleRestore(company.id)}
+                                >
+                                  ♻️ Restore
+                                </Dropdown.Item>
+                              )}
                             </Dropdown.Menu>
                           </Dropdown>
                         </td>
