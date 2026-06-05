@@ -10,6 +10,7 @@ import {
   FaStreetView,
   FaArrowLeft,
 } from 'react-icons/fa'
+import { BsThreeDotsVertical } from 'react-icons/bs'
 import SearchPanel from '../../utils/FilterPanel'
 import {
   Button,
@@ -118,29 +119,32 @@ const CompanyPage = () => {
         params.toDate = dateFilter.to
       }
 
-      let url = 'http://localhost:5000/api/companies'
-
-      // 🔥 IMPORTANT: switch API based on tab
-      if (statusFilter === 'deleted') {
-        url = 'http://localhost:5000/api/companies/deleted/list'
-      }
-
-      const response = await axios.get(url, {
+      // Fetch active companies
+      const activeResponse = await axios.get('http://localhost:5000/api/companies', {
         params,
         ...getAuthHeaders(),
       })
+      const activeData = activeResponse.data.data || []
 
-      const data = response.data.data
+      // Fetch deleted companies
+      const deletedResponse = await axios.get('http://localhost:5000/api/companies/deleted/list', {
+        params,
+        ...getAuthHeaders(),
+      })
+      const deletedData = deletedResponse.data.data || []
 
-      setCompanies(data)
+      // Set companies based on current tab
+      if (statusFilter === 'deleted') {
+        setCompanies(deletedData)
+      } else {
+        setCompanies(activeData)
+      }
 
-      // counts
+      // Set accurate counts
       setCounts({
-        totalCompanies: response.data.data.length,
-        approvedCompanies: response.data.data.filter((c) => c.active == 0)
-          .length,
-        deletedCompanies: response.data.data.filter((c) => c.active == 1)
-          .length,
+        totalCompanies: activeData.length + deletedData.length,
+        approvedCompanies: activeData.length,
+        deletedCompanies: deletedData.length,
       })
     } catch (err) {
       console.log(err)
@@ -615,7 +619,7 @@ const CompanyPage = () => {
               className="search-btn shadow-sm rounded-3"
               onClick={() => setShowSearch(!showSearch)}
               style={{
-                padding: '6px 14px',
+                padding: '1px 6px',
                 backgroundColor: '#00baf2',
                 border: 'none',
                 color: '#ffff',
@@ -643,7 +647,7 @@ const CompanyPage = () => {
               }
             }}
             style={{
-              padding: '6px 14px',
+              padding: '1px 6px',
               border: 'none',
               display: 'inline-flex',
               alignItems: 'center',
@@ -1236,19 +1240,19 @@ const CompanyPage = () => {
             activeKey={statusFilter}
             onSelect={(key) => setStatusFilter(key)}
           >
-            <Tab
+            {/* <Tab
               eventKey="all"
               title={`Total Companies (${counts.totalCompanies})`}
-            />
+            /> */}
 
             <Tab
               eventKey="approved"
-              title={`Active Companies (${counts.approvedCompanies})`}
+              title={`Active (${counts.approvedCompanies})`}
             />
 
             <Tab
               eventKey="deleted"
-              title={`Deleted Companies (${counts.deletedCompanies})`}
+              title={`Deleted (${counts.deletedCompanies})`}
             />
           </Tabs>
         </div>
@@ -1266,20 +1270,24 @@ const CompanyPage = () => {
               {error}
             </Alert>
           ) : (
-            <div className="table-responsive">
-              <Table bordered hover className="list-table align-middle">
-                <thead className="table">
+            <div>
+              <Table
+                bordered
+                hover
+                className="list-table align-middle table-sm w-auto"
+              >
+                <thead className="table text-center">
                   <tr>
-                    <th>Company</th>
-                    <th>Contact Person</th>
-                    <th>Email ID</th>
-                    <th>Contact No</th>
-                    <th>City</th>
-                    <th>Actions</th>
+                    <th width="180">Company</th>
+                    <th width="150">Contact Person</th>
+                    <th width="200">Email ID</th>
+                    <th width="120">Contact No</th>
+                    <th width="120">City</th>
+                    <th width="90">Actions</th>
                   </tr>
                 </thead>
 
-                <tbody>
+                <tbody className="text-center">
                   {companies.length === 0 ? (
                     <tr className="text-center">
                       <td colSpan={6}>No data found</td>
@@ -1304,7 +1312,7 @@ const CompanyPage = () => {
                                 border: '1px solid #ddd',
                               }}
                             >
-                              Action
+                              <BsThreeDotsVertical />
                             </Dropdown.Toggle>
 
                             <Dropdown.Menu>

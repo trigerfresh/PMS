@@ -351,22 +351,21 @@ exports.exportBranches = async (req, res) => {
     const { searchFields, fromDate, toDate } = req.query
 
     let filters = []
-    let values = []
 
     if (searchFields) {
       const fields = JSON.parse(searchFields)
 
       fields.forEach((f) => {
         if (f.field && f.keyword) {
-          filters.push(`${f.field} LIKE ?`)
-          values.push(`%${f.keyword}%`)
+          filters.push(`${f.field} LIKE '%${f.keyword}%'`)
         }
       })
     }
 
     if (fromDate && toDate) {
-      filters.push(`DATE(created_at) BETWEEN ? AND ?`)
-      values.push(fromDate, toDate)
+      filters.push(
+        `CAST(created_on AS DATE) BETWEEN '${fromDate}' AND '${toDate}'`,
+      )
     }
 
     let query = `
@@ -386,7 +385,10 @@ exports.exportBranches = async (req, res) => {
     }
 
     const pool = await poolPromise
-    const [rows] = await pool.query(query, values)
+
+    // ✅ FIX HERE
+    const result = await pool.request().query(query)
+    const rows = result.recordset
 
     if (!rows || rows.length === 0) {
       return res.status(404).json({ message: 'No data to export' })
@@ -402,7 +404,6 @@ exports.exportBranches = async (req, res) => {
     })
 
     res.setHeader('Content-Disposition', 'attachment; filename=branches.xlsx')
-
     res.setHeader(
       'Content-Type',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

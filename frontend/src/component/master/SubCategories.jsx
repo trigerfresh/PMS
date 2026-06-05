@@ -4,6 +4,7 @@ import { Tabs, Tab, Dropdown } from 'react-bootstrap'
 import { FaSearch, FaPlus, FaTimes, FaArrowLeft } from 'react-icons/fa'
 import SearchPanel from '../../utils/filterPanel'
 import './Company.css'
+import { BsThreeDotsVertical } from 'react-icons/bs'
 
 const SUB_URL = 'http://localhost:5000/api/subcategory'
 const PRIMARY_URL = 'http://localhost:5000/api/primary-category'
@@ -244,7 +245,7 @@ export default function SubCategories() {
               className="search-btn shadow-sm rounded-3"
               onClick={() => setShowSearch(!showSearch)}
               style={{
-                padding: '6px 14px',
+                padding: '1px 6px',
                 backgroundColor: '#00baf2',
                 border: 'none',
                 color: '#ffff',
@@ -261,7 +262,9 @@ export default function SubCategories() {
 
           <button
             type="button"
-            className="btn-primary shadow-sm rounded-3"
+            className={`btn shadow-sm rounded-3 text-white ${
+              showForm ? 'btn-danger' : 'btn-primary'
+            }`}
             onClick={() => {
               if (showForm) {
                 resetForm()
@@ -271,7 +274,7 @@ export default function SubCategories() {
               }
             }}
             style={{
-              padding: '6px 14px',
+              padding: '1px 6px',
               border: 'none',
               display: 'inline-flex',
               alignItems: 'center',
@@ -433,20 +436,20 @@ export default function SubCategories() {
           >
             {/* ACTIVE TAB */}
             <Tab eventKey="active" title="Active">
-              <table className="table table-bordered table-striped mt-3 shadow-sm bg-white">
-                <thead className="table">
+              <table className="table table-bordered table-striped mt-3 shadow-sm bg-white table-sm w-auto">
+                <thead className="table text-center">
                   <tr>
-                    <th>ID</th>
-                    <th>Image</th>
-                    <th>Primary Category</th>
-                    <th>Category</th>
-                    <th>Subcategory</th>
-                    <th width="120" className="text-center">
+                    <th width="50" className="text-center">ID</th>
+                    <th width="70" className="text-center">Image</th>
+                    <th width="150">Primary Category</th>
+                    <th width="150">Category</th>
+                    <th width="200">Subcategory</th>
+                    <th width="90" className="text-center">
                       Action
                     </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="text-center">
                   {activeList.length === 0 ? (
                     <tr>
                       <td
@@ -459,17 +462,17 @@ export default function SubCategories() {
                   ) : (
                     activeList.map((item) => (
                       <tr key={item.id} className="align-middle">
-                        <td>{item.id}</td>
-                        <td>
+                        <td className="text-center">{item.id}</td>
+                        <td className="text-center">
                           {item.image ? (
                             <img
                               src={`http://localhost:5000/uploads/${item.image}`}
                               alt={item.subcategory_name}
-                              width="50"
-                              height="50"
+                              width="30"
+                              height="30"
                               style={{
                                 objectFit: 'cover',
-                                borderRadius: '5px',
+                                borderRadius: '4px',
                               }}
                             />
                           ) : (
@@ -478,7 +481,7 @@ export default function SubCategories() {
                         </td>
                         <td>{item.primary_categories_name}</td>
                         <td>{item.category_name}</td>
-                        <td className="fw-semibold">{item.subcategory_name}</td>
+                        <td>{item.subcategory_name}</td>
                         <td className="text-center">
                           <Dropdown>
                             <Dropdown.Toggle
@@ -486,7 +489,7 @@ export default function SubCategories() {
                               variant="outline-secondary"
                               className="bg-secondary text-white"
                             >
-                              Action
+                              <BsThreeDotsVertical />
                             </Dropdown.Toggle>
                             <Dropdown.Menu>
                               <Dropdown.Item onClick={() => handleEdit(item)}>
@@ -510,20 +513,20 @@ export default function SubCategories() {
 
             {/* DELETED TAB */}
             <Tab eventKey="deleted" title="Deleted">
-              <table className="table table-bordered table-striped mt-3 shadow-sm bg-white">
-                <thead className="table">
+              <table className="table table-bordered table-striped mt-3 shadow-sm bg-white table-sm w-auto">
+                <thead className="table-dark text-center">
                   <tr>
-                    <th>ID</th>
-                    <th>Image</th>
-                    <th>Primary Category</th>
-                    <th>Category</th>
-                    <th>Subcategory</th>
-                    <th width="120" className="text-center">
+                    <th width="50" className="text-center">ID</th>
+                    <th width="70" className="text-center">Image</th>
+                    <th width="150">Primary Category</th>
+                    <th width="150">Category</th>
+                    <th width="200">Subcategory</th>
+                    <th width="90" className="text-center">
                       Action
                     </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="text-center">
                   {deletedList.length === 0 ? (
                     <tr>
                       <td
@@ -536,17 +539,17 @@ export default function SubCategories() {
                   ) : (
                     deletedList.map((item) => (
                       <tr key={item.id} className="align-middle">
-                        <td>{item.id}</td>
-                        <td>
+                        <td className="text-center">{item.id}</td>
+                        <td className="text-center">
                           {item.image ? (
                             <img
                               src={`http://localhost:5000/uploads/${item.image}`}
                               alt={item.subcategory_name}
-                              width="50"
-                              height="50"
+                              width="30"
+                              height="30"
                               style={{
                                 objectFit: 'cover',
-                                borderRadius: '5px',
+                                borderRadius: '4px',
                               }}
                             />
                           ) : (

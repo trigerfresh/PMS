@@ -15,6 +15,7 @@ import Tabs from 'react-bootstrap/Tabs'
 import Tab from 'react-bootstrap/Tab'
 import Table from 'react-bootstrap/Table'
 import axios from 'axios'
+import { BsThreeDotsVertical } from 'react-icons/bs'
 
 export default function FloorPage() {
   const [hotels, setHotels] = useState([])
@@ -184,7 +185,7 @@ export default function FloorPage() {
               className="form-select"
               value={hotelId}
               onChange={(e) => setHotelId(e.target.value)}
-              style={{ minWidth: '180px' }}
+              style={{ minWidth: '100px' }}
             >
               <option value="">Select Hotel</option>
               {hotels.map((h) => (
@@ -200,7 +201,7 @@ export default function FloorPage() {
             className="search-btn shadow-sm rounded-3"
             onClick={() => setShowSearch(!showSearch)}
             style={{
-              padding: '6px 14px',
+              padding: '1px 6px',
               backgroundColor: '#00baf2',
               border: 'none',
               color: '#ffff',
@@ -290,16 +291,20 @@ export default function FloorPage() {
       {/* TABLE */}
       <div className="card branch-card">
         <div className="card-body p-0">
-          <Table hover bordered responsive className="list-table align-middle mb-0">
-            <thead className="table">
+          <Table
+            hover
+            bordered
+            className="list-table align-middle table-sm w-auto mb-0"
+          >
+            <thead className="table text-center">
               <tr>
-                <th>Floor No</th>
-                <th>Floor Name</th>
-                <th>Action</th>
+                <th width="100" className="text-center">Floor No</th>
+                <th width="200">Floor Name</th>
+                <th width="90" className="text-center">Action</th>
               </tr>
             </thead>
 
-            <tbody>
+            <tbody className="text-center">
               {floors.map((f) => (
                 <tr key={f.floor_id}>
                   <td>{f.floor_number}</td>
@@ -313,7 +318,7 @@ export default function FloorPage() {
                         id={`dropdown-${f.floor_id}`}
                         className="bg-secondary text-white shadow-sm border"
                       >
-                        Action
+                        <BsThreeDotsVertical />
                       </Dropdown.Toggle>
 
                       <Dropdown.Menu>

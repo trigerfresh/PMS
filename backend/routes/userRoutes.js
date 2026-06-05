@@ -10,6 +10,7 @@ const {
   deleteUser,
   getDeletedUsers,
   restoreUser,
+  getUsersSearch,
 } = require('../controllers/userController')
 
 // multer config
@@ -26,6 +27,7 @@ const upload = multer({ storage })
 
 // CREATE USER
 router.post('/', upload.single('profile_image'), createUser)
+router.post('/search', getUsersSearch)
 
 router.put('/restore/:id', restoreUser)
 router.get('/deleted', getDeletedUsers)

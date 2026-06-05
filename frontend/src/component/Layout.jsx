@@ -13,9 +13,9 @@ const Layout = () => {
       {/* Body */}
       <div
         className="page-body-wrapper"
-        // style={{
-        //   width: '106%',
-        // }}
+      // style={{
+      //   width: '106%',
+      // }}
       >
         {/* Sidebar */}
         <Sidebar />

@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-// import SearchPanel from '../../utils/FilterPanel'
-import { FaPen, FaTrashAlt, FaEye, FaPlus, FaSearch, FaArrowLeft } from 'react-icons/fa'
+import SearchPanel from '../../utils/FilterPanel'
+import {
+  FaPen,
+  FaTrashAlt,
+  FaEye,
+  FaPlus,
+  FaSearch,
+  FaArrowLeft,
+} from 'react-icons/fa'
+import { BsThreeDotsVertical } from 'react-icons/bs'
 import {
   Alert,
   Button,
@@ -13,6 +21,8 @@ import {
   Row,
   Table,
   Dropdown,
+  Tabs,
+  Tab,
 } from 'react-bootstrap'
 import defaultImg from './download.jfif'
 
@@ -35,6 +45,9 @@ const Users = () => {
   const [sites, setSites] = useState([])
   const [branches, setBranches] = useState([])
   const [profileImageFile, setProfileImageFile] = useState(null)
+  const [activeTab, setActiveTab] = useState('active')
+
+  const [deletedUsers, setDeletedUsers] = useState([])
   const initialFormData = {
     first_name: '',
     last_name: '',
@@ -63,6 +76,8 @@ const Users = () => {
   const userSearchOptions = [
     { value: 'name', label: 'Name' },
     { value: 'email', label: 'Email' },
+    { value: 'role', label: 'Role' },
+    { value: 'branch_name', label: 'Branch' },
     { value: 'contactNo', label: 'Contact No' },
   ]
 
@@ -72,6 +87,36 @@ const Users = () => {
     return token ? { headers: { Authorization: `Bearer ${token}` } } : {}
   }
 
+  const fetchactiveUsers = async () => {
+    const res = await axios.get(`${API_BASE_URL}/users`)
+    setUsers(res.data)
+  }
+
+  const fetchDeletedUsers = async () => {
+    const res = await axios.get(`${API_BASE_URL}/users/deleted`)
+
+    setDeletedUsers(res.data.data || [])
+  }
+
+  const handleRestore = async (id) => {
+    if (!window.confirm('Restore this user?')) return
+
+    try {
+      await axios.put(
+        `${API_BASE_URL}/users/restore/${id}`,
+        {},
+        getAuthHeaders(),
+      )
+
+      alert('User restored successfully')
+
+      fetchUsers()
+      fetchDeletedUsers()
+    } catch (err) {
+      alert('Failed to restore user')
+    }
+  }
+
   // --- Data Fetching ---
   const fetchUsers = async () => {
     setLoading(true)
@@ -79,16 +124,35 @@ const Users = () => {
     try {
       const params = {}
       const validSearch = searchFields.filter((f) => f.field && f.keyword)
-      if (validSearch.length > 0)
-        params.searchFields = JSON.stringify(validSearch)
+      if (validSearch.length > 0) {
+        validSearch.forEach((f) => {
+          if (f.field === 'name') params.fullname = f.keyword
+          if (f.field === 'email') params.email = f.keyword
+          if (f.field === 'role') params.role = f.keyword
+          if (f.field === 'branch_name') params.branch = f.keyword
+          if (f.field === 'contactNo') params.phone = f.keyword
+        })
+      }
+
       if (dateFilter.from && dateFilter.to) {
         params.fromDate = dateFilter.from
         params.toDate = dateFilter.to
       }
-      const res = await axios.get(`${API_BASE_URL}/users`, {
-        params,
-        ...getAuthHeaders(),
-      })
+
+      let res
+      if (validSearch.length > 0) {
+        // Use the search endpoint which is a POST route taking query params
+        res = await axios.post(`${API_BASE_URL}/users/search`, {}, {
+          params,
+          ...getAuthHeaders(),
+        })
+      } else {
+        // Default to normal GET endpoint
+        res = await axios.get(`${API_BASE_URL}/users`, {
+          params,
+          ...getAuthHeaders(),
+        })
+      }
 
       const data = res.data
 
@@ -592,10 +656,7 @@ const Users = () => {
 
       {/* UNIFIED HEADER */}
       <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-        <h1
-          className="page-title mb-0"
-          style={{ fontSize: '25px' }}
-        >
+        <h1 className="page-title mb-0" style={{ fontSize: '25px' }}>
           {showForm
             ? isEditing
               ? `Edit User - ${isEditing.name || isEditing.fullname || isEditing.first_name}`
@@ -611,7 +672,7 @@ const Users = () => {
               className="search-btn shadow-sm rounded-3"
               onClick={() => setShowSearch(!showSearch)}
               style={{
-                padding: '6px 14px',
+                padding: '1px 6px',
                 backgroundColor: '#00baf2',
                 border: 'none',
                 color: '#fff',
@@ -641,7 +702,7 @@ const Users = () => {
               }
             }}
             style={{
-              padding: '6px 14px',
+              padding: '1px 6px',
               border: 'none',
               display: 'inline-flex',
               alignItems: 'center',
@@ -652,9 +713,13 @@ const Users = () => {
             }}
           >
             {showForm ? (
-              <><FaArrowLeft /> Back to List</>
+              <>
+                <FaArrowLeft /> Back to List
+              </>
             ) : (
-              <><FaPlus /> Create New</>
+              <>
+                <FaPlus /> Create New
+              </>
             )}
           </button>
         </div>
@@ -989,6 +1054,18 @@ const Users = () => {
         </Card>
       )}
 
+      <Tabs
+        activeKey={activeTab}
+        onSelect={(k) => setActiveTab(k)}
+        className="mb-3 custom-bootstrap-tabs"
+        style={{ overflow: 'visible', flexWrap: 'wrap' }}
+      >
+        <Tab eventKey="active" title={`Active Users (${users.length})`} />
+        <Tab
+          eventKey="deleted"
+          title={`Deleted Users (${deletedUsers.length})`}
+        />
+      </Tabs>
       {/* Users List Table */}
       {!showForm && (
         <Card className="user-card">
@@ -1001,88 +1078,117 @@ const Users = () => {
               {error}
             </Alert>
           ) : (
-            <Table responsive bordered hover className="list-table align-middle mb-0">
-              <thead className="table">
+            <Table
+              bordered
+              hover
+              className="list-table align-middle table-sm w-auto mb-0"
+            >
+              <thead className="table text-center">
                 <tr>
-                  <th>Name</th>
-                  <th>Email ID</th>
-                  <th>Role</th>
-                  <th>Branch</th>
-                  <th>Contact No</th>
-                  <th>Actions</th>
+                  <th width="250" className="text-center">
+                    Name
+                  </th>
+                  <th width="200">Email ID</th>
+                  <th width="150">Role</th>
+                  <th width="150">Branch</th>
+                  <th width="120">Contact No</th>
+                  <th width="90" className="text-center">
+                    Actions
+                  </th>
                 </tr>
               </thead>
-              <tbody>
-                {users.length === 0 ? (
-                  <tr className="text-center">
-                    <td colSpan={6}>No data found</td>
-                  </tr>
-                ) : (
-                  users.map((user) => (
-                    <tr key={user.id}>
-                      <td>
-                        <div className="info">
-                          <img
-                            src={
-                              user.profile_image
-                                ? `${import.meta.env.VITE_API_URL}/${user.profile_image.replace(
-                                    /\\/g,
-                                    '/',
-                                  )}`
-                                : defaultImg
-                            }
-                            style={{
-                              height: '50px',
-                            }}
-                            alt={user.first_name}
-                            className="user-avatar"
-                            onError={(e) => {
-                              e.target.src = defaultImg
-                            }}
-                          />
-                          <div className="user-details">
-                            <span className="user-name">
-                              {user.fullname || user.name || user.first_name}
-                            </span>
+              <tbody className="text-center">
+                {activeTab === 'active' ? (
+                  users.length === 0 ? (
+                    <tr>
+                      <td colSpan="6">No active users found</td>
+                    </tr>
+                  ) : (
+                    users.map((user) => (
+                      <tr key={user.id}>
+                        <td>
+                          <div className="info">
+                            <img
+                              src={
+                                user.profile_image
+                                  ? `${import.meta.env.VITE_API_URL}/${user.profile_image.replace(
+                                      /\\/g,
+                                      '/',
+                                    )}`
+                                  : defaultImg
+                              }
+                              style={{
+                                height: '30px',
+                              }}
+                              alt={user.first_name}
+                              className="user-avatar"
+                              onError={(e) => {
+                                e.target.src = defaultImg
+                              }}
+                            />
+                            <div className="user-details">
+                              <span className="user-name">
+                                {user.fullname || user.name || user.first_name}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td>{user.email || 'N/A'}</td>
-                      <td>{user.role || 'N/A'}</td>
-                      <td>
-                        {branches.find(
-                          (b) => String(b.id) === String(user.branch_id),
-                        )?.branch_name || 'N/A'}
-                      </td>{' '}
-                      <td>{user.phone || 'N/A'}</td>
-                      <td>
-                        <div className="text-center">
+                        </td>
+                        <td>{user.email}</td>
+                        <td>{user.role}</td>
+                        <td>{user.branch_name || 'NA'}</td>
+                        <td>{user.phone || 'NA'}</td>
+
+                        <td>
                           <Dropdown>
-                            <Dropdown.Toggle
-                              variant="outline-secondary"
-                              size="sm"
-                              className="bg-secondary text-white shadow-sm border"
-                            >
-                              Action
+                            <Dropdown.Toggle variant="secondary" size="sm">
+                              <BsThreeDotsVertical />
                             </Dropdown.Toggle>
+
                             <Dropdown.Menu>
                               <Dropdown.Item onClick={() => handleView(user)}>
-                                <FaEye className="me-2 text-info" /> View
+                                <FaEye className="me-2 text-info" />
+                                View
                               </Dropdown.Item>
 
                               <Dropdown.Item onClick={() => handleEdit(user)}>
-                                <FaPen className="me-2 text-primary" /> Edit
+                                <FaPen className="me-2 text-primary" />
+                                Edit
                               </Dropdown.Item>
 
                               <Dropdown.Item
                                 className="text-danger"
                                 onClick={() => handleDelete(user.id)}
                               >
-                                <FaTrashAlt className="me-2" /> Delete
+                                <FaTrashAlt className="me-2" />
+                                Delete
                               </Dropdown.Item>
                             </Dropdown.Menu>
                           </Dropdown>
-                        </div>
+                        </td>
+                      </tr>
+                    ))
+                  )
+                ) : deletedUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan="6">No deleted users found</td>
+                  </tr>
+                ) : (
+                  deletedUsers.map((user) => (
+                    <tr key={user.id}>
+                      <td>{user.fullname}</td>
+                      <td>{user.email}</td>
+                      <td>{user.role}</td>
+                      <td>{user.branch_name}</td>
+                      <td>{user.phone}</td>
+
+                      <td>
+                        <Button
+                          size="sm"
+                          variant="success"
+                          onClick={() => handleRestore(user.id)}
+                        >
+                          Restore
+                        </Button>
                       </td>
                     </tr>
                   ))

@@ -4,6 +4,7 @@ import { Tabs, Tab, Dropdown } from 'react-bootstrap'
 import SearchPanel from '../../utils/filterPanel'
 import { FaSearch, FaPlus, FaArrowLeft } from 'react-icons/fa'
 import './Company.css'
+import { BsThreeDotsVertical } from 'react-icons/bs'
 
 const BASE_URL = 'http://localhost:5000/api/category'
 const PRIMARY_URL = 'http://localhost:5000/api/primary-category'
@@ -223,7 +224,9 @@ export default function Categories() {
               ? 'Modify Category'
               : 'Create New Category'
             : 'Category Master'}{' '}
-          {!showForm && <span className="text-success">({activeList.length})</span>}
+          {!showForm && (
+            <span className="text-success">({activeList.length})</span>
+          )}
         </h1>
 
         <div className="page-actions d-flex gap-3 align-items-center">
@@ -233,7 +236,7 @@ export default function Categories() {
               className="search-btn shadow-sm rounded-3"
               onClick={() => setShowSearch(!showSearch)}
               style={{
-                padding: '6px 14px',
+                padding: '1px 6px',
                 backgroundColor: '#00baf2',
                 border: 'none',
                 color: '#ffff',
@@ -241,7 +244,7 @@ export default function Categories() {
                 alignItems: 'center',
                 gap: '8px',
                 fontWeight: '500',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
               }}
             >
               <FaSearch /> {showSearch ? 'Hide Search' : 'Search'}
@@ -250,7 +253,9 @@ export default function Categories() {
 
           <button
             type="button"
-            className="btn-primary shadow-sm rounded-3"
+            className={`btn shadow-sm rounded-3 text-white ${
+              showForm ? 'btn-danger' : 'btn-primary'
+            }`}
             onClick={() => {
               if (showForm) {
                 resetForm()
@@ -260,13 +265,13 @@ export default function Categories() {
               }
             }}
             style={{
-              padding: '6px 14px',
+              padding: '1px 6px',
               border: 'none',
               display: 'inline-flex',
               alignItems: 'center',
               gap: '8px',
               fontWeight: '500',
-              transition: 'all 0.2s'
+              transition: 'all 0.2s',
             }}
           >
             {showForm ? (
@@ -390,27 +395,31 @@ export default function Categories() {
             />
           )}
 
-          <Tabs 
-            activeKey={key} 
+          <Tabs
+            activeKey={key}
             onSelect={(k) => setKey(k)}
             className="mb-3 custom-bootstrap-tabs"
             style={{ overflow: 'visible', flexWrap: 'wrap' }}
           >
             {/* ACTIVE TAB */}
             <Tab eventKey="active" title="Active">
-              <table className="table table-bordered table-striped mt-3 bg-white shadow-sm align-middle">
-                <thead className="table">
+              <table className="table table-bordered table-striped mt-3 bg-white shadow-sm align-middle table-sm w-auto">
+                <thead className="table text-center">
                   <tr>
-                    <th>ID</th>
-                    <th>Image</th>
-                    <th>Primary Category</th>
-                    <th>Category</th>
-                    <th width="120" className="text-center">
+                    <th width="50" className="text-center">
+                      ID
+                    </th>
+                    <th width="70" className="text-center">
+                      Image
+                    </th>
+                    <th width="150">Primary Category</th>
+                    <th width="200">Category</th>
+                    <th width="90" className="text-center">
                       Action
                     </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="text-center">
                   {activeList.length === 0 ? (
                     <tr>
                       <td
@@ -423,17 +432,17 @@ export default function Categories() {
                   ) : (
                     activeList.map((item) => (
                       <tr key={item.id}>
-                        <td>{item.id}</td>
-                        <td>
+                        <td className="text-center">{item.id}</td>
+                        <td className="text-center">
                           {item.image ? (
                             <img
                               src={`http://localhost:5000/uploads/${item.image}`}
                               alt={item.category_name}
-                              width="50"
-                              height="50"
+                              width="30"
+                              height="30"
                               style={{
                                 objectFit: 'cover',
-                                borderRadius: '5px',
+                                borderRadius: '4px',
                               }}
                             />
                           ) : (
@@ -449,7 +458,7 @@ export default function Categories() {
                               variant="outline-secondary"
                               className="bg-secondary text-white"
                             >
-                              Action
+                              <BsThreeDotsVertical />
                             </Dropdown.Toggle>
                             <Dropdown.Menu>
                               <Dropdown.Item onClick={() => handleEdit(item)}>
@@ -473,14 +482,18 @@ export default function Categories() {
 
             {/* DELETED TAB */}
             <Tab eventKey="deleted" title="Deleted">
-              <table className="table table-bordered table-striped mt-3 bg-white shadow-sm align-middle">
+              <table className="table table-bordered table-striped mt-3 bg-white shadow-sm align-middle table-sm w-auto">
                 <thead className="table">
                   <tr>
-                    <th>ID</th>
-                    <th>Image</th>
-                    <th>Primary Category</th>
-                    <th>Category</th>
-                    <th width="120" className="text-center">
+                    <th width="50" className="text-center">
+                      ID
+                    </th>
+                    <th width="70" className="text-center">
+                      Image
+                    </th>
+                    <th width="150">Primary Category</th>
+                    <th width="200">Category</th>
+                    <th width="90" className="text-center">
                       Action
                     </th>
                   </tr>
@@ -498,17 +511,17 @@ export default function Categories() {
                   ) : (
                     deletedList.map((item) => (
                       <tr key={item.id}>
-                        <td>{item.id}</td>
-                        <td>
+                        <td className="text-center">{item.id}</td>
+                        <td className="text-center">
                           {item.image ? (
                             <img
                               src={`http://localhost:5000/uploads/${item.image}`}
                               alt={item.category_name}
-                              width="50"
-                              height="50"
+                              width="30"
+                              height="30"
                               style={{
                                 objectFit: 'cover',
-                                borderRadius: '5px',
+                                borderRadius: '4px',
                               }}
                             />
                           ) : (

@@ -296,3 +296,61 @@ exports.restoreUser = async (req, res) => {
     res.status(500).json({ message: err.message })
   }
 }
+
+exports.getUsersSearch = async (req, res) => {
+  try {
+    const { fullname, email, role, branch, phone } = req.query
+
+    const pool = await poolPromise
+
+    let query = `
+      SELECT u.*, b.branch_name, c.company_name
+      FROM users u
+      LEFT JOIN branch b ON u.branch_id = b.id
+      LEFT JOIN companies c ON u.company_id = c.id
+      WHERE u.active = 0
+    `
+
+    const request = pool.request()
+
+    if (fullname) {
+      query += ` AND u.fullname LIKE '%' + @fullname + '%'`
+      request.input('fullname', sql.NVarChar, fullname)
+    }
+
+    if (email) {
+      query += ` AND u.email LIKE '%' + @email + '%'`
+      request.input('email', sql.NVarChar, email)
+    }
+
+    if (role) {
+      query += ` AND u.role LIKE '%' + @role + '%'`
+      request.input('role', sql.NVarChar, role)
+    }
+
+    if (branch) {
+      query += ` AND b.branch_name LIKE '%' + @branch + '%'`
+      request.input('branch', sql.NVarChar, branch)
+    }
+
+    if (phone) {
+      query += ` AND u.phone LIKE '%' + @phone + '%'`
+      request.input('phone', sql.NVarChar, phone)
+    }
+
+    query += ` ORDER BY u.id DESC`
+
+    const result = await request.query(query)
+
+    res.json({
+      success: true,
+      data: result.recordset,
+    })
+  } catch (err) {
+    console.error('GET USERS ERROR:', err)
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    })
+  }
+}

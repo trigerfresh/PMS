@@ -24,6 +24,7 @@ import {
 import SearchPanel from '../../utils/filterPanel'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import { BsThreeDotsVertical } from 'react-icons/bs'
 
 const BookingMaster = () => {
   const [hotels, setHotels] = useState([])
@@ -940,7 +941,7 @@ const BookingMaster = () => {
               className="search-btn shadow-sm rounded-3"
               onClick={() => setShowSearch(!showSearch)}
               style={{
-                padding: '6px 14px',
+                padding: '1px 6px',
                 backgroundColor: '#00baf2',
                 border: 'none',
                 color: '#fff',
@@ -967,7 +968,7 @@ const BookingMaster = () => {
               }
             }}
             style={{
-              padding: '6px 14px',
+              padding: '1px 6px',
               border: 'none',
               display: 'inline-flex',
               alignItems: 'center',
@@ -1465,34 +1466,34 @@ const BookingMaster = () => {
             {/* TOTAL BOOKINGS */}
             <Tab
               eventKey="all"
-              title={`Total Bookings (${bookingCounts?.total_bookings || 0})`}
+              title={`Total (${bookingCounts?.total_bookings || 0})`}
             />
 
             {/* CURRENT BOOKINGS */}
             <Tab
               eventKey="current"
-              title={`Current Bookings (${bookingCounts?.current_bookings || 0})`}
+              title={`Current (${bookingCounts?.current_bookings || 0})`}
             />
 
             {/* CANCELLED BOOKINGS */}
             <Tab
               eventKey="cancelled"
-              title={`Cancelled Bookings (${bookingCounts?.cancelled_bookings || 0})`}
+              title={`Cancelled (${bookingCounts?.cancelled_bookings || 0})`}
             />
 
             <Tab
               eventKey="reserved"
-              title={`Reserved Bookings (${bookingCounts?.reserved_bookings || 0})`}
+              title={`Reserved (${bookingCounts?.reserved_bookings || 0})`}
             />
 
             <Tab
               eventKey="checkedout"
-              title={`Vacant Bookings (${bookingCounts?.checkedout_bookings || 0})`}
+              title={`Vacant (${bookingCounts?.checkedout_bookings || 0})`}
             />
 
             <Tab
               eventKey="deleted"
-              title={`Deleted Bookings (${bookingCounts?.deleted_bookings || 0})`}
+              title={`Deleted (${bookingCounts?.deleted_bookings || 0})`}
             >
               <Table>
                 <thead>
@@ -1525,12 +1526,8 @@ const BookingMaster = () => {
 
           <Card className="branch-card">
             <h4 className="p-3 mb-0 border-bottom">Bookings List</h4>
-            <Table
-              bordered
-              hover
-              className="list-table align-middle mb-0"
-            >
-              <thead className="table">
+            <Table bordered hover className="list-table align-middle mb-0">
+              <thead className="table text-center">
                 <tr>
                   <th>Room No</th>
                   <th>Guest</th>
@@ -1547,7 +1544,7 @@ const BookingMaster = () => {
                 </tr>
               </thead>
 
-              <tbody>
+              <tbody className="text-center">
                 {filteredBookings.length > 0 ? (
                   filteredBookings.map((b) => (
                     <tr key={b.booking_id}>
@@ -1583,13 +1580,13 @@ const BookingMaster = () => {
 
                         {getCheckoutStatus(b.check_out_date, b.status) ===
                           'overdue' && (
-                            <span className="badge bg-danger ms-2">Overdue</span>
-                          )}
+                          <span className="badge bg-danger ms-2">Overdue</span>
+                        )}
 
                         {getCheckoutStatus(b.check_out_date, b.status) ===
                           'soon' && (
-                            <span className="badge bg-warning ms-2">Soon</span>
-                          )}
+                          <span className="badge bg-warning ms-2">Soon</span>
+                        )}
                       </td>{' '}
                       <td>
                         <span
@@ -1629,7 +1626,7 @@ const BookingMaster = () => {
                             size="sm"
                             className="bg-secondary text-white shadow-sm border"
                           >
-                            Action
+                            <BsThreeDotsVertical />
                           </Dropdown.Toggle>
 
                           <Dropdown.Menu>
@@ -1739,7 +1736,7 @@ const BookingMaster = () => {
                   Math.ceil(
                     (new Date(viewData.check_out_date) -
                       new Date(viewData.check_in_date)) /
-                    (1000 * 60 * 60 * 24),
+                      (1000 * 60 * 60 * 24),
                   ),
                 )}
               </p>

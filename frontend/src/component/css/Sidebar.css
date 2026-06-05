@@ -10,8 +10,9 @@
   width: 70px;
 }
 
-/* hide text in collapsed mode */
-.page-sidebar.collapsed span {
+/* hide text and right-carets in collapsed mode */
+.page-sidebar.collapsed span,
+.page-sidebar.collapsed .pull-right {
   display: none;
 }
 

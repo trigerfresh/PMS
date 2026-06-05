@@ -34,7 +34,15 @@ const MainHeader = () => {
                   className=""
                 /> */}
 
-              <input id="sidebar-toggle" type="checkbox" defaultChecked />
+              <input 
+                id="sidebar-toggle" 
+                type="checkbox" 
+                defaultChecked 
+                onChange={(e) => {
+                  const isCollapsed = !e.target.checked;
+                  window.dispatchEvent(new CustomEvent('toggleSidebar', { detail: isCollapsed }));
+                }}
+              />
               <span className="switch-state"></span>
             </label>
           </div>

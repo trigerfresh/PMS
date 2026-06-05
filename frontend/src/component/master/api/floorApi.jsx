@@ -5,10 +5,28 @@ const API = 'http://localhost:5000/api'
 // export const getFloorsByHotel = (hotel_id) =>
 //   axios.get(`${API}/floors/${hotel_id}`)
 
-export const getFloorsByHotel = (hotelId, searchFields = []) => {
+// export const getFloorsByHotel = (hotelId, searchFields = []) => {
+//   return axios.get(`${API}/floors/${hotelId}`, {
+//     params: {
+//       searchFields: JSON.stringify(searchFields),
+//     },
+//   })
+// }
+
+// export const getFloorsByHotel = (hotelId, searchFields, status) => {
+//   return axios.get(`${API}/floors/${hotelId}`, {
+//     params: {
+//       searchFields: JSON.stringify(searchFields),
+//       status, // ✅ ADD THIS
+//     },
+//   })
+// }
+
+export const getFloorsByHotel = (hotelId, searchFields = [], status = '0') => {
   return axios.get(`${API}/floors/${hotelId}`, {
     params: {
       searchFields: JSON.stringify(searchFields),
+      status,
     },
   })
 }

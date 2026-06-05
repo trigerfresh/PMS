@@ -167,7 +167,7 @@ exports.restoreFloor = async (req, res) => {
 exports.getFloorsByHotel = async (req, res) => {
   try {
     const { hotel_id } = req.params
-    const { searchFields } = req.query
+    const { searchFields, status } = req.query
 
     const pool = await poolPromise
     const request = pool.request()
@@ -178,10 +178,16 @@ exports.getFloorsByHotel = async (req, res) => {
       SELECT *
       FROM floor_master
       WHERE hotel_id = @hotel_id
-        AND active = '0'
     `
 
-    // MULTI SEARCH
+    // ✅ ACTIVE / DELETED FILTER FIX
+    if (status === '0') {
+      query += ` AND active = '0'`
+    } else if (status === '1') {
+      query += ` AND active = '1'`
+    }
+
+    // SEARCH
     if (searchFields) {
       const fields = JSON.parse(searchFields)
 

@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-import { FaPlus, FaSearch, FaPen, FaTrashAlt, FaEye, FaArrowLeft } from 'react-icons/fa' // Import icons
+import {
+  FaPlus,
+  FaSearch,
+  FaPen,
+  FaTrashAlt,
+  FaEye,
+  FaArrowLeft,
+} from 'react-icons/fa' // Import icons
 import SearchPanel from '../../utils/FilterPanel'
 import {
   Alert,
@@ -17,6 +24,7 @@ import {
 } from 'react-bootstrap'
 
 import Dropdown from 'react-bootstrap/Dropdown'
+import { BsThreeDotsVertical } from 'react-icons/bs'
 
 const HotelPage = () => {
   const [branches, setBranches] = useState([])
@@ -102,22 +110,30 @@ const HotelPage = () => {
         params.toDate = dateFilter.to
       }
 
-      // 👇 ADD THIS
-      if (statusFilter !== 'all') {
-        params.status = statusFilter
-      }
-
-      const res = await axios.get(`http://localhost:5000/api/hotels`, {
-        params,
+      // Fetch active hotels
+      const activeRes = await axios.get(`http://localhost:5000/api/hotels`, {
+        params: { ...params, status: 'active' },
         ...getAuthHeaders(),
       })
+      const activeData = activeRes.data.data || []
 
-      setBranches(res.data.data)
+      // Fetch deleted hotels
+      const deletedRes = await axios.get(`http://localhost:5000/api/hotels`, {
+        params: { ...params, status: 'deleted' },
+        ...getAuthHeaders(),
+      })
+      const deletedData = deletedRes.data.data || []
+
+      if (statusFilter === 'deleted') {
+        setBranches(deletedData)
+      } else {
+        setBranches(activeData)
+      }
 
       setCounts({
-        totalHotels: res.data.data.filter((h) => h.active == 0).length,
-        approvedHotels: res.data.data.filter((h) => h.active == 0).length,
-        deletedHotels: res.data.data.filter((h) => h.active == 1).length,
+        totalHotels: activeData.length + deletedData.length,
+        approvedHotels: activeData.length,
+        deletedHotels: deletedData.length,
       })
     } catch (err) {
       setError('Failed to load branches.', err)
@@ -473,7 +489,9 @@ const HotelPage = () => {
               ? 'Edit Hotel'
               : 'Create Hotel'
             : 'Hotel Management'}{' '}
-          {!showForm && <span className="text-success">({branches.length})</span>}
+          {!showForm && (
+            <span className="text-success">({branches.length})</span>
+          )}
         </h1>
         <div className="page-actions d-flex gap-3 align-items-center">
           {!showForm && (
@@ -482,7 +500,7 @@ const HotelPage = () => {
               className="search-btn shadow-sm rounded-3"
               onClick={() => setShowSearch(!showSearch)}
               style={{
-                padding: '6px 14px',
+                padding: '1px 6px',
                 backgroundColor: '#00baf2',
                 border: 'none',
                 color: '#ffff',
@@ -490,7 +508,7 @@ const HotelPage = () => {
                 alignItems: 'center',
                 gap: '8px',
                 fontWeight: '500',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
               }}
             >
               <FaSearch /> {showSearch ? 'Hide Search' : 'Search'}
@@ -510,14 +528,14 @@ const HotelPage = () => {
               }
             }}
             style={{
-              padding: '6px 14px',
+              padding: '1px 6px',
               border: 'none',
               display: 'inline-flex',
               alignItems: 'center',
               gap: '8px',
               fontWeight: '500',
               transition: 'all 0.2s',
-              color: '#fff'
+              color: '#fff',
             }}
           >
             {showForm ? (
@@ -555,9 +573,15 @@ const HotelPage = () => {
             className="mb-3 custom-bootstrap-tabs"
             style={{ overflow: 'visible', flexWrap: 'wrap' }}
           >
-            <Tab eventKey="all" title={`Total Hotels (${counts.totalHotels})`} />
-            <Tab eventKey="approved" title={`Approved Hotels (${counts.approvedHotels})`} />
-            <Tab eventKey="deleted" title={`Deleted Hotels (${counts.deletedHotels})`} />
+            {/* <Tab eventKey="all" title={`Total Hotels (${counts.totalHotels})`} /> */}
+            <Tab
+              eventKey="approved"
+              title={`Approved (${counts.approvedHotels})`}
+            />
+            <Tab
+              eventKey="deleted"
+              title={`Deleted (${counts.deletedHotels})`}
+            />
           </Tabs>
         </div>
       )}
@@ -860,7 +884,7 @@ const HotelPage = () => {
               responsive
               className="list-table align-middle"
             >
-              <thead className="table">
+              <thead className="table text-center">
                 <tr>
                   <th>Hotel Name</th>
                   <th>Branch Name</th>
@@ -870,7 +894,7 @@ const HotelPage = () => {
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="text-center">
                 {branches.length === 0 ? (
                   <tr className="text-center">
                     <td colSpan={5}>No data found</td>
@@ -891,7 +915,7 @@ const HotelPage = () => {
                             id={`dropdown-${branch.id}`}
                             className="bg-secondary text-white shadow-sm border"
                           >
-                            Action
+                            <BsThreeDotsVertical />
                           </Dropdown.Toggle>
 
                           <Dropdown.Menu>

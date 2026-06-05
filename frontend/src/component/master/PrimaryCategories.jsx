@@ -4,6 +4,7 @@ import { Tabs, Tab, Dropdown } from 'react-bootstrap'
 import SearchPanel from '../../utils/filterPanel'
 import { FaSearch, FaPlus, FaArrowLeft } from 'react-icons/fa'
 import './Company.css'
+import { BsThreeDotsVertical } from 'react-icons/bs'
 
 const BASE_URL = 'http://localhost:5000/api/primary-category'
 
@@ -196,7 +197,7 @@ export default function PrimaryCategories() {
               className="search-btn shadow-sm rounded-3"
               onClick={() => setShowSearch(!showSearch)}
               style={{
-                padding: '6px 14px',
+                padding: '1px 6px',
                 backgroundColor: '#00baf2',
                 border: 'none',
                 color: '#ffff',
@@ -213,7 +214,7 @@ export default function PrimaryCategories() {
 
           <button
             type="button"
-            className={`btn shadow-sm rounded-3 text-white d-flex align-items-center gap-2 px-4 py-2 ${
+            className={`btn shadow-sm rounded-3 text-white ${
               showForm ? 'btn-danger' : 'btn-primary'
             }`}
             onClick={() => {
@@ -225,9 +226,13 @@ export default function PrimaryCategories() {
               }
             }}
             style={{
+              padding: '1px 6px',
               border: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
               fontWeight: '500',
-              transition: 'all 0.2s ease',
+              transition: 'all 0.2s',
             }}
           >
             {showForm ? (
@@ -340,18 +345,22 @@ export default function PrimaryCategories() {
             {/* ACTIVE TAB */}
             <Tab eventKey="active" title="Active">
               <div className="table-responsive" style={{ overflowX: 'auto' }}>
-                <table className="table table-bordered table-striped bg-white shadow-sm align-middle mb-0">
-                  <thead className="table">
+                <table className="table table-bordered table-striped bg-white shadow-sm align-middle table-sm w-auto mb-0">
+                  <thead className="table text-center">
                     <tr>
-                      <th style={{ width: '80px' }}>ID</th>
-                      <th>Name</th>
-                      <th style={{ width: '150px' }}>Image</th>
-                      <th style={{ width: '120px' }} className="text-center">
+                      <th width="50" className="text-center">
+                        ID
+                      </th>
+                      <th width="200">Name</th>
+                      <th width="70" className="text-center">
+                        Image
+                      </th>
+                      <th width="90" className="text-center">
                         Action
                       </th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="text-center">
                     {activeList.length === 0 ? (
                       <tr>
                         <td
@@ -364,20 +373,18 @@ export default function PrimaryCategories() {
                     ) : (
                       activeList.map((item) => (
                         <tr key={item.id}>
-                          <td>{item.id}</td>
-                          <td className="fw-semibold">
-                            {item.primary_categories_name}
-                          </td>
-                          <td>
+                          <td className="text-center">{item.id}</td>
+                          <td>{item.primary_categories_name}</td>
+                          <td className="text-center">
                             {item.image ? (
                               <img
                                 src={`http://localhost:5000/uploads/${item.image}`}
                                 alt=""
-                                width="45"
-                                height="45"
+                                width="30"
+                                height="30"
                                 style={{
                                   objectFit: 'cover',
-                                  borderRadius: '5px',
+                                  borderRadius: '4px',
                                 }}
                               />
                             ) : (
@@ -389,10 +396,9 @@ export default function PrimaryCategories() {
                               <Dropdown.Toggle
                                 variant="outline-secondary"
                                 size="sm"
-                                className='bg-secondary text-white'
-
+                                className="bg-secondary text-white"
                               >
-                                Action
+                                <BsThreeDotsVertical />
                               </Dropdown.Toggle>
                               <Dropdown.Menu>
                                 <Dropdown.Item onClick={() => handleEdit(item)}>
@@ -418,18 +424,22 @@ export default function PrimaryCategories() {
             {/* DELETED TAB */}
             <Tab eventKey="deleted" title="Deleted">
               <div className="table-responsive" style={{ overflowX: 'auto' }}>
-                <table className="table table-bordered table-striped bg-white shadow-sm align-middle mb-0">
-                  <thead className="table-dark">
+                <table className="table table-bordered table-striped bg-white shadow-sm align-middle table-sm w-auto mb-0">
+                  <thead className="table-dark text-center">
                     <tr>
-                      <th style={{ width: '80px' }}>ID</th>
-                      <th>Name</th>
-                      <th style={{ width: '150px' }}>Image</th>
-                      <th style={{ width: '120px' }} className="text-center">
+                      <th width="50" className="text-center">
+                        ID
+                      </th>
+                      <th width="200">Name</th>
+                      <th width="70" className="text-center">
+                        Image
+                      </th>
+                      <th width="90" className="text-center">
                         Action
                       </th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="text-center">
                     {deletedList.length === 0 ? (
                       <tr>
                         <td
@@ -442,18 +452,18 @@ export default function PrimaryCategories() {
                     ) : (
                       deletedList.map((item) => (
                         <tr key={item.id}>
-                          <td>{item.id}</td>
+                          <td className="text-center">{item.id}</td>
                           <td>{item.primary_categories_name}</td>
-                          <td>
+                          <td className="text-center">
                             {item.image ? (
                               <img
                                 src={`http://localhost:5000/uploads/${item.image}`}
                                 alt=""
-                                width="45"
-                                height="45"
+                                width="30"
+                                height="30"
                                 style={{
                                   objectFit: 'cover',
-                                  borderRadius: '5px',
+                                  borderRadius: '4px',
                                 }}
                               />
                             ) : (

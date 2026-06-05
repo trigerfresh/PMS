@@ -1435,6 +1435,7 @@ router.get('/bookings-counts', async (req, res) => {
       SELECT
         COUNT(*) AS total_bookings,
 
+        
         SUM(
           CASE
             WHEN LOWER(ISNULL(status,'')) = 'cancelled'

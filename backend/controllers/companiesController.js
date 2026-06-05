@@ -646,3 +646,23 @@ exports.getDeletedCompanies = async (req, res) => {
     })
   }
 }
+
+exports.getCompanyCounts = async (req, res) => {
+  try {
+    const pool = await poolPromise
+
+    const result = await pool.request().query(`
+      SELECT
+        COUNT(*) totalCompanies,
+        SUM(CASE WHEN active = 0 THEN 1 ELSE 0 END) approvedCompanies,
+        SUM(CASE WHEN active = 1 THEN 1 ELSE 0 END) deletedCompanies
+      FROM companies
+    `)
+
+    res.json(result.recordset[0])
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    })
+  }
+}

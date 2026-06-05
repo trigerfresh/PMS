@@ -24,6 +24,7 @@ import {
   Tabs,
   Tab,
 } from 'react-bootstrap'
+import { BsThreeDotsVertical } from 'react-icons/bs'
 
 const BranchPage = () => {
   const [branches, setBranches] = useState([])
@@ -91,23 +92,30 @@ const BranchPage = () => {
         params.fromDate = dateFilter.from
         params.toDate = dateFilter.to
       }
-      if (statusFilter === 'approved') {
-        params.status = 'active'
-      } else if (statusFilter === 'deleted') {
-        params.status = 'deleted'
-      }
-      const res = await axios.get(`http://localhost:5000/api/branch`, {
-        params,
+      // Fetch active branches
+      const activeRes = await axios.get(`http://localhost:5000/api/branch`, {
+        params: { ...params, status: 'active' },
         ...getAuthHeaders(),
       })
-      setBranches(res.data.data)
+      const activeData = activeRes.data.data || []
 
-      const all = res.data.data
+      // Fetch deleted branches
+      const deletedRes = await axios.get(`http://localhost:5000/api/branch`, {
+        params: { ...params, status: 'deleted' },
+        ...getAuthHeaders(),
+      })
+      const deletedData = deletedRes.data.data || []
+
+      if (statusFilter === 'deleted') {
+        setBranches(deletedData)
+      } else {
+        setBranches(activeData)
+      }
 
       setCounts({
-        totalBranches: all.length,
-        approvedBranches: all.filter((b) => b.active == 0).length,
-        deletedBranches: all.filter((b) => b.active == 1).length,
+        totalBranches: activeData.length + deletedData.length,
+        approvedBranches: activeData.length,
+        deletedBranches: deletedData.length,
       })
     } catch (err) {
       if (err.response?.status === 401) {
@@ -416,7 +424,7 @@ const BranchPage = () => {
               className="search-btn shadow-sm rounded-3"
               onClick={() => setShowSearch(!showSearch)}
               style={{
-                padding: '6px 14px',
+                padding: '1px 6px',
                 backgroundColor: '#00baf2',
                 border: 'none',
                 color: '#ffff',
@@ -444,7 +452,7 @@ const BranchPage = () => {
               }
             }}
             style={{
-              padding: '6px 14px',
+              padding: '1px 6px',
               border: 'none',
               display: 'inline-flex',
               alignItems: 'center',
@@ -681,17 +689,17 @@ const BranchPage = () => {
             onSelect={(key) => setStatusFilter(key)}
             className="mb-3 custom-bootstrap-tabs"
           >
-            <Tab
+            {/* <Tab
               eventKey="all"
-              title={`Total Branches (${counts.totalBranches})`}
-            />
+              title={`Total (${counts.totalBranches})`}
+            /> */}
             <Tab
               eventKey="approved"
-              title={`Approved Branches (${counts.approvedBranches})`}
+              title={`Approved (${counts.approvedBranches})`}
             />
             <Tab
               eventKey="deleted"
-              title={`Deleted Branches (${counts.deletedBranches})`}
+              title={`Deleted (${counts.deletedBranches})`}
             />
           </Tabs>
         </div>
@@ -712,19 +720,18 @@ const BranchPage = () => {
             <Table
               hover
               bordered
-              responsive
-              className="list-table align-middle"
+              className="list-table align-middle table-sm w-auto"
             >
-              <thead className="table">
+              <thead className="table text-center">
                 <tr>
-                  <th>Branch Name</th>
-                  <th>Address</th>
-                  <th>Pincode</th>
-                  <th>Companies</th>
-                  <th>Actions</th>
+                  <th width="150">Branch Name</th>
+                  <th width="200">Address</th>
+                  <th width="100">Pincode</th>
+                  <th width="200">Companies</th>
+                  <th width="90">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="text-center">
                 {branches.length === 0 ? (
                   <tr className="text-center">
                     <td colSpan={5}>No data found</td>
@@ -745,7 +752,7 @@ const BranchPage = () => {
                             id={`dropdown-${branch.id}`}
                             className="bg-secondary text-white shadow-sm border"
                           >
-                            Action
+                            <BsThreeDotsVertical />
                           </Dropdown.Toggle>
 
                           <Dropdown.Menu>

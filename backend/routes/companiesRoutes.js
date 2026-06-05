@@ -26,6 +26,8 @@ router.post(
   companyController.createCompany,
 )
 
+router.get('/counts', companyController.getCompanyCounts)
+
 router.put('/restore/:id', authMiddleware, companyController.restoreCompany)
 
 // READ ALL

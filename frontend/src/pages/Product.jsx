@@ -2,7 +2,15 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { Tabs, Tab, Dropdown, Modal, Table } from 'react-bootstrap'
 import SearchPanel from '../utils/filterPanel'
-import { FaSearch, FaPlus, FaArrowLeft, FaPen, FaTrashAlt, FaEye } from 'react-icons/fa'
+import {
+  FaSearch,
+  FaPlus,
+  FaArrowLeft,
+  FaPen,
+  FaTrashAlt,
+  FaEye,
+} from 'react-icons/fa'
+import { BsThreeDotsVertical } from 'react-icons/bs'
 
 const PRODUCT_URL = 'http://localhost:5000/api/product'
 const PRIMARY_URL = 'http://localhost:5000/api/primary-category'
@@ -45,6 +53,18 @@ export default function ProductPage() {
   const [image3, setImage3] = useState(null)
   const [image4, setImage4] = useState(null)
 
+  const [availableForDays, setAvailableForDays] = useState([])
+  const [startTime, setStartTime] = useState('')
+  const [endTime, setEndTime] = useState('')
+
+  const [availability, setAvailability] = useState([
+    {
+      available_day: '',
+      start_time: '',
+      end_time: '',
+    },
+  ])
+
   const [showView, setShowView] = useState(false)
   const [viewItem, setViewItem] = useState(null)
   const [existingImages, setExistingImages] = useState({
@@ -64,9 +84,9 @@ export default function ProductPage() {
     'sunday',
   ]
 
-  const [availableForDays, setAvailableForDays] = useState([])
-  const [startTime, setStartTime] = useState('')
-  const [endTime, setEndTime] = useState('')
+  // const [availableForDays, setAvailableForDays] = useState([])
+  // const [startTime, setStartTime] = useState('')
+  // const [endTime, setEndTime] = useState('')
 
   const [tab, setTab] = useState('active')
   const [searchFields, setSearchFields] = useState([
@@ -152,6 +172,31 @@ export default function ProductPage() {
     })
   }
 
+  const handleAvailabilityChange = (index, field, value) => {
+    const updated = [...availability]
+
+    updated[index][field] = value
+
+    setAvailability(updated)
+  }
+
+  const removeAvailabilityRow = (index) => {
+    const updated = [...availability]
+    updated.splice(index, 1)
+    setAvailability(updated)
+  }
+
+  const addAvailabilityRow = () => {
+    setAvailability([
+      ...availability,
+      {
+        available_day: '',
+        start_time: '',
+        end_time: '',
+      },
+    ])
+  }
+
   const handleSearch = async () => {
     try {
       let params = {}
@@ -210,17 +255,11 @@ export default function ProductPage() {
     formData.append('price', price)
 
     // NEW FIELDS
-    // formData.append('available_for_days', availableForDays)
-    formData.append('start_time', startTime || '')
-    formData.append('end_time', endTime || '')
     if (image1) formData.append('image1', image1)
     if (image2) formData.append('image2', image2)
     if (image3) formData.append('image3', image3)
     if (image4) formData.append('image4', image4)
-    formData.append(
-      'available_for_days',
-      availableForDays.length ? availableForDays.join(',') : '',
-    )
+    formData.append('availability', JSON.stringify(availability))
     if (editId) {
       await axios.put(`${PRODUCT_URL}/${editId}`, formData)
     } else {
@@ -242,10 +281,6 @@ export default function ProductPage() {
     setGst('')
     setPrice('')
 
-    // setAvailableForDays('')
-    setStartTime('')
-    setEndTime('')
-
     setImage1(null)
     setImage2(null)
     setImage3(null)
@@ -257,7 +292,13 @@ export default function ProductPage() {
       image3: '',
       image4: '',
     })
-    setAvailableForDays([])
+    setAvailability([
+      {
+        available_day: '',
+        start_time: '',
+        end_time: '',
+      },
+    ])
   }
 
   // ================= EDIT =================
@@ -272,16 +313,21 @@ export default function ProductPage() {
     setGst(item.gst || '')
     setPrice(item.price || '')
 
-    // ✅ FIX DAYS (always array)
-    setAvailableForDays(
-      item.available_for_days
-        ? item.available_for_days.split(',').map((d) => d.trim().toLowerCase())
-        : [],
+    setAvailability(
+      item.availability?.length
+        ? item.availability.map((a) => ({
+            available_day: a.available_day,
+            start_time: a.start_time?.substring(0, 5),
+            end_time: a.end_time?.substring(0, 5),
+          }))
+        : [
+            {
+              available_day: '',
+              start_time: '',
+              end_time: '',
+            },
+          ],
     )
-
-    // ✅ FIX TIME (convert DB format safely)
-    setStartTime(formatTime(item.start_time))
-    setEndTime(formatTime(item.end_time))
     setExistingImages({
       image1: item.image1 || '',
       image2: item.image2 || '',
@@ -339,16 +385,15 @@ export default function ProductPage() {
     <div className="page-container">
       {/* UNIFIED HEADER */}
       <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-        <h1
-          className="page-title mb-0"
-          style={{ fontSize: '25px' }}
-        >
+        <h1 className="page-title mb-0" style={{ fontSize: '25px' }}>
           {showForm
             ? editId
               ? 'Edit Product'
               : 'Add New Product'
             : 'Product Master'}{' '}
-          {!showForm && <span className="text-success">({activeList.length})</span>}
+          {!showForm && (
+            <span className="text-success">({activeList.length})</span>
+          )}
         </h1>
 
         <div className="page-actions d-flex gap-3 align-items-center">
@@ -358,7 +403,7 @@ export default function ProductPage() {
               className="search-btn shadow-sm rounded-3"
               onClick={() => setShowSearch(!showSearch)}
               style={{
-                padding: '6px 14px',
+                padding: '1px 6px',
                 backgroundColor: '#00baf2',
                 border: 'none',
                 color: '#fff',
@@ -386,7 +431,7 @@ export default function ProductPage() {
               }
             }}
             style={{
-              padding: '6px 14px',
+              padding: '1px 6px',
               border: 'none',
               display: 'inline-flex',
               alignItems: 'center',
@@ -397,9 +442,13 @@ export default function ProductPage() {
             }}
           >
             {showForm ? (
-              <><FaArrowLeft /> Back to List</>
+              <>
+                <FaArrowLeft /> Back to List
+              </>
             ) : (
-              <><FaPlus /> Create New</>
+              <>
+                <FaPlus /> Create New
+              </>
             )}
           </button>
         </div>
@@ -424,7 +473,7 @@ export default function ProductPage() {
           onSubmit={handleSubmit}
           className="card p-4 shadow-sm border-0 rounded-3 mb-4"
         >
-          <h5 className="mb-3 text-secondary">Product Details</h5>
+          <h5 className="mb-3">Product Details</h5>
           <div className="row g-3">
             <div className="col-md-4">
               <label className="form-label fw-bold small">
@@ -527,103 +576,145 @@ export default function ProductPage() {
               />
             </div>
 
-            <div className="col-md-12">
-              <label className="form-label fw-bold small">Available Days</label>
+            <h5 className="mt-4">Product Images</h5>
+            <div className="row g-3">
+              <div className="col-md-3">
+                <input
+                  type="file"
+                  className="form-control"
+                  onChange={(e) => setImage1(e.target.files[0])}
+                />
 
-              <div className="d-flex flex-wrap gap-3 mt-2">
-                {DAYS.map((day) => (
-                  <label key={day} className="form-check">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      checked={availableForDays.includes(day.toLowerCase())}
-                      onChange={() => handleDayChange(day)}
-                    />
-                    <span className="form-check-label">{day}</span>
-                  </label>
-                ))}
+                {existingImages.image1 && !image1 && (
+                  <img
+                    src={`http://localhost:5000/uploads/${existingImages.image1}`}
+                    width="60"
+                    className="mt-2"
+                  />
+                )}
+              </div>
+              <div className="col-md-3">
+                <input
+                  type="file"
+                  className="form-control"
+                  onChange={(e) => setImage2(e.target.files[0])}
+                />
+                {existingImages.image2 && !image2 && (
+                  <img
+                    src={`http://localhost:5000/uploads/${existingImages.image2}`}
+                    width="60"
+                    className="mt-2"
+                  />
+                )}
+              </div>
+              <div className="col-md-3">
+                <input
+                  type="file"
+                  className="form-control"
+                  onChange={(e) => setImage3(e.target.files[0])}
+                />
+                {existingImages.image3 && !image3 && (
+                  <img
+                    src={`http://localhost:5000/uploads/${existingImages.image3}`}
+                    width="60"
+                    className="mt-2"
+                  />
+                )}
+              </div>
+              <div className="col-md-3">
+                <input
+                  type="file"
+                  className="form-control"
+                  onChange={(e) => setImage4(e.target.files[0])}
+                />
+                {existingImages.image4 && !image4 && (
+                  <img
+                    src={`http://localhost:5000/uploads/${existingImages.image4}`}
+                    width="60"
+                    className="mt-2"
+                  />
+                )}
               </div>
             </div>
 
-            <div className="col-md-4">
-              <label className="form-label fw-bold small">Start Time</label>
-              <input
-                type="time"
-                className="form-control"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-              />
-            </div>
+            <div className="col-md-12">
+              <label className="form-label fw-bold">Product Availability</label>
 
-            <div className="col-md-4">
-              <label className="form-label fw-bold small">End Time</label>
-              <input
-                type="time"
-                className="form-control"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-              />
-            </div>
-          </div>
+              {availability.map((item, index) => (
+                <div key={index} className="row mb-2 align-items-end">
+                  <div className="col-md-3">
+                    <select
+                      className="form-control"
+                      value={item.available_day}
+                      onChange={(e) =>
+                        handleAvailabilityChange(
+                          index,
+                          'available_day',
+                          e.target.value,
+                        )
+                      }
+                    >
+                      <option value="">Select Day</option>
 
-          <h5 className="mt-4 mb-3 text-secondary">Product Images</h5>
-          <div className="row g-3">
-            <div className="col-md-3">
-              <input
-                type="file"
-                className="form-control"
-                onChange={(e) => setImage1(e.target.files[0])}
-              />
+                      <option value="Monday">Monday</option>
+                      <option value="Tuesday">Tuesday</option>
+                      <option value="Wednesday">Wednesday</option>
+                      <option value="Thursday">Thursday</option>
+                      <option value="Friday">Friday</option>
+                      <option value="Saturday">Saturday</option>
+                      <option value="Sunday">Sunday</option>
+                    </select>
+                  </div>
 
-              {existingImages.image1 && !image1 && (
-                <img
-                  src={`http://localhost:5000/uploads/${existingImages.image1}`}
-                  width="60"
-                  className="mt-2"
-                />
-              )}
-            </div>
-            <div className="col-md-3">
-              <input
-                type="file"
-                className="form-control"
-                onChange={(e) => setImage2(e.target.files[0])}
-              />
-              {existingImages.image2 && !image2 && (
-                <img
-                  src={`http://localhost:5000/uploads/${existingImages.image2}`}
-                  width="60"
-                  className="mt-2"
-                />
-              )}
-            </div>
-            <div className="col-md-3">
-              <input
-                type="file"
-                className="form-control"
-                onChange={(e) => setImage3(e.target.files[0])}
-              />
-              {existingImages.image3 && !image3 && (
-                <img
-                  src={`http://localhost:5000/uploads/${existingImages.image3}`}
-                  width="60"
-                  className="mt-2"
-                />
-              )}
-            </div>
-            <div className="col-md-3">
-              <input
-                type="file"
-                className="form-control"
-                onChange={(e) => setImage4(e.target.files[0])}
-              />
-              {existingImages.image4 && !image4 && (
-                <img
-                  src={`http://localhost:5000/uploads/${existingImages.image4}`}
-                  width="60"
-                  className="mt-2"
-                />
-              )}
+                  <div className="col-md-3">
+                    <input
+                      type="time"
+                      className="form-control"
+                      value={item.start_time}
+                      onChange={(e) =>
+                        handleAvailabilityChange(
+                          index,
+                          'start_time',
+                          e.target.value,
+                        )
+                      }
+                    />
+                  </div>
+
+                  <div className="col-md-3">
+                    <input
+                      type="time"
+                      className="form-control"
+                      value={item.end_time}
+                      onChange={(e) =>
+                        handleAvailabilityChange(
+                          index,
+                          'end_time',
+                          e.target.value,
+                        )
+                      }
+                    />
+                  </div>
+
+                  <div className="col-md-3">
+                    <button
+                      type="button"
+                      className="btn btn-danger"
+                      onClick={() => removeAvailabilityRow(index)}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              <button
+                type="button"
+                className="btn btn-primary mt-2"
+                onClick={addAvailabilityRow}
+              >
+                + Add Time Slot
+              </button>
             </div>
           </div>
 
@@ -652,10 +743,15 @@ export default function ProductPage() {
             className="mb-3 custom-bootstrap-tabs"
             style={{ overflow: 'visible', flexWrap: 'wrap' }}
           >
-            <Tab eventKey="active" title={`Active Products (${activeList.length})`}>
+            <Tab eventKey="active" title={`Active (${activeList.length})`}>
               <div className="table-responsive">
-                <Table hover bordered responsive className="list-table align-middle mb-0">
-                  <thead className="table">
+                <Table
+                  hover
+                  bordered
+                  responsive
+                  className="list-table align-middle mb-0"
+                >
+                  <thead className="table text-center">
                     <tr>
                       <th>ID</th>
                       <th>Primary</th>
@@ -668,7 +764,7 @@ export default function ProductPage() {
                       <th>Action</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="text-center">
                     {activeList.map((item) => (
                       <tr key={item.id}>
                         <td>{item.id}</td>
@@ -692,7 +788,7 @@ export default function ProductPage() {
                               size="sm"
                               className="bg-secondary text-white shadow-sm border"
                             >
-                              Action
+                              <BsThreeDotsVertical />
                             </Dropdown.Toggle>
                             <Dropdown.Menu>
                               <Dropdown.Item onClick={() => handleView(item)}>
@@ -729,10 +825,15 @@ export default function ProductPage() {
               </div>
             </Tab>
 
-            <Tab eventKey="deleted" title={`Deleted Products (${deletedList.length})`}>
+            <Tab eventKey="deleted" title={`Deleted (${deletedList.length})`}>
               <div className="table-responsive">
-                <Table hover bordered responsive className="list-table align-middle mb-0">
-                  <thead className="table">
+                <Table
+                  hover
+                  bordered
+                  responsive
+                  className="list-table align-middle mb-0"
+                >
+                  <thead className="table text-center">
                     <tr>
                       <th>ID</th>
                       <th>Product Name</th>
@@ -742,7 +843,7 @@ export default function ProductPage() {
                       <th>Action</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="text-center">
                     {deletedList.map((item) => (
                       <tr key={item.id}>
                         <td>{item.id}</td>
@@ -756,10 +857,12 @@ export default function ProductPage() {
                               size="sm"
                               className="bg-secondary text-white shadow-sm border"
                             >
-                              Action
+                              <BsThreeDotsVertical />
                             </Dropdown.Toggle>
                             <Dropdown.Menu>
-                              <Dropdown.Item onClick={() => handleRestore(item.id)}>
+                              <Dropdown.Item
+                                onClick={() => handleRestore(item.id)}
+                              >
                                 ♻️ Restore
                               </Dropdown.Item>
                             </Dropdown.Menu>
@@ -816,23 +919,21 @@ export default function ProductPage() {
                   <b>Price:</b> ₹ {viewItem.price}
                 </p>
 
-                <p>
-                  <b>Available Days:</b>{' '}
-                  {viewItem.available_for_days
-                    ? viewItem.available_for_days
-                        .split(',')
-                        .map((d) => d.trim())
-                        .join(', ')
-                    : '-'}
-                </p>
+                <div>
+                  <b>Availability:</b>
 
-                <p>
-                  <b>Start Time:</b> {formatTime(viewItem.start_time)}
-                </p>
-
-                <p>
-                  <b>End Time:</b> {formatTime(viewItem.end_time)}
-                </p>
+                  <ul className="mt-2">
+                    {viewItem.availability?.map((slot, index) => (
+                      <li key={index}>
+                        {slot.available_day}
+                        {' | '}
+                        {slot.start_time}
+                        {' - '}
+                        {slot.end_time}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
                 <p>
                   <b>Total Price:</b> ₹{' '}

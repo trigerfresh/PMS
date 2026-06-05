@@ -23,6 +23,7 @@ import { useEffect, useState } from 'react'
 import { Dropdown } from 'react-bootstrap'
 import { FaEllipsisV, FaEye } from 'react-icons/fa'
 import '../css/RoomMaster.css'
+import { BsThreeDotsVertical } from 'react-icons/bs'
 
 const RoomsMaster = () => {
   const [rooms, setRooms] = useState([])
@@ -488,7 +489,7 @@ const RoomsMaster = () => {
               className="search-btn shadow-sm rounded-3"
               onClick={() => setShowSearch(!showSearch)}
               style={{
-                padding: '6px 14px',
+                padding: '1px 6px',
                 backgroundColor: '#00baf2',
                 border: 'none',
                 color: '#fff',
@@ -519,7 +520,7 @@ const RoomsMaster = () => {
               }
             }}
             style={{
-              padding: '6px 14px',
+              padding: '1px 6px',
               border: 'none',
               display: 'inline-flex',
               alignItems: 'center',
@@ -856,7 +857,7 @@ const RoomsMaster = () => {
               responsive
               className="list-table align-middle mb-0"
             >
-              <thead className="table">
+              <thead className="table text-center">
                 <tr>
                   <th>Hotel Name</th>
                   <th>Floor Name</th>
@@ -867,7 +868,7 @@ const RoomsMaster = () => {
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="text-center">
                 {rooms.length > 0 ? (
                   rooms.map((room) => (
                     <tr key={room.room_id}>
@@ -885,7 +886,7 @@ const RoomsMaster = () => {
                             id={`dropdown-${room.room_id}`}
                             className="bg-secondary text-white shadow-sm border"
                           >
-                            Action
+                            <BsThreeDotsVertical />
                           </Dropdown.Toggle>
                           <Dropdown.Menu>
                             <Dropdown.Item onClick={() => handleView(room)}>
