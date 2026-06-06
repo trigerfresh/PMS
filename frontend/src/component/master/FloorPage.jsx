@@ -47,7 +47,9 @@ export default function FloorPage() {
   useEffect(() => {
     const loadHotels = async () => {
       const res = await getHotels()
-      setHotels(res.data.data || [])
+      const allHotels = res.data.data || []
+      const activeHotels = allHotels.filter((h) => h.active === '0')
+      setHotels(activeHotels)
     }
     loadHotels()
   }, [])

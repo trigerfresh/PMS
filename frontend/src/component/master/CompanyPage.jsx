@@ -26,6 +26,7 @@ import {
   Modal,
 } from 'react-bootstrap'
 import './Company.css'
+import download from './download.jfif'
 
 const CompanyPage = () => {
   const [companies, setCompanies] = useState([])
@@ -72,9 +73,22 @@ const CompanyPage = () => {
   const [logoFile, setLogoFile] = useState(null)
   const [logoPreview, setLogoPreview] = useState(null)
 
-  const handleView = (company) => {
-    setSelectedCompany(company)
-    setShowViewModal(true)
+  const handleView = async (company) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/companies/${company.id}`,
+        getAuthHeaders(),
+      )
+      setSelectedCompany(response.data.data)
+      setShowViewModal(true)
+    } catch (err) {
+      console.error(err)
+      alert(
+        err.response?.data?.message ||
+          err.response?.data?.error ||
+          'Failed to fetch company details.',
+      )
+    }
   }
 
   const [bankDetails, setBankDetails] = useState([
@@ -120,17 +134,23 @@ const CompanyPage = () => {
       }
 
       // Fetch active companies
-      const activeResponse = await axios.get('http://localhost:5000/api/companies', {
-        params,
-        ...getAuthHeaders(),
-      })
+      const activeResponse = await axios.get(
+        'http://localhost:5000/api/companies',
+        {
+          params,
+          ...getAuthHeaders(),
+        },
+      )
       const activeData = activeResponse.data.data || []
 
       // Fetch deleted companies
-      const deletedResponse = await axios.get('http://localhost:5000/api/companies/deleted/list', {
-        params,
-        ...getAuthHeaders(),
-      })
+      const deletedResponse = await axios.get(
+        'http://localhost:5000/api/companies/deleted/list',
+        {
+          params,
+          ...getAuthHeaders(),
+        },
+      )
       const deletedData = deletedResponse.data.data || []
 
       // Set companies based on current tab
@@ -378,14 +398,17 @@ const CompanyPage = () => {
       // =========================
       // BANK DETAILS
       // =========================
-      data.append('bank_name', bankDetails[0]?.bankName || '')
-      data.append('account_no', bankDetails[0]?.accountNo || '')
-      data.append('account_type', bankDetails[0]?.accountType || '')
-      data.append('branch_city', bankDetails[0]?.branchCity || '')
-      data.append('bank_address', bankDetails[0]?.address || '')
-      data.append('swift_no', bankDetails[0]?.swift || '')
-      data.append('micr_no', bankDetails[0]?.micr || '')
-      data.append('ifsc_code', bankDetails[0]?.ifsc || '')
+      const mappedBanks = bankDetails.map((bank) => ({
+        bank_name: bank.bankName || '',
+        account_no: bank.accountNo || '',
+        account_type: bank.accountType || '',
+        branch_city: bank.branchCity || '',
+        bank_address: bank.address || '',
+        swift_no: bank.swift || '',
+        micr_no: bank.micr || '',
+        ifsc_code: bank.ifsc || '',
+      }))
+      data.append('banks', JSON.stringify(mappedBanks))
 
       // =========================
       // LOGO
@@ -447,53 +470,88 @@ const CompanyPage = () => {
     }
   }
 
-  const handleEdit = (company) => {
-    setIsEditing(company)
-    setValidationErrors({})
+  const handleEdit = async (company) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/companies/${company.id}`,
+        getAuthHeaders(),
+      )
+      const fullCompany = response.data.data
+      setIsEditing(fullCompany)
+      setValidationErrors({})
 
-    setFormData({
-      companyName: company.company_name || '',
-      contactPersonName: company.contact_person || '',
-      emailId: company.email_id || '',
-      address: company.address || '',
+      setFormData({
+        companyName: fullCompany.company_name || '',
+        contactPersonName: fullCompany.contact_person || '',
+        emailId: fullCompany.email_id || '',
+        address: fullCompany.address || '',
 
-      country: company.country_name || '',
-      regionState: company.state_name || '',
-      city: company.city_name || '',
+        country: fullCompany.country_name || '',
+        regionState: fullCompany.state_name || '',
+        city: fullCompany.city_name || '',
 
-      pincode: company.pincode || '',
-      stateCode: company.state_code || '',
+        pincode: fullCompany.pincode || '',
+        stateCode: fullCompany.state_code || '',
 
-      contactNo: company.contact_no || '',
+        contactNo: fullCompany.contact_no || '',
 
-      gstNo: company.gst_no || '',
-      website: company.website || '',
+        gstNo: fullCompany.gst_no || '',
+        website: fullCompany.website || '',
 
-      currency: company.currency_name || 'INR',
+        currency: fullCompany.currency_name || 'INR',
 
-      cinNo: company.cin_no || '',
-      vatTin: company.vat_in || '',
-      cstTin: company.cst || '',
+        cinNo: fullCompany.cin_no || '',
+        vatTin: fullCompany.vat_in || '',
+        cstTin: fullCompany.cst || '',
 
-      termsAndCond: company.terms_conditions || '',
-    })
+        termsAndCond: fullCompany.terms_conditions || '',
+      })
 
-    setBankDetails([
-      {
-        bankName: company.bank_name || '',
-        accountNo: company.account_no || '',
-        accountType: company.account_type || '',
-        branchCity: company.branch_city || '',
-        address: company.bank_address || '',
-        swift: company.swift_no || '',
-        micr: company.micr_no || '',
-        ifsc: company.ifsc_code || '',
-      },
-    ])
+      if (fullCompany.banks && fullCompany.banks.length > 0) {
+        setBankDetails(
+          fullCompany.banks.map((b) => ({
+            bankName: b.bank_name || '',
+            accountNo: b.account_no || '',
+            accountType: b.account_type || '',
+            branchCity: b.branch_city || '',
+            address: b.bank_address || '',
+            swift: b.swift_no || '',
+            micr: b.micr_no || '',
+            ifsc: b.ifsc_code || '',
+          })),
+        )
+      } else {
+        setBankDetails([
+          {
+            bankName: '',
+            accountNo: '',
+            accountType: '',
+            branchCity: '',
+            address: '',
+            swift: '',
+            micr: '',
+            ifsc: '',
+          },
+        ])
+      }
 
-    setShowForm(true)
-    setShowSearch(false)
-    setActiveTab('companyDetails')
+      if (fullCompany.image) {
+        setLogoPreview(`http://localhost:5000/uploads/${fullCompany.image}`)
+      } else {
+        setLogoPreview(null)
+      }
+
+      setShowForm(true)
+      setShowSearch(false)
+      setActiveTab('companyDetails')
+    } catch (err) {
+      console.error(err)
+      alert(
+        err.response?.data?.message ||
+          err.response?.data?.error ||
+          'Failed to fetch company details for editing.',
+      )
+    }
   }
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this company?')) {
@@ -691,7 +749,7 @@ const CompanyPage = () => {
             {isEditing ? (
               <span>Edit Company - {isEditing.company_name}</span>
             ) : (
-              'Create New Company'
+              ''
             )}
           </h2>
 
@@ -953,7 +1011,7 @@ const CompanyPage = () => {
                         />
                       </Form.Group>
                     </Col>
-                    <Col xs={12} sm={6} md={3} className="mb-3">
+                    {/* <Col xs={12} sm={6} md={3} className="mb-3">
                       <Form.Group controlId="iec">
                         <Form.Label>IEC</Form.Label>
                         <Form.Control
@@ -974,8 +1032,8 @@ const CompanyPage = () => {
                           placeholder="Invoice Prefix"
                         />
                       </Form.Group>
-                    </Col>
-                    {/* <Col xs={12} sm={6} md={3} className="mb-3">
+                    </Col> */}
+                    <Col xs={12} sm={6} md={3} className="mb-3">
                       <Form.Group controlId="formLogo">
                         <Form.Label>Attach Logo</Form.Label>
                         <Form.Control
@@ -985,17 +1043,25 @@ const CompanyPage = () => {
                           onChange={handleFileChange}
                         />
                       </Form.Group>
-                    </Col> */}
+                    </Col>
                     {logoPreview && (
-                      <Col xs={12} sm={6} md={3} className="mb-3 text-center">
+                      <Col
+                        xs={12}
+                        sm={6}
+                        md={3}
+                        className="mb-3 text-center d-flex align-items-center justify-content-center"
+                      >
                         <img
                           src={logoPreview}
                           alt="logo preview"
                           style={{
-                            width: '180px',
-                            height: '200px',
+                            maxHeight: '120px',
+                            maxWidth: '150px',
+                            objectFit: 'contain',
                             border: '1px solid #ddd',
-                            borderRadius: '4px',
+                            borderRadius: '8px',
+                            padding: '4px',
+                            backgroundColor: '#fff',
                           }}
                         />
                       </Col>
@@ -1278,6 +1344,7 @@ const CompanyPage = () => {
               >
                 <thead className="table text-center">
                   <tr>
+                    <th width="80">Logo</th>
                     <th width="180">Company</th>
                     <th width="150">Contact Person</th>
                     <th width="200">Email ID</th>
@@ -1290,11 +1357,33 @@ const CompanyPage = () => {
                 <tbody className="text-center">
                   {companies.length === 0 ? (
                     <tr className="text-center">
-                      <td colSpan={6}>No data found</td>
+                      <td colSpan={7}>No data found</td>
                     </tr>
                   ) : (
                     companies.map((company) => (
                       <tr key={company.id}>
+                        <td>
+                          <img
+                            src={
+                              company.image
+                                ? `http://localhost:5000/uploads/${company.image}`
+                                : download
+                            }
+                            alt="Logo"
+                            style={{
+                              width: '40px',
+                              height: '40px',
+                              objectFit: 'contain',
+                              border: '1px solid #eee',
+                              borderRadius: '4px',
+                              padding: '2px',
+                              backgroundColor: '#fff',
+                            }}
+                            onError={(e) => {
+                              e.target.src = download
+                            }}
+                          />
+                        </td>
                         <td>{company.company_name}</td>
                         <td>{company.contact_person}</td>
                         <td>{company.email_id}</td>
@@ -1374,6 +1463,29 @@ const CompanyPage = () => {
         <Modal.Body>
           {selectedCompany && (
             <Row>
+              {selectedCompany.image && (
+                <Col md={12} className="text-center mb-4">
+                  <div className="d-inline-block p-2 border rounded bg-white shadow-sm">
+                    <img
+                      src={
+                        selectedCompany.image?.trim()
+                          ? `http://localhost:5000/uploads/${selectedCompany.image}`
+                          : download
+                      }
+                      alt={`${selectedCompany.company_name} Logo`}
+                      style={{
+                        maxHeight: '120px',
+                        maxWidth: '240px',
+                        objectFit: 'contain',
+                      }}
+                      onError={(e) => {
+                        e.target.onerror = null
+                        e.target.src = download
+                      }}
+                    />
+                  </div>
+                </Col>
+              )}
               <Col md={6} className="mb-3">
                 <strong>Company Name:</strong>
                 <div>{selectedCompany.company_name}</div>
@@ -1441,42 +1553,65 @@ const CompanyPage = () => {
 
               <hr />
 
-              <h5 className="mt-3 mb-3">Bank Details</h5>
+              <h5 className="mt-3 mb-2 col-12">Bank Details</h5>
 
-              <Col md={6} className="mb-3">
-                <strong>Bank Name:</strong>
-                <div>{selectedCompany.bank_name}</div>
-              </Col>
-
-              <Col md={6} className="mb-3">
-                <strong>Account No:</strong>
-                <div>{selectedCompany.account_no}</div>
-              </Col>
-
-              <Col md={6} className="mb-3">
-                <strong>Account Type:</strong>
-                <div>{selectedCompany.account_type}</div>
-              </Col>
-
-              <Col md={6} className="mb-3">
-                <strong>Branch City:</strong>
-                <div>{selectedCompany.branch_city}</div>
-              </Col>
-
-              <Col md={6} className="mb-3">
-                <strong>IFSC:</strong>
-                <div>{selectedCompany.ifsc_code}</div>
-              </Col>
-
-              <Col md={6} className="mb-3">
-                <strong>MICR:</strong>
-                <div>{selectedCompany.micr_no}</div>
-              </Col>
-
-              <Col md={12} className="mb-3">
-                <strong>Bank Address:</strong>
-                <div>{selectedCompany.bank_address}</div>
-              </Col>
+              {selectedCompany.banks && selectedCompany.banks.length > 0 ? (
+                <Col md={12} className="mb-3">
+                  <div className="table-responsive">
+                    <Table
+                      size="sm"
+                      bordered
+                      hover
+                      className="align-middle text-center table-striped mt-2"
+                    >
+                      <thead className="table-secondary">
+                        <tr>
+                          <th>#</th>
+                          <th>Bank Name</th>
+                          <th>Account No</th>
+                          <th>Type</th>
+                          <th>IFSC Code</th>
+                          <th>Branch City</th>
+                          <th>Address</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedCompany.banks.map((bank, index) => (
+                          <tr key={bank.id || index}>
+                            <td>{index + 1}</td>
+                            <td className="fw-medium">
+                              {bank.bank_name || 'N/A'}
+                            </td>
+                            <td>{bank.account_no || 'N/A'}</td>
+                            <td>{bank.account_type || 'N/A'}</td>
+                            <td>{bank.ifsc_code || 'N/A'}</td>
+                            <td>{bank.branch_city || 'N/A'}</td>
+                            <td
+                              className="text-start"
+                              style={{
+                                fontSize: '12px',
+                                maxWidth: '200px',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                              title={bank.bank_address}
+                            >
+                              {bank.bank_address || 'N/A'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </div>
+                </Col>
+              ) : (
+                <Col md={12} className="mb-3">
+                  <div className="text-muted text-center p-3 bg-light border rounded">
+                    No bank accounts configured.
+                  </div>
+                </Col>
+              )}
 
               <Col md={12} className="mb-3">
                 <strong>Terms & Conditions:</strong>

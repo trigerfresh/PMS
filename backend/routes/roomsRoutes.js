@@ -20,6 +20,8 @@ router.post(
 // ================= GET ALL ROOMS =================
 router.get('/rooms', roomController.getRooms)
 
+router.get('/rooms/export', roomController.exportRooms)
+
 // Deleted Rooms
 router.get('/rooms/deleted', roomController.getDeletedRooms)
 

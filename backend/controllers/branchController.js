@@ -39,9 +39,9 @@ exports.createBranch = async (req, res) => {
       .input('def_sales_ac', sql.VarChar(sql.MAX), def_sales_ac)
       .input('def_branch_recv_ac', sql.VarChar(sql.MAX), def_branch_recv_ac)
       .input('def_branch_desp_ac', sql.VarChar(sql.MAX), def_branch_desp_ac)
-      .input('branch_id', sql.VarChar(10), branch_id)
-      .input('company_id', sql.VarChar(10), company_id)
-      .input('phone', sql.VarChar(sql.MAX), phone)
+      .input('branch_id', sql.VarChar(10), branch_id || null)
+      .input('company_id', sql.VarChar(10), company_id || null)
+      .input('phone', sql.VarChar(sql.MAX), phone || null)
       .input('active', sql.VarChar(1), '0')
       .input('created_by', sql.Int, req.user.id)
       .input('created_on', sql.DateTime2, new Date()).query(`
@@ -178,30 +178,74 @@ exports.getBranches = async (req, res) => {
   try {
     const pool = await poolPromise
 
-    const { status } = req.query
+    const { status, searchFields, fromDate, toDate } = req.query
 
-    let where = ''
-
-    if (status === 'active') {
-      where = "WHERE active = '0'"
-    } else if (status === 'deleted') {
-      where = "WHERE active = '1'"
-    } else {
-      where = '' // all
-    }
-
-    const result = await pool.request().query(`
+    let query = `
       SELECT *
       FROM branch
-      ${where}
-      ORDER BY id ASC
-    `)
+      WHERE 1=1
+    `
+    const request = pool.request()
+
+    // -------------------------
+    // STATUS FILTER
+    // -------------------------
+    if (status === 'active' || status === 'approved') {
+      query += ` AND active = '0'`
+    } else if (status === 'deleted') {
+      query += ` AND active = '1'`
+    }
+
+    // -------------------------
+    // SEARCH FILTER
+    // -------------------------
+    if (searchFields) {
+      const parsedFields = JSON.parse(searchFields)
+      const conditions = []
+
+      parsedFields.forEach((item, index) => {
+        const keyword = item.keyword?.trim()
+        const field = item.field
+        const paramName = `keyword${index}`
+
+        if (keyword) {
+          if (field === 'branchName') {
+            conditions.push(`branch_name LIKE @${paramName}`)
+            request.input(paramName, sql.VarChar, `%${keyword}%`)
+          } else if (field === 'address') {
+            conditions.push(`address LIKE @${paramName}`)
+            request.input(paramName, sql.VarChar, `%${keyword}%`)
+          } else if (field === 'pincode') {
+            conditions.push(`pincode LIKE @${paramName}`)
+            request.input(paramName, sql.VarChar, `%${keyword}%`)
+          }
+        }
+      })
+
+      if (conditions.length > 0) {
+        query += ` AND (${conditions.join(' OR ')})`
+      }
+    }
+
+    // -------------------------
+    // DATE FILTER
+    // -------------------------
+    if (fromDate && toDate) {
+      query += ` AND CAST(created_on AS DATE) BETWEEN @fromDate AND @toDate`
+      request.input('fromDate', sql.Date, fromDate)
+      request.input('toDate', sql.Date, toDate)
+    }
+
+    query += ` ORDER BY id DESC`
+
+    const result = await request.query(query)
 
     return res.status(200).json({
       success: true,
       data: result.recordset,
     })
   } catch (error) {
+    console.error('getBranches error:', error)
     return res.status(500).json({
       success: false,
       error: error.message,
@@ -275,9 +319,9 @@ exports.updateBranch = async (req, res) => {
       .input('def_sales_ac', sql.VarChar(sql.MAX), def_sales_ac)
       .input('def_branch_recv_ac', sql.VarChar(sql.MAX), def_branch_recv_ac)
       .input('def_branch_desp_ac', sql.VarChar(sql.MAX), def_branch_desp_ac)
-      .input('branch_id', sql.VarChar(10), branch_id)
-      .input('company_id', sql.VarChar(10), company_id)
-      .input('phone', sql.VarChar(sql.MAX), phone)
+      .input('branch_id', sql.VarChar(10), branch_id || null)
+      .input('company_id', sql.VarChar(10), company_id || null)
+      .input('phone', sql.VarChar(sql.MAX), phone || null)
       .input('modified_by', sql.Int, req.user.id)
       .input('modified_on', sql.DateTime2, new Date()).query(`
         UPDATE branch

@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
-import { Tabs, Tab, Dropdown } from 'react-bootstrap'
+import {
+  Tabs,
+  Tab,
+  Dropdown,
+  Card,
+  Form,
+  Row,
+  Col,
+  Button,
+} from 'react-bootstrap'
 import SearchPanel from '../../utils/filterPanel'
 import { FaSearch, FaPlus, FaArrowLeft } from 'react-icons/fa'
 import './Company.css'
@@ -289,96 +298,100 @@ export default function Categories() {
 
       {/* VIEW 1: PROPER PRO FORM (Jab showForm true hoga tabhi dikhega) */}
       {showForm ? (
-        <div className="card shadow-sm border-primary animate__animated animate__fadeIn">
-          <div className="card-header py-2 fw-semibold">
-            {editId ? 'Update Record Details' : 'Fill Category Details'}
-          </div>
-          <form onSubmit={handleSubmit} className="card-body p-4">
-            <div className="row g-3">
-              {/* PRIMARY CATEGORY SELECT */}
-              <div className="col-md-6">
-                <label className="form-label small fw-bold">
-                  Primary Category <span className="text-danger">*</span>
-                </label>
-                <select
-                  className="form-select form-select-sm"
-                  value={pcatId}
-                  onChange={(e) => setPcatId(e.target.value)}
-                  required
-                >
-                  <option value="">Select Primary Category</option>
-                  {primaryList.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.primary_categories_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+        <Card className="company-card">
+          <h2 className="card-header mb-4">
+            {editId ? <span>Edit Category - {name}</span> : ''}
+          </h2>
 
-              {/* CATEGORY NAME INPUT */}
-              <div className="col-md-6">
-                <label className="form-label small fw-bold">
-                  Category Name <span className="text-danger">*</span>
-                </label>
-                <input
-                  className="form-control form-control-sm"
-                  placeholder="Enter Category Name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
+          <div className="company-form-wrapper">
+            <Form className="company-form" onSubmit={handleSubmit}>
+              <Row>
+                {/* PRIMARY CATEGORY SELECT */}
+                <Col xs={12} sm={6} md={6} className="mb-3">
+                  <Form.Group controlId="pcatId">
+                    <Form.Label>Primary Category *</Form.Label>
+                    <Form.Select
+                      value={pcatId}
+                      onChange={(e) => setPcatId(e.target.value)}
+                      required
+                    >
+                      <option value="">Select Primary Category</option>
+                      {primaryList.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.primary_categories_name}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
 
-              {/* IMAGE INPUT */}
-              <div className="col-md-6">
-                <label className="form-label small fw-bold">Upload Image</label>
-                <input
-                  id="category-image"
-                  type="file"
-                  accept="image/*"
-                  className="form-control form-control-sm"
-                  onChange={(e) => setImage(e.target.files[0])}
-                />
-              </div>
-
-              {/* CURRENT IMAGE PREVIEW (In Edit Mode) */}
-              {editId && existingImage && (
-                <div className="col-md-6 d-flex align-items-end">
-                  <div className="p-2 border rounded d-inline-flex align-items-center gap-2 bg-light">
-                    <img
-                      src={`http://localhost:5000/uploads/${existingImage}`}
-                      alt="Current"
-                      width="50"
-                      height="50"
-                      style={{ objectFit: 'cover', borderRadius: '4px' }}
+                {/* CATEGORY NAME INPUT */}
+                <Col xs={12} sm={6} md={6} className="mb-3">
+                  <Form.Group controlId="categoryName">
+                    <Form.Label>Category Name *</Form.Label>
+                    <Form.Control
+                      placeholder="Enter Category Name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
                     />
-                    <div style={{ fontSize: '12px' }} className="text-muted">
-                      <span className="fw-bold d-block">Current Image</span>
-                      {existingImage}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+                  </Form.Group>
+                </Col>
 
-            {/* FORM FOOTER BUTTONS */}
-            <div className="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
-              <button
-                type="button"
-                className="btn btn-light btn-sm px-4 border"
-                onClick={resetForm}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn btn-success btn-sm px-5 fw-bold"
-              >
-                {editId ? 'Update Changes' : 'Save Record'}
-              </button>
-            </div>
-          </form>
-        </div>
+                {/* IMAGE INPUT */}
+                <Col xs={12} sm={6} md={6} className="mb-3">
+                  <Form.Group controlId="categoryImage">
+                    <Form.Label>Upload Image</Form.Label>
+                    <Form.Control
+                      id="category-image"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setImage(e.target.files[0])}
+                    />
+                  </Form.Group>
+                </Col>
+
+                {/* CURRENT IMAGE PREVIEW (In Edit Mode) */}
+                {editId && existingImage && (
+                  <Col
+                    xs={12}
+                    sm={6}
+                    md={6}
+                    className="mb-3 d-flex align-items-end"
+                  >
+                    <div className="p-2 border rounded d-inline-flex align-items-center gap-2 bg-light">
+                      <img
+                        src={`http://localhost:5000/uploads/${existingImage}`}
+                        alt="Current"
+                        width="50"
+                        height="50"
+                        style={{ objectFit: 'cover', borderRadius: '4px' }}
+                      />
+                      <div style={{ fontSize: '12px' }} className="text-muted">
+                        <span className="fw-bold d-block">Current Image</span>
+                        {existingImage}
+                      </div>
+                    </div>
+                  </Col>
+                )}
+              </Row>
+
+              {/* FORM FOOTER BUTTONS */}
+              <div className="form-actions d-flex justify-content-end mt-4">
+                <Button
+                  variant="secondary"
+                  className="me-2"
+                  onClick={resetForm}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" variant="primary">
+                  {editId ? 'Update Category' : 'Save Category'}
+                </Button>
+              </div>
+            </Form>
+          </div>
+        </Card>
       ) : (
         /* VIEW 2: SEARCH PANEL AND TABS TABLE (Jab form band hoga) */
         <>

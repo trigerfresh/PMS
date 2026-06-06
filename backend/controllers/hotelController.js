@@ -451,7 +451,7 @@ exports.getHotels = async (req, res) => {
     // -------------------------
     // STATUS FILTER
     // -------------------------
-    if (req.query.status === 'approved') {
+    if (req.query.status === 'approved' || req.query.status === 'active') {
       query += ` AND active = '0'`
     }
 

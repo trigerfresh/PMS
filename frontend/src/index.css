@@ -55,12 +55,9 @@ body {
 }
 
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-
+  width: 100%;
+  margin: 0;
+  text-align: left;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -77,20 +74,24 @@ h1 {
   font-size: 56px;
   letter-spacing: -1.68px;
   margin: 32px 0;
+
   @media (max-width: 1024px) {
     font-size: 36px;
     margin: 20px 0;
   }
 }
+
 h2 {
   font-size: 24px;
   line-height: 118%;
   letter-spacing: -0.24px;
   margin: 0 0 8px;
+
   @media (max-width: 1024px) {
     font-size: 20px;
   }
 }
+
 p {
   margin: 0;
 }
@@ -119,14 +120,17 @@ code {
 .custom-bootstrap-tabs {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
-  overflow: hidden !important; /* Force hide any sliders */
+  overflow: hidden !important;
+  /* Force hide any sliders */
   flex-wrap: nowrap !important;
 }
+
 .custom-bootstrap-tabs::-webkit-scrollbar {
   display: none !important;
   width: 0 !important;
   height: 0 !important;
 }
+
 .custom-bootstrap-tabs .nav-link {
   border: 1px solid #ccc !important;
   margin-right: 5px;
@@ -134,11 +138,15 @@ code {
   white-space: nowrap !important;
   background-color: #f8f9fa;
   color: #333;
-  flex-shrink: 0 !important; /* Prevent shrinking which causes wrapping */
+  flex-shrink: 0 !important;
+  /* Prevent shrinking which causes wrapping */
   min-width: max-content;
-  padding: 6px 12px !important; /* Reduce padding to decrease height */
-  font-size: 14px; /* Slightly smaller text for better proportion */
+  padding: 6px 12px !important;
+  /* Reduce padding to decrease height */
+  font-size: 14px;
+  /* Slightly smaller text for better proportion */
 }
+
 .custom-bootstrap-tabs .nav-link.active {
   border-color: #0d6efd !important;
   background-color: #0d6efd !important;

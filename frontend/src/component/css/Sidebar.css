@@ -6,24 +6,52 @@
   color: #fff;
 }
 
-.page-sidebar.collapsed {
-  width: 70px;
+.page-wrapper .page-body-wrapper .page-sidebar.collapsed {
+  width: 70px !important;
 }
 
-/* hide text and right-carets in collapsed mode */
-.page-sidebar.collapsed span,
-.page-sidebar.collapsed .pull-right {
-  display: none;
+/* hide text and right-carets smoothly in collapsed mode */
+.page-wrapper .page-body-wrapper .page-sidebar span,
+.page-wrapper .page-body-wrapper .page-sidebar .pull-right,
+.page-wrapper .page-body-wrapper .page-sidebar .sidebar-user h6 {
+  transition: opacity 0.2s ease, width 0.2s ease;
+  opacity: 1;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
-/* center icons */
-.page-sidebar.collapsed a {
-  justify-content: center;
+.page-wrapper .page-body-wrapper .page-sidebar.collapsed span,
+.page-wrapper .page-body-wrapper .page-sidebar.collapsed .pull-right,
+.page-wrapper .page-body-wrapper .page-sidebar.collapsed .sidebar-user h6 {
+  opacity: 0 !important;
+  width: 0 !important;
+  margin: 0 !important;
+  pointer-events: none;
+}
+
+/* center icons and adjust margins */
+.page-wrapper .page-body-wrapper .page-sidebar a {
+  transition: justify-content 0.3s ease;
+  white-space: nowrap;
+}
+
+.page-wrapper .page-body-wrapper .page-sidebar.collapsed a {
+  justify-content: center !important;
+}
+
+.page-wrapper .page-body-wrapper .page-sidebar.collapsed .menu-icon,
+.page-wrapper .page-body-wrapper .page-sidebar.collapsed .submenu-icon {
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+  transition: margin 0.3s ease;
 }
 
 /* submenu hide */
-.page-sidebar.collapsed .sidebar-submenu {
-  display: none !important;
+.page-wrapper .page-body-wrapper .page-sidebar.collapsed .sidebar-submenu {
+  opacity: 0;
+  height: 0;
+  overflow: hidden;
+  transition: opacity 0.2s ease, height 0.2s ease;
 }
 
 .sidebar {
@@ -43,4 +71,57 @@
   cursor: pointer;
   padding: 10px;
   text-align: right;
+}
+
+/* collapsed layout overrides */
+.page-sidebar.collapsed~.page-body {
+  margin-left: 70px !important;
+  transition: 0.3s ease;
+}
+
+.page-sidebar.collapsed~footer {
+  margin-left: 70px !important;
+  transition: 0.3s ease;
+}
+
+.page-sidebar .sidebar-user {
+  transition: opacity 0.2s ease, height 0.2s ease, padding 0.2s ease, margin 0.2s ease;
+  overflow: hidden;
+}
+
+.page-sidebar.collapsed .sidebar-user {
+  opacity: 0 !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  pointer-events: none;
+}
+
+/* expanded layout default */
+.page-sidebar~.page-body {
+  margin-left: 250px;
+  transition: 0.3s ease;
+  width: calc(100% - 250px);
+}
+
+.page-sidebar~footer {
+  margin-left: 250px;
+  transition: 0.3s ease;
+}
+
+.page-sidebar.collapsed~.page-body {
+  width: calc(100% - 70px) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991px) {
+  .page-sidebar~.page-body {
+    margin-left: 250px !important;
+    width: calc(100% - 250px) !important;
+  }
+
+  .page-sidebar.collapsed~.page-body {
+    margin-left: 70px !important;
+    width: calc(100% - 70px) !important;
+  }
 }

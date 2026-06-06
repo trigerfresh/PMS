@@ -40,6 +40,7 @@ const RoomsMaster = () => {
     totalRooms: 0,
     occupiedRooms: 0,
     availableRooms: 0,
+    maintenanceRooms: 0,
   })
   const [showViewModal, setShowViewModal] = useState(false)
   const [selectedRoom, setSelectedRoom] = useState(null)
@@ -232,7 +233,9 @@ const RoomsMaster = () => {
         'http://localhost:5000/api/hotels',
         getAuthHeader(),
       )
-      setHotels(res.data.data)
+      const allHotels = res.data.data || []
+      const activeHotels = allHotels.filter((h) => h.active === '0')
+      setHotels(activeHotels)
     } catch (err) {
       console.log(err)
     }
@@ -284,6 +287,42 @@ const RoomsMaster = () => {
       setRoomStats(calculateStats(data))
     } catch (err) {
       console.log(err)
+    }
+  }
+
+  const handleDownloadExcel = async () => {
+    try {
+      const params = {}
+      const validSearch = searchFields.filter((f) => f.field && f.keyword)
+      if (validSearch.length > 0) {
+        params.searchFields = JSON.stringify(validSearch)
+      }
+
+      const randomNumber = Math.floor(1000000000 + Math.random() * 9000000000)
+
+      const res = await axios.get(
+        'http://localhost:5000/api/rooms/export',
+        {
+          params,
+          responseType: 'blob',
+          ...getAuthHeader(),
+        },
+      )
+
+      const blob = new Blob([res.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      })
+
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `Rooms_${randomNumber}.xlsx`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } catch (err) {
+      console.log(err)
+      alert('Excel download failed')
     }
   }
 
@@ -505,9 +544,8 @@ const RoomsMaster = () => {
           )}
           <button
             type="button"
-            className={`shadow-sm rounded-3 ${
-              showForm ? 'btn-danger' : 'btn-primary'
-            }`}
+            className={`shadow-sm rounded-3 ${showForm ? 'btn-danger' : 'btn-primary'
+              }`}
             onClick={() => {
               if (showForm) {
                 setShowForm(false)
@@ -818,6 +856,7 @@ const RoomsMaster = () => {
               setDateFilter={setDateFilter}
               onSearch={handleSearch}
               onReset={resetSearch}
+              onDownloadExcel={handleDownloadExcel}
               searchOptions={branchSearchOptions}
             />
           )}

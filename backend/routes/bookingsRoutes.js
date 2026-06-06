@@ -1433,39 +1433,49 @@ router.get('/bookings-counts', async (req, res) => {
 
     const result = await pool.request().query(`
       SELECT
-        COUNT(*) AS total_bookings,
-
-        
         SUM(
           CASE
-            WHEN LOWER(ISNULL(status,'')) = 'cancelled'
+            WHEN active = '0'
+            THEN 1 ELSE 0
+          END
+        ) AS total_bookings,
+
+        SUM(
+          CASE
+            WHEN active = '1'
+            THEN 1 ELSE 0
+          END
+        ) AS deleted_bookings,
+
+        SUM(
+          CASE
+            WHEN LOWER(ISNULL(status,'')) = 'cancelled' AND active = '0'
             THEN 1 ELSE 0
           END
         ) AS cancelled_bookings,
 
         SUM(
           CASE
-            WHEN LOWER(ISNULL(status,'')) = 'booked'
+            WHEN LOWER(ISNULL(status,'')) = 'booked' AND active = '0'
             THEN 1 ELSE 0
           END
         ) AS current_bookings,
 
         SUM(
           CASE
-            WHEN LOWER(ISNULL(status,'')) = 'reserved'
+            WHEN LOWER(ISNULL(status,'')) = 'reserved' AND active = '0'
             THEN 1 ELSE 0
           END
         ) AS reserved_bookings,
 
         SUM(
           CASE
-            WHEN LOWER(ISNULL(status,'')) = 'checkedout'
+            WHEN LOWER(ISNULL(status,'')) = 'checkedout' AND active = '0'
             THEN 1 ELSE 0
           END
         ) AS checkedout_bookings
 
       FROM booking_masters
-      WHERE active = '0'
     `)
 
     res.json(result.recordset[0])

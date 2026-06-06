@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './css/Sidebar.css'
 
 import {
@@ -32,6 +32,16 @@ const Sidebar = () => {
   // MOBILE SIDEBAR
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
+
+  useEffect(() => {
+    const handleToggle = (e) => {
+      setCollapsed(e.detail)
+    }
+    window.addEventListener('toggleSidebar', handleToggle)
+    return () => {
+      window.removeEventListener('toggleSidebar', handleToggle)
+    }
+  }, [])
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -73,7 +83,7 @@ const Sidebar = () => {
       )}
 
       {/* SIDEBAR */}
-      <div className={`page-sidebar ${sidebarOpen ? 'show-sidebar' : ''}`}>
+      <div className={`page-sidebar ${sidebarOpen ? 'show-sidebar' : ''} ${collapsed ? 'collapsed' : ''}`}>
         <div className="sidebar custom-scrollbar">
           {/* MOBILE CLOSE */}
           {/* <div className="sidebar-top">
@@ -104,7 +114,7 @@ const Sidebar = () => {
                 onClick={() => handleNavigate('/master/dashboard')}
               >
                 <FaTachometerAlt className="menu-icon" />
-                Dashboard
+                <span>Dashboard</span>
               </a>
             </li>
 
@@ -118,7 +128,7 @@ const Sidebar = () => {
                 <FaMale className="submenu-icon me-3" />
                 <span>Master</span>
 
-                {openMenu === 'master' ? <FaAngleDown /> : <FaAngleRight />}
+                {openMenu === 'master' ? <FaAngleDown className="pull-right" /> : <FaAngleRight className="pull-right" />}
               </a>
 
               {openMenu === 'master' && (
@@ -126,21 +136,21 @@ const Sidebar = () => {
                   <li>
                     <a onClick={() => handleNavigate('/master/companies')}>
                       <FaBuilding className="submenu-icon me-1" />
-                      Companies
+                      <span>Companies</span>
                     </a>
                   </li>
 
                   <li>
                     <a onClick={() => handleNavigate('/master/branch')}>
                       <FaBuilding className="submenu-icon me-1" />
-                      Branches
+                      <span>Branches</span>
                     </a>
                   </li>
 
                   <li>
                     <a onClick={() => handleNavigate('/master/hotel')}>
                       <FaHotel className="submenu-icon me-1" />
-                      Hotels
+                      <span>Hotels</span>
                     </a>
                   </li>
 
@@ -152,7 +162,7 @@ const Sidebar = () => {
                     >
                       {' '}
                       <FaUsers className="submenu-icon me-1" />
-                      Primary Categories
+                      <span>Primary Categories</span>
                     </a>
                   </li>
 
@@ -160,7 +170,7 @@ const Sidebar = () => {
                     <a onClick={() => handleNavigate('/master/categories')}>
                       {' '}
                       <FaUsers className="submenu-icon me-1" />
-                      Categories
+                      <span>Categories</span>
                     </a>
                   </li>
 
@@ -168,7 +178,7 @@ const Sidebar = () => {
                     <a onClick={() => handleNavigate('/master/subcategories')}>
                       {' '}
                       <FaUsers className="submenu-icon me-1" />
-                      Sub Categories
+                      <span>Sub Categories</span>
                     </a>
                   </li>
 
@@ -176,14 +186,14 @@ const Sidebar = () => {
                     <a onClick={() => handleNavigate('/master/users')}>
                       {' '}
                       <FaUsers className="submenu-icon me-1" />
-                      Users
+                      <span>Users</span>
                     </a>
                   </li>
 
                   <li>
                     <a onClick={() => handleNavigate('/master/floors')}>
                       <FaLayerGroup className="submenu-icon me-1" />
-                      Floors
+                      <span>Floors</span>
                     </a>
                   </li>
 
@@ -191,7 +201,7 @@ const Sidebar = () => {
                     <a onClick={() => handleNavigate('/master/rooms')}>
                       {' '}
                       <FaBed className="submenu-icon me-1" />
-                      Rooms
+                      <span>Rooms</span>
                     </a>
                   </li>
 
@@ -211,14 +221,14 @@ const Sidebar = () => {
                   <li>
                     <a onClick={() => handleNavigate('/master/roles')}>
                       <FaUserShield className="submenu-icon me-1" />
-                      Role Master
+                      <span>Role Master</span>
                     </a>
                   </li>
 
                   <li>
                     <a onClick={() => handleNavigate('/master/userRoleAccess')}>
                       <FaKey className="submenu-icon me-1" />
-                      User Role Access
+                      <span>User Role Access</span>
                     </a>
                   </li>
                 </ul>
@@ -235,7 +245,7 @@ const Sidebar = () => {
                 <FaChartLine className="submenu-icon me-3" />
                 <span>Orders</span>
 
-                {openMenu === 'sales' ? <FaAngleDown /> : <FaAngleRight />}
+                {openMenu === 'sales' ? <FaAngleDown className="pull-right" /> : <FaAngleRight className="pull-right" />}
               </a>
 
               {openMenu === 'sales' && (
@@ -243,14 +253,14 @@ const Sidebar = () => {
                   <li>
                     <a href="#!" onClick={() => handleNavigate('/products')}>
                       <FaBox className="submenu-icon me-1" />
-                      Food
+                      <span>Food</span>
                     </a>
                   </li>
 
                   <li>
                     <a onClick={() => handleNavigate('/master/bookings')}>
                       <FaHotel className="submenu-icon me-1" />
-                      Bookings
+                      <span>Bookings</span>
                     </a>
                   </li>
                 </ul>
@@ -268,7 +278,7 @@ const Sidebar = () => {
                     color: 'red',
                   }}
                 >
-                  Logout
+                  <span>Logout</span>
                 </a>
               </li>
             ) : (
@@ -278,7 +288,7 @@ const Sidebar = () => {
                   className="sidebar-header"
                   onClick={() => handleNavigate('/login')}
                 >
-                  Login
+                  <span>Login</span>
                 </a>
               </li>
             )}

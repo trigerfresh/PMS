@@ -241,6 +241,7 @@ const BranchPage = () => {
         def_branch_desp_ac: formData.defBranchDispAccount,
 
         phone: formData.contactNo,
+        branch_id: isEditing?.branch_id || '',
       }
 
       const url = isEditing
@@ -266,7 +267,11 @@ const BranchPage = () => {
     } catch (err) {
       console.error(err)
 
-      alert(err.response?.data?.message || 'Operation failed')
+      alert(
+        err.response?.data?.error ||
+          err.response?.data?.message ||
+          'Operation failed',
+      )
     }
   }
 
@@ -494,7 +499,7 @@ const BranchPage = () => {
             {isEditing ? (
               <span>Edit Branch - {isEditing.branch_name}</span>
             ) : (
-              'Create New Branch'
+              ''
             )}
           </h2>
           {Object.keys(validationErrors).length > 0 && (
@@ -636,24 +641,25 @@ const BranchPage = () => {
             <hr />
             <div className="mb-3 branch-company-selection">
               <h4 className="fs-5">Select Company *</h4>
-              {companies.map((company) => (
-                <Form.Check
-                  key={company.id}
-                  type="checkbox"
-                  id={`company-${company.id}`}
-                  label={company.company_name}
-                  checked={formData.companyId.includes(company.id)}
-                  onChange={() => handleCompanySelection(company.id)}
-                  className="mb-2"
-                  isInvalid={!!validationErrors.companyId}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      handleCompanySelection(company.id) // ✅ call directly
-                    }
-                  }}
-                />
-              ))}
+              <div className="d-flex flex-wrap gap-3 mb-2">
+                {companies.map((company) => (
+                  <Form.Check
+                    key={company.id}
+                    type="checkbox"
+                    id={`company-${company.id}`}
+                    label={company.company_name}
+                    checked={formData.companyId.includes(company.id)}
+                    onChange={() => handleCompanySelection(company.id)}
+                    isInvalid={!!validationErrors.companyId}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        handleCompanySelection(company.id) // ✅ call directly
+                      }
+                    }}
+                  />
+                ))}
+              </div>
               {validationErrors.companyId && (
                 <div className="invalid-feedback d-block">
                   {validationErrors.companyId}
@@ -724,11 +730,11 @@ const BranchPage = () => {
             >
               <thead className="table text-center">
                 <tr>
-                  <th width="150">Branch Name</th>
-                  <th width="200">Address</th>
-                  <th width="100">Pincode</th>
-                  <th width="200">Companies</th>
-                  <th width="90">Actions</th>
+                  <th width="10">Branch Name</th>
+                  <th width="10">Address</th>
+                  <th width="10">Pincode</th>
+                  <th width="10">Companies</th>
+                  <th width="10">Actions</th>
                 </tr>
               </thead>
               <tbody className="text-center">

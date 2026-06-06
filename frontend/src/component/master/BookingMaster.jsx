@@ -425,7 +425,9 @@ const BookingMaster = () => {
       const res = await axios.get('http://localhost:5000/api/hotels', {
         headers: { Authorization: `Bearer ${token}` },
       })
-      setHotels(res.data.data || [])
+      const allHotels = res.data.data || []
+      const activeHotels = allHotels.filter((h) => h.active === '0')
+      setHotels(activeHotels)
     } catch (err) {
       console.log('Hotel error:', err.message)
     }
@@ -827,6 +829,8 @@ const BookingMaster = () => {
           headers: { Authorization: `Bearer ${token}` },
         })
         fetchBookings()
+        fetchDeletedBookings()
+        fetchBookingCounts()
       } catch (err) {
         console.log('Delete error:', err.message)
       }
@@ -1529,13 +1533,13 @@ const BookingMaster = () => {
             <Table bordered hover className="list-table align-middle mb-0">
               <thead className="table text-center">
                 <tr>
-                  <th>Room No</th>
+                  <th style={{ width: '10px' }}>Room No</th>
                   <th>Guest</th>
-                  <th>Email</th>
+                  <th style={{ width: '10px' }}>Email</th>
                   <th>Profile</th>
                   {/* <th>Adhar</th> */}
 
-                  <th>Room Type</th>
+                  <th style={{ width: '120px' }}>Room Type</th>
                   <th>Check In</th>
                   <th>Check Out</th>
                   <th>Status</th>
@@ -1573,7 +1577,7 @@ const BookingMaster = () => {
                           />
                         )}
                       </td> */}
-                      <td>{b.room_no || 'N/A'}</td>
+                      <td>{b.room_type || 'N/A'}</td>
                       <td> {b.check_in_date?.split('T')[0]}</td>
                       <td>
                         {b.check_out_date?.split('T')[0]}

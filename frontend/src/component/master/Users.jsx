@@ -142,10 +142,14 @@ const Users = () => {
       let res
       if (validSearch.length > 0) {
         // Use the search endpoint which is a POST route taking query params
-        res = await axios.post(`${API_BASE_URL}/users/search`, {}, {
-          params,
-          ...getAuthHeaders(),
-        })
+        res = await axios.post(
+          `${API_BASE_URL}/users/search`,
+          {},
+          {
+            params,
+            ...getAuthHeaders(),
+          },
+        )
       } else {
         // Default to normal GET endpoint
         res = await axios.get(`${API_BASE_URL}/users`, {

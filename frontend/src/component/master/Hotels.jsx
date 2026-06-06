@@ -9,6 +9,7 @@ import {
   FaArrowLeft,
 } from 'react-icons/fa' // Import icons
 import SearchPanel from '../../utils/FilterPanel'
+import download from './download.jfif'
 import {
   Alert,
   Button,
@@ -112,7 +113,7 @@ const HotelPage = () => {
 
       // Fetch active hotels
       const activeRes = await axios.get(`http://localhost:5000/api/hotels`, {
-        params: { ...params, status: 'active' },
+        params: { ...params, status: 'approved' },
         ...getAuthHeaders(),
       })
       const activeData = activeRes.data.data || []
@@ -592,7 +593,7 @@ const HotelPage = () => {
             {isEditing ? (
               <span>Hotel Branch - {isEditing.hotel_name}</span>
             ) : (
-              'Create Hotel Form'
+              ''
             )}
           </h2>
           {Object.keys(validationErrors).length > 0 && (
@@ -720,6 +721,7 @@ const HotelPage = () => {
                       setFormData({
                         ...formData,
                         companyId: e.target.value,
+                        branchId: '',
                       })
                     }
                   >
@@ -750,11 +752,26 @@ const HotelPage = () => {
                   >
                     <option value="">Select Branch</option>
 
-                    {branch.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.branch_name}
-                      </option>
-                    ))}
+                    {branch
+                      .filter((item) => {
+                        const isActive = item.active == 0;
+                        let isAssigned = false;
+                        if (formData.companyId) {
+                          const selectedCompanyId = String(formData.companyId);
+                          if (item.company_id) {
+                            const assignedCompanyIds = item.company_id
+                              .split(',')
+                              .map((id) => id.trim());
+                            isAssigned = assignedCompanyIds.includes(selectedCompanyId);
+                          }
+                        }
+                        return isActive && isAssigned;
+                      })
+                      .map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.branch_name}
+                        </option>
+                      ))}
                   </Form.Select>
                 </Form.Group>
               </Col>
@@ -886,6 +903,7 @@ const HotelPage = () => {
             >
               <thead className="table text-center">
                 <tr>
+                  <th width="80">Image</th>
                   <th>Hotel Name</th>
                   <th>Branch Name</th>
                   <th>Address</th>
@@ -897,11 +915,33 @@ const HotelPage = () => {
               <tbody className="text-center">
                 {branches.length === 0 ? (
                   <tr className="text-center">
-                    <td colSpan={5}>No data found</td>
+                    <td colSpan={7}>No data found</td>
                   </tr>
                 ) : (
                   branches.map((branch) => (
                     <tr key={branch.id}>
+                      <td>
+                        <img
+                          src={
+                            branch.thumbnail_image
+                              ? `http://localhost:5000/uploads/${branch.thumbnail_image}`
+                              : download
+                          }
+                          alt="Hotel"
+                          style={{
+                            width: '40px',
+                            height: '40px',
+                            objectFit: 'cover',
+                            border: '1px solid #eee',
+                            borderRadius: '4px',
+                            padding: '2px',
+                            backgroundColor: '#fff',
+                          }}
+                          onError={(e) => {
+                            e.target.src = download
+                          }}
+                        />
+                      </td>
                       <td>{branch.hotel_name}</td>
                       <td>{branch.branch_name}</td>
                       <td>{branch.address}</td>

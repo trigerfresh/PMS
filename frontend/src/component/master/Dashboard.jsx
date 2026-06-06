@@ -243,7 +243,6 @@ const Dashboard = () => {
           <Form.Select
             value={hotelId}
             onChange={handleHotelChange}
-            onChange={(e) => setHotelId(e.target.value)}
           >
             <option value="">Select Hotel</option>
             {hotels.map((hotel) => (

@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
-import { Tabs, Tab, Dropdown } from 'react-bootstrap'
+import {
+  Tabs,
+  Tab,
+  Dropdown,
+  Card,
+  Form,
+  Row,
+  Col,
+  Button,
+} from 'react-bootstrap'
 import SearchPanel from '../../utils/filterPanel'
 import { FaSearch, FaPlus, FaArrowLeft } from 'react-icons/fa'
 import './Company.css'
@@ -250,76 +259,81 @@ export default function PrimaryCategories() {
 
       {/* VIEW 1: FORM LAYOUT */}
       {showForm ? (
-        <div className="card shadow-sm border-primary">
-          <div className="card-header bg-primary text-white py-2 fw-semibold">
-            {editId
-              ? 'Edit Primary Category Details'
-              : 'Add New Primary Category'}
-          </div>
-          <form onSubmit={handleSubmit} className="card-body p-4">
-            <div className="row g-3">
-              <div className="col-md-6">
-                <label className="form-label small fw-bold">
-                  Primary Category Name <span className="text-danger">*</span>
-                </label>
-                <input
-                  className="form-control form-control-sm"
-                  placeholder="Enter Category Name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
+        <Card className="company-card">
+          <h2 className="card-header mb-4">
+            {editId ? <span>Edit Primary Category - {name}</span> : ''}
+          </h2>
 
-              <div className="col-md-6">
-                <label className="form-label small fw-bold">
-                  Category Image
-                </label>
-                <input
-                  id="primary-image"
-                  type="file"
-                  className="form-control form-control-sm"
-                  accept="image/*"
-                  onChange={(e) => setImage(e.target.files[0])}
-                />
-              </div>
-
-              {editId && existingImage && (
-                <div className="col-md-6">
-                  <div className="p-2 border rounded d-inline-flex align-items-center gap-2 bg-light">
-                    <img
-                      src={`http://localhost:5000/uploads/${existingImage}`}
-                      alt="Current"
-                      width="55"
-                      height="55"
-                      style={{ objectFit: 'cover', borderRadius: '4px' }}
+          <div className="company-form-wrapper">
+            <Form className="company-form" onSubmit={handleSubmit}>
+              <Row>
+                {/* PRIMARY CATEGORY NAME INPUT */}
+                <Col xs={12} sm={6} md={6} className="mb-3">
+                  <Form.Group controlId="primaryCategoryName">
+                    <Form.Label>Primary Category Name *</Form.Label>
+                    <Form.Control
+                      placeholder="Enter Category Name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
                     />
-                    <div style={{ fontSize: '12px' }} className="text-muted">
-                      <span className="fw-bold d-block">Current Image:</span>
-                      {existingImage}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+                  </Form.Group>
+                </Col>
 
-            <div className="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
-              <button
-                type="button"
-                className="btn btn-light btn-sm px-4 border"
-                onClick={resetForm}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn btn-success btn-sm px-5 fw-bold"
-              >
-                {editId ? 'Update Changes' : 'Save Record'}
-              </button>
-            </div>
-          </form>
-        </div>
+                {/* IMAGE INPUT */}
+                <Col xs={12} sm={6} md={6} className="mb-3">
+                  <Form.Group controlId="primaryCategoryImage">
+                    <Form.Label>Category Image</Form.Label>
+                    <Form.Control
+                      id="primary-image"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setImage(e.target.files[0])}
+                    />
+                  </Form.Group>
+                </Col>
+
+                {/* CURRENT IMAGE PREVIEW (In Edit Mode) */}
+                {editId && existingImage && (
+                  <Col
+                    xs={12}
+                    sm={6}
+                    md={6}
+                    className="mb-3 d-flex align-items-end"
+                  >
+                    <div className="p-2 border rounded d-inline-flex align-items-center gap-2 bg-light">
+                      <img
+                        src={`http://localhost:5000/uploads/${existingImage}`}
+                        alt="Current"
+                        width="55"
+                        height="55"
+                        style={{ objectFit: 'cover', borderRadius: '4px' }}
+                      />
+                      <div style={{ fontSize: '12px' }} className="text-muted">
+                        <span className="fw-bold d-block">Current Image</span>
+                        {existingImage}
+                      </div>
+                    </div>
+                  </Col>
+                )}
+              </Row>
+
+              {/* FORM FOOTER BUTTONS */}
+              <div className="form-actions d-flex justify-content-end mt-4">
+                <Button
+                  variant="secondary"
+                  className="me-2"
+                  onClick={resetForm}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" variant="primary">
+                  {editId ? 'Update Primary Category' : 'Save Primary Category'}
+                </Button>
+              </div>
+            </Form>
+          </div>
+        </Card>
       ) : (
         /* VIEW 2: TABS TABLE LIST (Fixed structure width attributes) */
         <>

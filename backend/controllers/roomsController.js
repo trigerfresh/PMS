@@ -1,5 +1,6 @@
 //New code rooms controller.js
 const { poolPromise, sql } = require('../config/db')
+const XLSX = require('xlsx')
 
 // ================= CREATE ROOM =================
 exports.createRoom = async (req, res) => {
@@ -352,8 +353,9 @@ exports.getRoomStats = async (req, res) => {
     const result = await pool.request().query(`
       SELECT 
         COUNT(*) AS totalRooms,
-        SUM(CASE WHEN status = 'occupied' THEN 1 ELSE 0 END) AS occupiedRooms,
-        SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) AS availableRooms
+        SUM(CASE WHEN LOWER(status) = 'occupied' THEN 1 ELSE 0 END) AS occupiedRooms,
+        SUM(CASE WHEN LOWER(status) = 'available' THEN 1 ELSE 0 END) AS availableRooms,
+        SUM(CASE WHEN LOWER(status) = 'maintenance' THEN 1 ELSE 0 END) AS maintenanceRooms
       FROM room_masters
       WHERE active = '0'
     `)
@@ -444,6 +446,110 @@ exports.restoreRoom = async (req, res) => {
     })
   } catch (error) {
     res.status(500).json({
+      success: false,
+      message: error.message,
+    })
+  }
+}
+
+exports.exportRooms = async (req, res) => {
+  try {
+    const pool = await poolPromise
+
+    const { searchFields } = req.query
+
+    let query = `
+      SELECT 
+        h.hotel_name AS [Hotel Name],
+        f.floor_name AS [Floor Name],
+        r.room_no AS [Room No],
+        r.room_type AS [Room Type],
+        r.price AS [Price],
+        r.status AS [Status],
+        r.bhk AS [BHK],
+        r.balcony AS [Balcony],
+        r.bedroom AS [Bedroom],
+        r.bathroom AS [Bathroom],
+        r.bed_type AS [Bed Type],
+        r.room_amenities AS [Amenities]
+      FROM room_masters r
+      LEFT JOIN hotel h ON r.hotel_id = h.id
+      LEFT JOIN floor_master f ON r.floor_id = f.floor_id
+      WHERE r.active = '0'
+    `
+
+    const request = pool.request()
+
+    if (searchFields) {
+      const parsedFields = JSON.parse(searchFields)
+      parsedFields.forEach((item, index) => {
+        const keyword = item.keyword?.trim()
+        const field = item.field
+        const paramName = `keyword${index}`
+
+        if (keyword) {
+          if (field === 'hotel_name') {
+            query += ` AND h.hotel_name LIKE @${paramName}`
+            request.input(paramName, sql.VarChar, `%${keyword}%`)
+          } else if (field === 'floor_name') {
+            query += ` AND f.floor_name LIKE @${paramName}`
+            request.input(paramName, sql.VarChar, `%${keyword}%`)
+          } else if (field === 'room_no') {
+            query += ` AND r.room_no LIKE @${paramName}`
+            request.input(paramName, sql.VarChar, `%${keyword}%`)
+          } else if (field === 'room_type') {
+            query += ` AND r.room_type LIKE @${paramName}`
+            request.input(paramName, sql.VarChar, `%${keyword}%`)
+          } else if (field === 'status') {
+            query += ` AND r.status = @${paramName}`
+            request.input(paramName, sql.VarChar, keyword)
+          }
+        }
+      })
+    }
+
+    query += ` ORDER BY r.room_id DESC`
+
+    const result = await request.query(query)
+    const rows = result.recordset
+
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ message: 'No data to export' })
+    }
+
+    // Clean up room_amenities JSON arrays for display in Excel
+    rows.forEach((row) => {
+      if (row.Amenities) {
+        try {
+          const parsed = JSON.parse(row.Amenities)
+          if (Array.isArray(parsed)) {
+            row.Amenities = parsed.join(', ')
+          }
+        } catch (e) {
+          // Keep it as is
+        }
+      }
+    })
+
+    const worksheet = XLSX.utils.json_to_sheet(rows)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Rooms')
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'buffer',
+    })
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    res.setHeader('Content-Disposition', 'attachment; filename=Rooms.xlsx')
+
+    return res.send(excelBuffer)
+  } catch (error) {
+    console.error('Export Rooms Error:', error)
+    return res.status(500).json({
       success: false,
       message: error.message,
     })

@@ -122,10 +122,10 @@ export default function ProductPage() {
       value: 'gst',
       label: 'GST',
     },
-    {
-      value: 'price',
-      label: 'Price',
-    },
+    // {
+    //   value: 'price',
+    //   label: 'Price',
+    // },
   ]
 
   // NEW: Form toggle state (Page handling ke liye)

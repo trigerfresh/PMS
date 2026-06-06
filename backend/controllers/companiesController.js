@@ -26,27 +26,13 @@ exports.createCompany = async (req, res) => {
       vat_in,
       cin_no,
       cst,
-
-      // BANK DETAILS
-      bank_name,
-      account_no,
-      account_type,
-      branch_city,
-      bank_address,
-      swift_no,
-      micr_no,
-      ifsc_code,
-
       terms_conditions,
     } = req.body
 
-    console.log(req.body)
-    console.log(req.file)
+    const image = req.file ? req.file.filename : null
 
     const result = await pool
       .request()
-
-      // COMPANY DETAILS
       .input('company_name', sql.VarChar(sql.MAX), company_name)
       .input('contact_person', sql.VarChar(sql.MAX), contact_person)
       .input('email_id', sql.VarChar(sql.MAX), email_id)
@@ -63,20 +49,9 @@ exports.createCompany = async (req, res) => {
       .input('vat_in', sql.VarChar(sql.MAX), vat_in)
       .input('cin_no', sql.VarChar(sql.MAX), cin_no)
       .input('cst', sql.VarChar(sql.MAX), cst)
-
-      // BANK DETAILS
-      .input('bank_name', sql.VarChar(sql.MAX), bank_name)
-      .input('account_no', sql.VarChar(sql.MAX), account_no)
-      .input('account_type', sql.VarChar(sql.MAX), account_type)
-      .input('branch_city', sql.VarChar(sql.MAX), branch_city)
-      .input('bank_address', sql.VarChar(sql.MAX), bank_address)
-      .input('swift_no', sql.VarChar(sql.MAX), swift_no)
-      .input('micr_no', sql.VarChar(sql.MAX), micr_no)
-      .input('ifsc_code', sql.VarChar(sql.MAX), ifsc_code)
-
-      // OTHER DETAILS
       .input('terms_conditions', sql.VarChar(sql.MAX), terms_conditions)
-      .input('active', sql.VarChar(sql.MAX), '0')
+      .input('image', sql.VarChar(255), image)
+      .input('active', sql.VarChar(1), '0')
       .input('created_by', sql.VarChar(sql.MAX), String(req.user.id))
       .input('created_on', sql.DateTime, new Date()).query(`
         INSERT INTO companies (
@@ -96,24 +71,13 @@ exports.createCompany = async (req, res) => {
           vat_in,
           cin_no,
           cst,
-
-          bank_name,
-          account_no,
-          account_type,
-          branch_city,
-          bank_address,
-          swift_no,
-          micr_no,
-          ifsc_code,
-
           terms_conditions,
+          image,
           active,
           created_by,
           created_on
         )
-
         OUTPUT INSERTED.id
-
         VALUES (
           @company_name,
           @contact_person,
@@ -131,40 +95,69 @@ exports.createCompany = async (req, res) => {
           @vat_in,
           @cin_no,
           @cst,
-
-          @bank_name,
-          @account_no,
-          @account_type,
-          @branch_city,
-          @bank_address,
-          @swift_no,
-          @micr_no,
-          @ifsc_code,
-
           @terms_conditions,
+          @image,
           @active,
           @created_by,
           @created_on
         )
       `)
 
-    // INSERTED COMPANY ID
     const companyId = result.recordset[0].id
+
+    const banks = req.body.banks ? JSON.parse(req.body.banks) : []
+
+    for (const bank of banks) {
+      await pool
+        .request()
+        .input('company_id', sql.Int, companyId)
+        .input('bank_name', sql.VarChar(sql.MAX), bank.bank_name)
+        .input('account_no', sql.VarChar(sql.MAX), bank.account_no)
+        .input('account_type', sql.VarChar(sql.MAX), bank.account_type)
+        .input('branch_city', sql.VarChar(sql.MAX), bank.branch_city)
+        .input('bank_address', sql.VarChar(sql.MAX), bank.bank_address)
+        .input('swift_no', sql.VarChar(sql.MAX), bank.swift_no)
+        .input('micr_no', sql.VarChar(sql.MAX), bank.micr_no)
+        .input('ifsc_code', sql.VarChar(sql.MAX), bank.ifsc_code)
+        .input('active', sql.VarChar(1), '0').query(`
+          INSERT INTO company_banks (
+            company_id,
+            bank_name,
+            account_no,
+            account_type,
+            branch_city,
+            bank_address,
+            swift_no,
+            micr_no,
+            ifsc_code,
+            active
+          )
+          VALUES (
+            @company_id,
+            @bank_name,
+            @account_no,
+            @account_type,
+            @branch_city,
+            @bank_address,
+            @swift_no,
+            @micr_no,
+            @ifsc_code,
+            @active
+          )
+        `)
+    }
 
     return res.status(201).json({
       success: true,
       message: 'Company created successfully',
-      company: {
-        id: companyId,
-      },
+      companyId,
     })
   } catch (error) {
     console.log('CREATE COMPANY ERROR:', error)
 
     return res.status(500).json({
       success: false,
-      message: 'Create Failed',
-      error: error.message,
+      message: error.message,
     })
   }
 }
@@ -182,7 +175,6 @@ exports.getCompanies = async (req, res) => {
     let whereClause = "WHERE active = '0'"
     const request = pool.request()
 
-    // Dynamic Search
     if (searchFields) {
       const fields = JSON.parse(searchFields)
 
@@ -211,9 +203,6 @@ exports.getCompanies = async (req, res) => {
           case 'city':
             conditions.push(`city_name LIKE @${paramName}`)
             break
-
-          default:
-            break
         }
 
         request.input(paramName, sql.VarChar, `%${item.keyword}%`)
@@ -224,22 +213,22 @@ exports.getCompanies = async (req, res) => {
       }
     }
 
-    // Date Filter
     if (fromDate && toDate) {
-      whereClause += ` AND CAST(created_on AS DATE) BETWEEN @fromDate AND @toDate`
+      whereClause += ` 
+        AND CAST(created_on AS DATE)
+        BETWEEN @fromDate AND @toDate
+      `
 
       request.input('fromDate', sql.Date, fromDate)
       request.input('toDate', sql.Date, toDate)
     }
 
-    const query = `
+    const result = await request.query(`
       SELECT *
       FROM companies
       ${whereClause}
       ORDER BY id DESC
-    `
-
-    const result = await request.query(query)
+    `)
 
     return res.status(200).json({
       success: true,
@@ -284,18 +273,41 @@ exports.getCompanyById = async (req, res) => {
   try {
     const pool = await poolPromise
 
-    const result = await pool.request().input('id', sql.Int, req.params.id)
-      .query(`
+    const companyResult = await pool
+      .request()
+      .input('id', sql.Int, req.params.id).query(`
         SELECT *
         FROM companies
         WHERE id = @id
       `)
 
+    if (!companyResult.recordset.length) {
+      return res.status(404).json({
+        success: false,
+        message: 'Company not found',
+      })
+    }
+
+    const banksResult = await pool
+      .request()
+      .input('company_id', sql.Int, req.params.id).query(`
+        SELECT *
+        FROM company_banks
+        WHERE company_id = @company_id
+        AND active = '0'
+        ORDER BY id ASC
+      `)
+
     return res.status(200).json({
       success: true,
-      data: result.recordset[0],
+      data: {
+        ...companyResult.recordset[0],
+        banks: banksResult.recordset,
+      },
     })
   } catch (error) {
+    console.log(error)
+
     return res.status(500).json({
       success: false,
       error: error.message,
@@ -309,6 +321,8 @@ exports.getCompanyById = async (req, res) => {
 exports.updateCompany = async (req, res) => {
   try {
     const pool = await poolPromise
+
+    const companyId = req.params.id
 
     const {
       company_name,
@@ -327,20 +341,15 @@ exports.updateCompany = async (req, res) => {
       vat_in,
       cin_no,
       cst,
-      bank_name,
-      account_no,
-      account_type,
-      branch_city,
-      bank_address,
-      swift_no,
-      micr_no,
-      ifsc_code,
       terms_conditions,
     } = req.body
 
+    const image = req.file ? req.file.filename : null
+
+    // 1. UPDATE COMPANY
     await pool
       .request()
-      .input('id', sql.Int, req.params.id)
+      .input('id', sql.Int, companyId)
       .input('company_name', sql.VarChar(sql.MAX), company_name)
       .input('contact_person', sql.VarChar(sql.MAX), contact_person)
       .input('email_id', sql.VarChar(sql.MAX), email_id)
@@ -357,57 +366,95 @@ exports.updateCompany = async (req, res) => {
       .input('vat_in', sql.VarChar(sql.MAX), vat_in)
       .input('cin_no', sql.VarChar(sql.MAX), cin_no)
       .input('cst', sql.VarChar(sql.MAX), cst)
-      .input('bank_name', sql.VarChar(sql.MAX), bank_name)
-      .input('account_no', sql.VarChar(sql.MAX), account_no)
-      .input('account_type', sql.VarChar(sql.MAX), account_type)
-      .input('branch_city', sql.VarChar(sql.MAX), branch_city)
-      .input('bank_address', sql.VarChar(sql.MAX), bank_address)
-      .input('swift_no', sql.VarChar(sql.MAX), swift_no)
-      .input('micr_no', sql.VarChar(sql.MAX), micr_no)
-      .input('ifsc_code', sql.VarChar(sql.MAX), ifsc_code)
       .input('terms_conditions', sql.VarChar(sql.MAX), terms_conditions)
+      .input('image', sql.VarChar(255), image)
       .input('modified_by', sql.VarChar(sql.MAX), String(req.user.id))
       .input('modified_on', sql.DateTime, new Date()).query(`
         UPDATE companies
         SET
-          company_name = @company_name,
-          contact_person = @contact_person,
-          email_id = @email_id,
-          address = @address,
-          country_name = @country_name,
-          state_name = @state_name,
-          city_name = @city_name,
-          pincode = @pincode,
-          state_code = @state_code,
-          contact_no = @contact_no,
-          currency_name = @currency_name,
-          gst_no = @gst_no,
-          website = @website,
-          vat_in = @vat_in,
-          cin_no = @cin_no,
-          cst = @cst,
-          bank_name = @bank_name,
-          account_no = @account_no,
-          account_type = @account_type,
-          branch_city = @branch_city,
-          bank_address = @bank_address,
-          swift_no = @swift_no,
-          micr_no = @micr_no,
-          ifsc_code = @ifsc_code,
-          terms_conditions = @terms_conditions,
-          modified_by = @modified_by,
-          modified_on = @modified_on
-        WHERE id = @id
+          company_name=@company_name,
+          contact_person=@contact_person,
+          email_id=@email_id,
+          address=@address,
+          country_name=@country_name,
+          state_name=@state_name,
+          city_name=@city_name,
+          pincode=@pincode,
+          state_code=@state_code,
+          contact_no=@contact_no,
+          currency_name=@currency_name,
+          gst_no=@gst_no,
+          website=@website,
+          vat_in=@vat_in,
+          cin_no=@cin_no,
+          cst=@cst,
+          terms_conditions=@terms_conditions,
+          image = ISNULL(@image,image),
+          modified_by=@modified_by,
+          modified_on=@modified_on
+        WHERE id=@id
       `)
+
+    // 2. MARK OLD BANKS INACTIVE (IMPORTANT FIX)
+    await pool.request().input('company_id', sql.Int, companyId).query(`
+        UPDATE company_banks
+        SET active='1'
+        WHERE company_id=@company_id
+      `)
+
+    // 3. INSERT NEW BANKS
+    const banks = req.body.banks ? JSON.parse(req.body.banks) : []
+
+    for (const bank of banks) {
+      await pool
+        .request()
+        .input('company_id', sql.Int, companyId)
+        .input('bank_name', sql.VarChar(sql.MAX), bank.bank_name)
+        .input('account_no', sql.VarChar(sql.MAX), bank.account_no)
+        .input('account_type', sql.VarChar(sql.MAX), bank.account_type)
+        .input('branch_city', sql.VarChar(sql.MAX), bank.branch_city)
+        .input('bank_address', sql.VarChar(sql.MAX), bank.bank_address)
+        .input('swift_no', sql.VarChar(sql.MAX), bank.swift_no)
+        .input('micr_no', sql.VarChar(sql.MAX), bank.micr_no)
+        .input('ifsc_code', sql.VarChar(sql.MAX), bank.ifsc_code)
+        .input('active', sql.VarChar(1), '0').query(`
+          INSERT INTO company_banks (
+            company_id,
+            bank_name,
+            account_no,
+            account_type,
+            branch_city,
+            bank_address,
+            swift_no,
+            micr_no,
+            ifsc_code,
+            active
+          )
+          VALUES (
+            @company_id,
+            @bank_name,
+            @account_no,
+            @account_type,
+            @branch_city,
+            @bank_address,
+            @swift_no,
+            @micr_no,
+            @ifsc_code,
+            @active
+          )
+        `)
+    }
 
     return res.status(200).json({
       success: true,
       message: 'Company updated successfully',
     })
   } catch (error) {
+    console.log('UPDATE COMPANY ERROR:', error)
+
     return res.status(500).json({
       success: false,
-      error: error.message,
+      message: error.message,
     })
   }
 }
@@ -419,9 +466,12 @@ exports.deleteCompany = async (req, res) => {
   try {
     const pool = await poolPromise
 
+    const companyId = req.params.id
+
+    // 1. Delete company (soft delete)
     await pool
       .request()
-      .input('id', sql.Int, req.params.id)
+      .input('id', sql.Int, companyId)
       .input('deleted_by', sql.VarChar(sql.MAX), String(req.user.id))
       .input('deleted_on', sql.DateTime, new Date()).query(`
         UPDATE companies
@@ -430,6 +480,13 @@ exports.deleteCompany = async (req, res) => {
           deleted_by = @deleted_by,
           deleted_on = @deleted_on
         WHERE id = @id
+      `)
+
+    // 2. Delete all banks (soft delete)
+    await pool.request().input('company_id', sql.Int, companyId).query(`
+        UPDATE company_banks
+        SET active = '1'
+        WHERE company_id = @company_id
       `)
 
     return res.status(200).json({
@@ -450,13 +507,11 @@ exports.exportCompanies = async (req, res) => {
 
     const { searchFields, fromDate, toDate } = req.query
 
-    let whereClause = "WHERE active = '0'"
+    let whereClause = "WHERE c.active = '0'"
     const request = pool.request()
 
-    // Search Filters
     if (searchFields) {
       const fields = JSON.parse(searchFields)
-
       const conditions = []
 
       fields.forEach((item, index) => {
@@ -464,23 +519,19 @@ exports.exportCompanies = async (req, res) => {
 
         switch (item.field) {
           case 'companyName':
-            conditions.push(`company_name LIKE @${paramName}`)
+            conditions.push(`c.company_name LIKE @${paramName}`)
             break
-
           case 'contactPersonName':
-            conditions.push(`contact_person LIKE @${paramName}`)
+            conditions.push(`c.contact_person LIKE @${paramName}`)
             break
-
           case 'emailId':
-            conditions.push(`email_id LIKE @${paramName}`)
+            conditions.push(`c.email_id LIKE @${paramName}`)
             break
-
           case 'contactNo':
-            conditions.push(`contact_no LIKE @${paramName}`)
+            conditions.push(`c.contact_no LIKE @${paramName}`)
             break
-
           case 'city':
-            conditions.push(`city_name LIKE @${paramName}`)
+            conditions.push(`c.city_name LIKE @${paramName}`)
             break
         }
 
@@ -492,9 +543,11 @@ exports.exportCompanies = async (req, res) => {
       }
     }
 
-    // Date Filter
     if (fromDate && toDate) {
-      whereClause += ` AND CAST(created_on AS DATE) BETWEEN @fromDate AND @toDate`
+      whereClause += `
+        AND CAST(c.created_on AS DATE)
+        BETWEEN @fromDate AND @toDate
+      `
 
       request.input('fromDate', sql.Date, fromDate)
       request.input('toDate', sql.Date, toDate)
@@ -502,17 +555,25 @@ exports.exportCompanies = async (req, res) => {
 
     const result = await request.query(`
       SELECT
-        company_name AS 'Company Name',
-        contact_person AS 'Contact Person',
-        email_id AS 'Email',
-        contact_no AS 'Contact Number',
-        city_name AS 'City',
-        gst_no AS 'GST Number',
-        website AS 'Website',
-        created_on AS 'Created On'
-      FROM companies
+        c.company_name AS 'Company Name',
+        c.contact_person AS 'Contact Person',
+        c.email_id AS 'Email',
+        c.contact_no AS 'Contact Number',
+        c.city_name AS 'City',
+        c.gst_no AS 'GST Number',
+        c.website AS 'Website',
+        c.created_on AS 'Created On',
+
+        (
+          SELECT COUNT(*)
+          FROM company_banks cb
+          WHERE cb.company_id = c.id
+          AND cb.active = '0'
+        ) AS 'Bank Count'
+
+      FROM companies c
       ${whereClause}
-      ORDER BY id DESC
+      ORDER BY c.id DESC
     `)
 
     const worksheet = XLSX.utils.json_to_sheet(result.recordset)
@@ -548,9 +609,12 @@ exports.restoreCompany = async (req, res) => {
   try {
     const pool = await poolPromise
 
+    const companyId = req.params.id
+
+    // 1. Restore company
     await pool
       .request()
-      .input('id', sql.Int, req.params.id)
+      .input('id', sql.Int, companyId)
       .input('modified_by', sql.VarChar(sql.MAX), String(req.user.id))
       .input('modified_on', sql.DateTime, new Date()).query(`
         UPDATE companies
@@ -559,6 +623,13 @@ exports.restoreCompany = async (req, res) => {
           modified_by = @modified_by,
           modified_on = @modified_on
         WHERE id = @id
+      `)
+
+    // 2. Restore all banks
+    await pool.request().input('company_id', sql.Int, companyId).query(`
+        UPDATE company_banks
+        SET active = '0'
+        WHERE company_id = @company_id
       `)
 
     return res.status(200).json({
@@ -579,10 +650,9 @@ exports.getDeletedCompanies = async (req, res) => {
 
     const { searchFields, fromDate, toDate } = req.query
 
-    let whereClause = "WHERE active = '1'"
+    let whereClause = "WHERE c.active = '1'"
     const request = pool.request()
 
-    // Search Filters (same as getCompanies)
     if (searchFields) {
       const fields = JSON.parse(searchFields)
       const conditions = []
@@ -592,23 +662,23 @@ exports.getDeletedCompanies = async (req, res) => {
 
         switch (item.field) {
           case 'companyName':
-            conditions.push(`company_name LIKE @${paramName}`)
+            conditions.push(`c.company_name LIKE @${paramName}`)
             break
 
           case 'contactPersonName':
-            conditions.push(`contact_person LIKE @${paramName}`)
+            conditions.push(`c.contact_person LIKE @${paramName}`)
             break
 
           case 'emailId':
-            conditions.push(`email_id LIKE @${paramName}`)
+            conditions.push(`c.email_id LIKE @${paramName}`)
             break
 
           case 'contactNo':
-            conditions.push(`contact_no LIKE @${paramName}`)
+            conditions.push(`c.contact_no LIKE @${paramName}`)
             break
 
           case 'city':
-            conditions.push(`city_name LIKE @${paramName}`)
+            conditions.push(`c.city_name LIKE @${paramName}`)
             break
         }
 
@@ -620,19 +690,29 @@ exports.getDeletedCompanies = async (req, res) => {
       }
     }
 
-    // Date filter
     if (fromDate && toDate) {
-      whereClause += ` AND CAST(deleted_on AS DATE) BETWEEN @fromDate AND @toDate`
+      whereClause += `
+        AND CAST(c.deleted_on AS DATE)
+        BETWEEN @fromDate AND @toDate
+      `
 
       request.input('fromDate', sql.Date, fromDate)
       request.input('toDate', sql.Date, toDate)
     }
 
     const result = await request.query(`
-      SELECT *
-      FROM companies
+      SELECT
+        c.*,
+
+        (
+          SELECT COUNT(*)
+          FROM company_banks cb
+          WHERE cb.company_id = c.id
+        ) AS bank_count
+
+      FROM companies c
       ${whereClause}
-      ORDER BY id DESC
+      ORDER BY c.id DESC
     `)
 
     return res.status(200).json({
