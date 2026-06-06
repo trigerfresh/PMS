@@ -7,14 +7,16 @@
 }
 
 .page-wrapper .page-body-wrapper .page-sidebar.collapsed {
-  width: 70px !important;
+  width: 0px !important;
 }
 
 /* hide text and right-carets smoothly in collapsed mode */
 .page-wrapper .page-body-wrapper .page-sidebar span,
 .page-wrapper .page-body-wrapper .page-sidebar .pull-right,
 .page-wrapper .page-body-wrapper .page-sidebar .sidebar-user h6 {
-  transition: opacity 0.2s ease, width 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    width 0.2s ease;
   opacity: 1;
   white-space: nowrap;
   overflow: hidden;
@@ -51,7 +53,9 @@
   opacity: 0;
   height: 0;
   overflow: hidden;
-  transition: opacity 0.2s ease, height 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    height 0.2s ease;
 }
 
 .sidebar {
@@ -75,17 +79,21 @@
 
 /* collapsed layout overrides */
 .page-sidebar.collapsed~.page-body {
-  margin-left: 70px !important;
+  margin-left: 0 !important;
   transition: 0.3s ease;
 }
 
 .page-sidebar.collapsed~footer {
-  margin-left: 70px !important;
+  margin-left: 0 !important;
   transition: 0.3s ease;
 }
 
 .page-sidebar .sidebar-user {
-  transition: opacity 0.2s ease, height 0.2s ease, padding 0.2s ease, margin 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    height 0.2s ease,
+    padding 0.2s ease,
+    margin 0.2s ease;
   overflow: hidden;
 }
 
@@ -110,7 +118,7 @@
 }
 
 .page-sidebar.collapsed~.page-body {
-  width: calc(100% - 70px) !important;
+  width: 100% !important;
 }
 
 /* Responsive adjustments */
@@ -121,7 +129,7 @@
   }
 
   .page-sidebar.collapsed~.page-body {
-    margin-left: 70px !important;
-    width: calc(100% - 70px) !important;
+    margin-left: 0 !important;
+    width: 100% !important;
   }
 }
