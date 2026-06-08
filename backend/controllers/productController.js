@@ -20,8 +20,17 @@ function safeTime(t) {
 
 exports.createProduct = async (req, res) => {
   try {
-    const { pcat_id, category_id, subcategory_id, product_name, gst, price } =
-      req.body
+    const {
+      hotel_id,
+      branch_id,
+      pcat_id,
+      category_id,
+      subcategory_id,
+      product_name,
+      gst,
+      price,
+      description,
+    } = req.body
 
     // Parse availability from form-data
     let availability = []
@@ -50,6 +59,8 @@ exports.createProduct = async (req, res) => {
     // Create Product
     const productResult = await pool
       .request()
+      .input('hotel_id', sql.VarChar(10), hotel_id)
+      .input('branch_id', sql.Int, branch_id)
       .input('pcat_id', sql.BigInt, pcat_id)
       .input('category_id', sql.BigInt, category_id)
       .input('subcategory_id', sql.BigInt, subcategory_id)
@@ -59,37 +70,44 @@ exports.createProduct = async (req, res) => {
       .input('image3', sql.NVarChar, image3)
       .input('image4', sql.NVarChar, image4)
       .input('gst', sql.Decimal(10, 2), gst || 0)
-      .input('price', sql.Decimal(18, 2), price || 0).query(`
-        INSERT INTO products (
-          pcat_id,
-          category_id,
-          subcategory_id,
-          product_name,
-          image1,
-          image2,
-          image3,
-          image4,
-          gst,
-          price,
-          active,
-          created_on
-        )
-        OUTPUT INSERTED.id
-        VALUES (
-          @pcat_id,
-          @category_id,
-          @subcategory_id,
-          @product_name,
-          @image1,
-          @image2,
-          @image3,
-          @image4,
-          @gst,
-          @price,
-          '0',
-          GETDATE()
-        )
-      `)
+      .input('price', sql.Decimal(18, 2), price || 0)
+      .input('description', sql.NVarChar, description || null).query(`
+      INSERT INTO products (
+        hotel_id,
+        branch_id,
+        pcat_id,
+        category_id,
+        subcategory_id,
+        product_name,
+        image1,
+        image2,
+        image3,
+        image4,
+        gst,
+        price,
+        description,
+        active,
+        created_on
+      )
+      OUTPUT INSERTED.id
+      VALUES (
+        @hotel_id,
+        @branch_id,
+        @pcat_id,
+        @category_id,
+        @subcategory_id,
+        @product_name,
+        @image1,
+        @image2,
+        @image3,
+        @image4,
+        @gst,
+        @price,
+        @description,
+        '0',
+        GETDATE()
+      )
+  `)
 
     const productId = productResult.recordset[0].id
 
@@ -144,14 +162,12 @@ exports.getProducts = async (req, res) => {
     const result = await pool.request().query(`
       SELECT
         p.id,
-        p.product_name,
-        p.image1,
-        p.image2,
-        p.image3,
-        p.image4,
-        p.gst,
-        p.price,
-        p.active,
+
+        p.hotel_id,
+        p.branch_id,
+
+        h.hotel_name,
+        b.branch_name,
 
         p.pcat_id,
         p.category_id,
@@ -161,11 +177,28 @@ exports.getProducts = async (req, res) => {
         c.category_name,
         s.subcategory_name,
 
+        p.product_name,
+        p.image1,
+        p.image2,
+        p.image3,
+        p.image4,
+
+        p.gst,
+        p.price,
+        p.description,
+        p.active,
+
         pa.available_day,
         pa.start_time,
         pa.end_time
 
       FROM products p
+
+      LEFT JOIN hotel h
+        ON h.id = TRY_CAST(p.hotel_id AS INT)
+
+      LEFT JOIN branch b
+        ON b.id = p.branch_id
 
       LEFT JOIN primary_categories pc
         ON pc.id = p.pcat_id
@@ -178,6 +211,7 @@ exports.getProducts = async (req, res) => {
 
       LEFT JOIN product_availability pa
         ON pa.product_id = p.id
+        AND pa.active = '0'
 
       ORDER BY p.id DESC
     `)
@@ -188,20 +222,34 @@ exports.getProducts = async (req, res) => {
       if (!grouped[row.id]) {
         grouped[row.id] = {
           id: row.id,
+
+          hotel_id: row.hotel_id,
+          hotel_name: row.hotel_name,
+
+          branch_id: row.branch_id,
+          branch_name: row.branch_name,
+
           pcat_id: row.pcat_id,
           category_id: row.category_id,
           subcategory_id: row.subcategory_id,
+
           primary_categories_name: row.primary_categories_name,
           category_name: row.category_name,
           subcategory_name: row.subcategory_name,
+
           product_name: row.product_name,
+
           image1: row.image1,
           image2: row.image2,
           image3: row.image3,
           image4: row.image4,
+
           gst: row.gst,
           price: row.price,
+          description: row.description,
+
           active: row.active,
+
           availability: [],
         }
       }
@@ -215,12 +263,15 @@ exports.getProducts = async (req, res) => {
       }
     })
 
-    res.json({
+    return res.status(200).json({
       success: true,
+      count: Object.keys(grouped).length,
       data: Object.values(grouped),
     })
   } catch (err) {
-    res.status(500).json({
+    console.log('GET PRODUCTS ERROR:', err)
+
+    return res.status(500).json({
       success: false,
       message: err.message,
     })
@@ -231,8 +282,17 @@ exports.updateProduct = async (req, res) => {
   try {
     const { id } = req.params
 
-    const { pcat_id, category_id, subcategory_id, product_name, gst, price } =
-      req.body
+    const {
+      hotel_id,
+      branch_id,
+      pcat_id,
+      category_id,
+      subcategory_id,
+      product_name,
+      gst,
+      price,
+      description,
+    } = req.body
 
     // Parse availability JSON
     let availability = []
@@ -259,34 +319,42 @@ exports.updateProduct = async (req, res) => {
     await pool
       .request()
       .input('id', sql.BigInt, id)
+      .input('hotel_id', sql.VarChar(10), hotel_id)
+      .input('branch_id', sql.Int, branch_id)
       .input('pcat_id', sql.BigInt, pcat_id)
       .input('category_id', sql.BigInt, category_id)
       .input('subcategory_id', sql.BigInt, subcategory_id)
       .input('product_name', sql.NVarChar, product_name)
       .input('gst', sql.Decimal(10, 2), gst || 0)
       .input('price', sql.Decimal(18, 2), price || 0)
+      .input('description', sql.NVarChar, description || null)
       .input('image1', sql.NVarChar, image1)
       .input('image2', sql.NVarChar, image2)
       .input('image3', sql.NVarChar, image3)
       .input('image4', sql.NVarChar, image4).query(`
-        UPDATE products
-        SET
-          pcat_id = @pcat_id,
-          category_id = @category_id,
-          subcategory_id = @subcategory_id,
-          product_name = @product_name,
-          gst = @gst,
-          price = @price,
+      UPDATE products
+      SET
+        hotel_id = @hotel_id,
+        branch_id = @branch_id,
 
-          image1 = CASE WHEN @image1='' THEN image1 ELSE @image1 END,
-          image2 = CASE WHEN @image2='' THEN image2 ELSE @image2 END,
-          image3 = CASE WHEN @image3='' THEN image3 ELSE @image3 END,
-          image4 = CASE WHEN @image4='' THEN image4 ELSE @image4 END,
+        pcat_id = @pcat_id,
+        category_id = @category_id,
+        subcategory_id = @subcategory_id,
 
-          modified_on = GETDATE()
+        product_name = @product_name,
+        gst = @gst,
+        price = @price,
+        description = @description,
 
-        WHERE id = @id
-      `)
+        image1 = CASE WHEN @image1='' THEN image1 ELSE @image1 END,
+        image2 = CASE WHEN @image2='' THEN image2 ELSE @image2 END,
+        image3 = CASE WHEN @image3='' THEN image3 ELSE @image3 END,
+        image4 = CASE WHEN @image4='' THEN image4 ELSE @image4 END,
+
+        modified_on = GETDATE()
+
+      WHERE id = @id
+  `)
 
     // Remove old availability
     await pool.request().input('product_id', sql.BigInt, id).query(`

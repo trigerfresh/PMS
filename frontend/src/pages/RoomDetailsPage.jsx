@@ -58,14 +58,13 @@ const RoomDetailsPage = () => {
         const rooms = roomsRes.data.data || []
         const bookings = bookingsRes.data.data || []
 
-        const hotelRooms = rooms.filter(
-          (room) => Number(room.hotel_id) === Number(hotelId),
-        )
+        const hotelRooms = hotelId === 'all' 
+          ? rooms 
+          : rooms.filter((room) => Number(room.hotel_id) === Number(hotelId))
 
-        const hotelBookings = bookings.filter(
-          (b) => Number(b.hotel_id) === Number(hotelId) && isActiveBooking(b),
-          // console.log('Bookings:', hotelBookings),
-        )
+        const hotelBookings = hotelId === 'all'
+          ? bookings.filter((b) => isActiveBooking(b))
+          : bookings.filter((b) => Number(b.hotel_id) === Number(hotelId) && isActiveBooking(b))
 
         const mergedRooms = hotelRooms.map((room) => {
           const activeBooking = hotelBookings.find(
@@ -105,7 +104,7 @@ const RoomDetailsPage = () => {
         const rooms = res.data.data || []
         const filteredRooms = rooms.filter(
           (room) =>
-            Number(room.hotel_id) === Number(hotelId) &&
+            (hotelId === 'all' || Number(room.hotel_id) === Number(hotelId)) &&
             (room.status?.toLowerCase() === 'available' ||
               room.status?.toLowerCase() === 'vacant' ||
               room.status?.toLowerCase() === 'avalable'),
@@ -118,7 +117,7 @@ const RoomDetailsPage = () => {
         const rooms = res.data.data || []
         const filteredRooms = rooms.filter(
           (room) =>
-            Number(room.hotel_id) === Number(hotelId) &&
+            (hotelId === 'all' || Number(room.hotel_id) === Number(hotelId)) &&
             room.status?.toLowerCase() === 'maintenance',
         )
         setRoomsData(filteredRooms)
@@ -129,7 +128,7 @@ const RoomDetailsPage = () => {
         const rooms = res.data.data || []
         const filteredRooms = rooms.filter(
           (room) =>
-            Number(room.hotel_id) === Number(hotelId) &&
+            (hotelId === 'all' || Number(room.hotel_id) === Number(hotelId)) &&
             room.status?.toLowerCase() === 'reserved',
         )
         setRoomsData(filteredRooms)
@@ -144,14 +143,14 @@ const RoomDetailsPage = () => {
         const rooms = roomsRes.data.data || []
         const bookings = bookingsRes.data.data || []
 
-        const hotelRooms = rooms.filter(
-          (room) => Number(room.hotel_id) === Number(hotelId),
-        )
+        const hotelRooms = hotelId === 'all' 
+          ? rooms 
+          : rooms.filter((room) => Number(room.hotel_id) === Number(hotelId))
 
         const occupiedBookings = bookings
           .filter(
             (b) =>
-              Number(b.hotel_id) === Number(hotelId) &&
+              (hotelId === 'all' || Number(b.hotel_id) === Number(hotelId)) &&
               (b.status?.toLowerCase() === 'booked' ||
                 b.status?.toLowerCase() === 'occupied'),
           )
@@ -225,10 +224,12 @@ const RoomDetailsPage = () => {
   const groupDataByFloor = (dataArray) => {
     const groups = {}
     dataArray.forEach((item) => {
-      const floorName =
+      const floorRaw =
         item.floor ||
         `Floor ${Math.floor(Number(item.room_no) / 100)}` ||
         'Other Floor'
+      
+      const floorName = hotelId === 'all' && item.hotel_name ? `${item.hotel_name} - ${floorRaw}` : floorRaw
 
       if (!groups[floorName]) {
         groups[floorName] = []
@@ -385,7 +386,7 @@ const RoomDetailsPage = () => {
 
               {/* Conditional Data Display for Booked/Occupied Rooms */}
               {(selectedDetails.status || status)?.toLowerCase() === 'booked' ||
-              (selectedDetails.status || status)?.toLowerCase() ===
+                (selectedDetails.status || status)?.toLowerCase() ===
                 'occupied' ? (
                 <>
                   <p className="mb-1">
@@ -409,10 +410,10 @@ const RoomDetailsPage = () => {
                     selectedDetails.check_out_date,
                     selectedDetails.status || status,
                   ) === 'crossed' && (
-                    <div className="alert alert-danger p-1 mb-0 mt-2 text-center small fw-bold">
-                      ⚠️ Checkout Time Overdue!
-                    </div>
-                  )}
+                      <div className="alert alert-danger p-1 mb-0 mt-2 text-center small fw-bold">
+                        ⚠️ Checkout Time Overdue!
+                      </div>
+                    )}
                 </>
               ) : (
                 <div className="text-muted small">
@@ -444,16 +445,16 @@ const RoomDetailsPage = () => {
           {/* Confirm Checkout Button: Visible only when room is Booked or Occupied */}
           {((selectedDetails?.status || status)?.toLowerCase() === 'booked' ||
             (selectedDetails?.status || status)?.toLowerCase() ===
-              'occupied') && (
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={handleCheckoutSubmit}
-              disabled={checkoutLoading}
-            >
-              {checkoutLoading ? 'Processing...' : 'Confirm Checkout'}
-            </Button>
-          )}
+            'occupied') && (
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={handleCheckoutSubmit}
+                disabled={checkoutLoading}
+              >
+                {checkoutLoading ? 'Processing...' : 'Confirm Checkout'}
+              </Button>
+            )}
         </Modal.Footer>
       </Modal>
     </Container>

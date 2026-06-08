@@ -10,52 +10,54 @@ import {
   Dropdown,
   Modal,
 } from 'react-bootstrap'
-import { FaPlus, FaArrowLeft, FaPen, FaTrash, FaSearch } from 'react-icons/fa'
+import { FaPlus, FaArrowLeft, FaSearch } from 'react-icons/fa'
 import SearchPanel from '../../utils/filterPanel'
 
 const FoodMaster = () => {
   const [foods, setFoods] = useState([])
   const [showForm, setShowForm] = useState(false)
   const [isEdit, setIsEdit] = useState(false)
-
   const [showView, setShowView] = useState(false)
   const [viewFood, setViewFood] = useState(null)
-  const [showSearch, setShowSearch] = useState(false)
+
+  // Dropdown states
+  const [hotels, setHotels] = useState([])
+  const [branches, setBranches] = useState([])
+  const [primaryCategories, setPrimaryCategories] = useState([])
+  const [categories, setCategories] = useState([])
+  const [subCategories, setSubCategories] = useState([])
 
   const [formData, setFormData] = useState({
-    food_id: null,
-    category: '',
-    primary_category: '',
-    food_name: '',
-    price: '',
+    product_id: null,
+    hotel_id: '',
+    branch_id: '',
+    pcat_id: '',
+    category_id: '',
+    subcategory_id: '',
+    product_name: '',
     gst: '',
+    price: '',
     total_price: '',
-
-    img1: null,
-    img2: null,
-    img3: null,
-    img4: null,
-
-    old_img1: '',
-    old_img2: '',
-    old_img3: '',
-    old_img4: '',
+    description: '',
+    availability: [],
+    image1: null,
+    image2: null,
+    image3: null,
+    image4: null,
+    old_image1: '',
+    old_image2: '',
+    old_image3: '',
+    old_image4: '',
   })
-
-  const handleView = (food) => {
-    setViewFood(food)
-    setShowView(true)
-  }
 
   const token = localStorage.getItem('token')
 
-  // ================= FETCH =================
+  // ================= FETCH FOODS =================
   const fetchFoods = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/foods', {
+      const res = await axios.get('http://localhost:5000/api/products', {
         headers: { Authorization: `Bearer ${token}` },
       })
-
       setFoods(res.data.data || [])
     } catch (err) {
       console.log(err)
@@ -64,21 +66,124 @@ const FoodMaster = () => {
 
   useEffect(() => {
     fetchFoods()
+    fetchHotels()
   }, [])
 
-  // ================= CHANGE =================
+  // ================= FETCH HOTELS =================
+  const fetchHotels = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/api/hotels', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      setHotels(res.data.data || [])
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  // ================= CASCADING HANDLERS =================
+  const handleHotelChange = async (e) => {
+    const hotelId = e.target.value
+    setFormData({
+      ...formData,
+      hotel_id: hotelId,
+      branch_id: '',
+      pcat_id: '',
+      category_id: '',
+      subcategory_id: '',
+    })
+    setBranches([])
+    setPrimaryCategories([])
+    setCategories([])
+    setSubCategories([])
+
+    try {
+      const res = await axios.get(
+        `http://localhost:5000/api/branches/by-hotel/${hotelId}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      )
+      setBranches(res.data.data || [])
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  const handleBranchChange = async (e) => {
+    const branchId = e.target.value
+    setFormData({
+      ...formData,
+      branch_id: branchId,
+      pcat_id: '',
+      category_id: '',
+      subcategory_id: '',
+    })
+    setPrimaryCategories([])
+    setCategories([])
+    setSubCategories([])
+
+    try {
+      const res = await axios.get(
+        `http://localhost:5000/api/primary-categories/branch/${branchId}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      )
+      setPrimaryCategories(res.data.data || [])
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  const handlePrimaryCategoryChange = async (e) => {
+    const pcatId = e.target.value
+    setFormData({
+      ...formData,
+      pcat_id: pcatId,
+      category_id: '',
+      subcategory_id: '',
+    })
+    setCategories([])
+    setSubCategories([])
+
+    try {
+      const res = await axios.get(
+        `http://localhost:5000/api/categories/primary/${pcatId}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      )
+      setCategories(res.data.data || [])
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  const handleCategoryChange = async (e) => {
+    const categoryId = e.target.value
+    setFormData({
+      ...formData,
+      category_id: categoryId,
+      subcategory_id: '',
+    })
+    setSubCategories([])
+
+    try {
+      const res = await axios.get(
+        `http://localhost:5000/api/subcategories/category/${categoryId}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      )
+      setSubCategories(res.data.data || [])
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  // ================= FORM CHANGE =================
   const handleChange = (e) => {
     const { name, value } = e.target
-
     setFormData((prev) => {
       const newData = { ...prev, [name]: value }
 
-      // Calculate GST & Total if price changes
       if (name === 'price') {
         const priceNum = parseFloat(value) || 0
         const gst = +(priceNum * 0.18).toFixed(2)
         const total_price = +(priceNum + gst).toFixed(2)
-
         newData.gst = gst
         newData.total_price = total_price
       }
@@ -87,56 +192,63 @@ const FoodMaster = () => {
     })
   }
 
-  // ================= FILE =================
   const handleFile = (e) => {
     const { name, files } = e.target
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: files[0],
-    }))
+    setFormData({ ...formData, [name]: files[0] })
   }
 
-  // ================= RESET =================
   const resetForm = () => {
     setIsEdit(false)
     setFormData({
-      food_id: null,
-      category: '',
-      primary_category: '',
-      food_name: '',
+      product_id: null,
+      hotel_id: '',
+      branch_id: '',
+      pcat_id: '',
+      category_id: '',
+      subcategory_id: '',
+      product_name: '',
+      gst: '',
       price: '',
-      img1: null,
-      img2: null,
-      img3: null,
-      img4: null,
-      old_img1: '',
-      old_img2: '',
-      old_img3: '',
-      old_img4: '',
+      total_price: '',
+      description: '',
+      availability: [],
+      image1: null,
+      image2: null,
+      image3: null,
+      image4: null,
+      old_image1: '',
+      old_image2: '',
+      old_image3: '',
+      old_image4: '',
     })
+    setBranches([])
+    setPrimaryCategories([])
+    setCategories([])
+    setSubCategories([])
   }
 
   // ================= SUBMIT =================
   const handleSubmit = async (e) => {
     e.preventDefault()
-
     try {
       const form = new FormData()
-
-      form.append('category', formData.category)
-      form.append('primary_category', formData.primary_category)
-      form.append('food_name', formData.food_name)
+      form.append('hotel_id', formData.hotel_id)
+      form.append('branch_id', formData.branch_id)
+      form.append('pcat_id', formData.pcat_id)
+      form.append('category_id', formData.category_id)
+      form.append('subcategory_id', formData.subcategory_id)
+      form.append('product_name', formData.product_name)
       form.append('price', formData.price)
-
-      if (formData.img1) form.append('img1', formData.img1)
-      if (formData.img2) form.append('img2', formData.img2)
-      if (formData.img3) form.append('img3', formData.img3)
-      if (formData.img4) form.append('img4', formData.img4)
+      form.append('gst', formData.gst)
+      form.append('description', formData.description)
+      form.append('availability', JSON.stringify(formData.availability))
+      ;['image1', 'image2', 'image3', 'image4'].forEach((img) => {
+        if (formData[img]) form.append(img, formData[img])
+      })
 
       if (isEdit) {
         await axios.put(
-          `http://localhost:5000/api/foods/${formData.food_id}`,
+          `http://localhost:5000/api/products/${formData.product_id}`,
           form,
           {
             headers: {
@@ -146,7 +258,7 @@ const FoodMaster = () => {
           },
         )
       } else {
-        await axios.post('http://localhost:5000/api/foods', form, {
+        await axios.post('http://localhost:5000/api/products', form, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data',
@@ -166,65 +278,49 @@ const FoodMaster = () => {
   const handleEdit = (food) => {
     setIsEdit(true)
     setShowForm(true)
-
     setFormData({
-      food_id: food.food_id,
-      category: food.category,
-      primary_category: food.primary_category,
-      food_name: food.food_name,
+      product_id: food.id,
+      hotel_id: food.hotel_id,
+      branch_id: food.branch_id,
+      pcat_id: food.pcat_id,
+      category_id: food.category_id,
+      subcategory_id: food.subcategory_id,
+      product_name: food.product_name,
       price: food.price,
-
-      img1: null,
-      img2: null,
-      img3: null,
-      img4: null,
-
-      old_img1: food.img1,
-      old_img2: food.img2,
-      old_img3: food.img3,
-      old_img4: food.img4,
+      gst: food.gst,
+      total_price: food.total_price,
+      description: food.description,
+      image1: null,
+      image2: null,
+      image3: null,
+      image4: null,
+      old_image1: food.image1,
+      old_image2: food.image2,
+      old_image3: food.image3,
+      old_image4: food.image4,
     })
   }
 
   // ================= DELETE =================
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this food?')) return
-
+    if (!window.confirm('Delete this product?')) return
     try {
-      await axios.delete(`http://localhost:5000/api/foods/${id}`, {
+      await axios.delete(`http://localhost:5000/api/products/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-
       fetchFoods()
     } catch (err) {
       console.log(err)
     }
   }
 
+  // ================= JSX =================
   return (
     <div className="container-fluid p-4">
-      {/* ================= FORM ================= */}
-      {/* <div
-        style={{
-          position: 'relative',
-          left: '16%',
-        }}
-      >
-        <button
-          className="search-btn btn-success p-2 me-2" // Changed class name
-          onClick={() => setShowSearch(!showSearch)}
-          style={{
-            borderRadius: '10%',
-          }}
-        >
-          <FaSearch /> {showSearch ? 'Hide Search' : 'Search'}
-        </button>
-      </div> */}
       {showForm ? (
         <Card className="p-4">
           <div className="d-flex justify-content-between mb-3">
-            <h4>{isEdit ? 'Update Food' : 'Add Food'}</h4>
-
+            <h4>{isEdit ? 'Update Product' : 'Add Product'}</h4>
             <Button
               variant="secondary"
               onClick={() => {
@@ -236,60 +332,102 @@ const FoodMaster = () => {
             </Button>
           </div>
 
-          {showSearch && (
-            <SearchPanel
-            // searchFields={searchFields}
-            // setSearchFields={setSearchFields}
-            // dateFilter={dateFilter}
-            // setDateFilter={setDateFilter}
-            // onSearch={handleSearch}
-            // onReset={resetSearch}
-            // onDownloadExcel={handleDownloadExcel}
-            // searchOptions={branchSearchOptions}
-            />
-          )}
-
           <Form onSubmit={handleSubmit}>
             <Row>
-              {/* CATEGORY DROPDOWN */}
               <Col md={4}>
-                <Form.Label>Category</Form.Label>
+                <Form.Label>Hotel</Form.Label>
                 <Form.Select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
+                  value={formData.hotel_id}
+                  onChange={handleHotelChange}
                   required
                 >
-                  <option value="">Select</option>
-                  <option value="Veg">Veg</option>
-                  <option value="Non-Veg">Non-Veg</option>
+                  <option value="">Select Hotel</option>
+                  {hotels.map((h) => (
+                    <option key={h.id} value={h.id}>
+                      {h.hotel_name}
+                    </option>
+                  ))}
                 </Form.Select>
               </Col>
 
-              {/* PRIMARY CATEGORY */}
+              <Col md={4}>
+                <Form.Label>Branch</Form.Label>
+                <Form.Select
+                  value={formData.branch_id}
+                  onChange={handleBranchChange}
+                  required
+                >
+                  <option value="">Select Branch</option>
+                  {branches.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.branch_name}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Col>
+
               <Col md={4}>
                 <Form.Label>Primary Category</Form.Label>
-                <Form.Control
-                  name="primary_category"
-                  value={formData.primary_category}
-                  onChange={handleChange}
+                <Form.Select
+                  value={formData.pcat_id}
+                  onChange={handlePrimaryCategoryChange}
                   required
-                />
+                >
+                  <option value="">Select</option>
+                  {primaryCategories.map((pc) => (
+                    <option key={pc.id} value={pc.id}>
+                      {pc.primary_categories_name}
+                    </option>
+                  ))}
+                </Form.Select>
               </Col>
 
-              {/* FOOD NAME */}
               <Col md={4}>
-                <Form.Label>Food Name</Form.Label>
+                <Form.Label>Category</Form.Label>
+                <Form.Select
+                  value={formData.category_id}
+                  onChange={handleCategoryChange}
+                  required
+                >
+                  <option value="">Select</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.category_name}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Col>
+
+              <Col md={4}>
+                <Form.Label>Sub Category</Form.Label>
+                <Form.Select
+                  value={formData.subcategory_id}
+                  onChange={(e) =>
+                    setFormData({ ...formData, subcategory_id: e.target.value })
+                  }
+                  required
+                >
+                  <option value="">Select</option>
+                  {subCategories.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.subcategory_name}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Col>
+
+              <Col md={4}>
+                <Form.Label>Product Name</Form.Label>
                 <Form.Control
-                  name="food_name"
-                  value={formData.food_name}
-                  onChange={handleChange}
+                  value={formData.product_name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, product_name: e.target.value })
+                  }
                   required
                 />
               </Col>
 
-              {/* PRICE */}
-              <Col md={4} className="mt-1">
+              <Col md={4}>
                 <Form.Label>Price</Form.Label>
                 <Form.Control
                   type="number"
@@ -300,12 +438,12 @@ const FoodMaster = () => {
                 />
               </Col>
 
-              <Col md={4} className="mt-1">
+              <Col md={4}>
                 <Form.Label>GST (18%)</Form.Label>
                 <Form.Control type="number" value={formData.gst} readOnly />
               </Col>
 
-              <Col md={4} className="mt-1">
+              <Col md={4}>
                 <Form.Label>Total Price</Form.Label>
                 <Form.Control
                   type="number"
@@ -314,19 +452,17 @@ const FoodMaster = () => {
                 />
               </Col>
 
-              {/* IMAGES */}
               {[1, 2, 3, 4].map((num) => (
-                <Col md={4} key={num} className="mt-1">
+                <Col md={4} key={num}>
                   <Form.Label>Image {num}</Form.Label>
                   <Form.Control
                     type="file"
-                    name={`img${num}`}
+                    name={`image${num}`}
                     onChange={handleFile}
                   />
-
-                  {formData[`old_img${num}`] && (
+                  {formData[`old_image${num}`] && (
                     <img
-                      src={`http://localhost:5000/uploads/${formData[`old_img${num}`]}`}
+                      src={`http://localhost:5000/uploads/${formData[`old_image${num}`]}`}
                       width="80"
                       className="mt-2"
                     />
@@ -335,26 +471,22 @@ const FoodMaster = () => {
               ))}
             </Row>
 
-            <div className="mt-4">
-              <Button type="submit" variant="success">
-                {isEdit ? 'Update' : 'Save'}
-              </Button>
-            </div>
+            <Button type="submit" variant="success" className="mt-3">
+              {isEdit ? 'Update' : 'Save'}
+            </Button>
           </Form>
         </Card>
       ) : (
-        /* ================= LIST ================= */
         <Card className="p-4">
           <div className="d-flex justify-content-between mb-3">
-            <h3>Food Master</h3>
-
+            <h3>Products</h3>
             <Button
               onClick={() => {
                 resetForm()
                 setShowForm(true)
               }}
             >
-              <FaPlus /> Add Food
+              <FaPlus /> Add Product
             </Button>
           </div>
 
@@ -364,32 +496,35 @@ const FoodMaster = () => {
                 <th>ID</th>
                 <th>Image</th>
                 <th>Name</th>
+                <th>Hotel</th>
+                <th>Branch</th>
                 <th>Category</th>
-                <th>Type</th>
+                <th>Primary Category</th>
+                <th>Sub Category</th>
                 <th>Price</th>
                 <th>GST</th>
                 <th>Total</th>
                 <th>Action</th>
               </tr>
             </thead>
-
             <tbody>
               {foods.map((f) => (
-                <tr key={f.food_id}>
-                  <td>{f.food_id}</td>
-
+                <tr key={f.id}>
+                  <td>{f.id}</td>
                   <td>
-                    {f.img1 && (
+                    {f.image1 && (
                       <img
-                        src={`http://localhost:5000/uploads/${f.img1}`}
+                        src={`http://localhost:5000/uploads/${f.image1}`}
                         width="60"
                       />
                     )}
                   </td>
-
-                  <td>{f.food_name}</td>
-                  <td>{f.category}</td>
-                  <td>{f.primary_category}</td>
+                  <td>{f.product_name}</td>
+                  <td>{f.hotel_name}</td>
+                  <td>{f.branch_name}</td>
+                  <td>{f.category_name}</td>
+                  <td>{f.primary_categories_name}</td>
+                  <td>{f.subcategory_name}</td>
                   <td>₹{f.price}</td>
                   <td>{f.gst}</td>
                   <td>{f.total_price}</td>
@@ -398,121 +533,25 @@ const FoodMaster = () => {
                       <Dropdown.Toggle variant="secondary" size="sm">
                         Action
                       </Dropdown.Toggle>
-
                       <Dropdown.Menu>
-                        {/* VIEW */}
-                        <Dropdown.Item onClick={() => handleView(f)}>
-                          View
-                        </Dropdown.Item>
-
-                        {/* EDIT */}
                         <Dropdown.Item onClick={() => handleEdit(f)}>
                           Edit
                         </Dropdown.Item>
-
-                        {/* DELETE */}
                         <Dropdown.Item
                           className="text-danger"
-                          onClick={() => handleDelete(f.food_id)}
+                          onClick={() => handleDelete(f.id)}
                         >
                           Delete
                         </Dropdown.Item>
                       </Dropdown.Menu>
                     </Dropdown>
                   </td>
-
-                  {/* <td>
-                    <Button
-                      size="sm"
-                      variant="warning"
-                      onClick={() => handleEdit(f)}
-                    >
-                      <FaPen />
-                    </Button>
-
-                    <Button
-                      size="sm"
-                      variant="danger"
-                      className="ms-2"
-                      onClick={() => handleDelete(f.food_id)}
-                    >
-                      <FaTrash />
-                    </Button>
-                  </td> */}
                 </tr>
               ))}
             </tbody>
           </Table>
         </Card>
       )}
-      <Modal show={showView} onHide={() => setShowView(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Food Details</Modal.Title>
-        </Modal.Header>
-
-        <Modal.Body>
-          {viewFood && (
-            <div>
-              <p>
-                <b>Food Name:</b> {viewFood.food_name}
-              </p>
-              <p>
-                <b>Category:</b> {viewFood.category}
-              </p>
-              <p>
-                <b>Primary Category:</b> {viewFood.primary_category}
-              </p>
-              <p>
-                <b>Price:</b> ₹{viewFood.price}
-              </p>
-              <p>
-                <b>GST:</b> ₹{viewFood.gst}
-              </p>
-              <p>
-                <b>Total Price:</b> ₹{viewFood.total_price}
-              </p>
-
-              <hr />
-
-              <div className="d-flex gap-3 flex-wrap">
-                {viewFood.img1 && (
-                  <img
-                    src={`http://localhost:5000/uploads/${viewFood.img1}`}
-                    width="120"
-                  />
-                )}
-
-                {viewFood.img2 && (
-                  <img
-                    src={`http://localhost:5000/uploads/${viewFood.img2}`}
-                    width="120"
-                  />
-                )}
-
-                {viewFood.img3 && (
-                  <img
-                    src={`http://localhost:5000/uploads/${viewFood.img3}`}
-                    width="120"
-                  />
-                )}
-
-                {viewFood.img4 && (
-                  <img
-                    src={`http://localhost:5000/uploads/${viewFood.img4}`}
-                    width="120"
-                  />
-                )}
-              </div>
-            </div>
-          )}
-        </Modal.Body>
-
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowView(false)}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </div>
   )
 }

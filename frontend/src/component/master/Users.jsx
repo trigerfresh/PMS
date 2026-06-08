@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import SearchPanel from '../../utils/FilterPanel'
+import Pagination from '../../utils/Pagination'
 import {
   FaPen,
   FaTrashAlt,
@@ -27,6 +28,7 @@ import {
 import defaultImg from './download.jfif'
 
 const API_BASE_URL = `http://localhost:5000/api`
+const IMAGE_BASE_URL = `http://localhost:5000/uploads`
 
 const Users = () => {
   const [users, setUsers] = useState([])
@@ -48,9 +50,11 @@ const Users = () => {
   const [activeTab, setActiveTab] = useState('active')
 
   const [deletedUsers, setDeletedUsers] = useState([])
+  const [currentPage, setCurrentPage] = useState(1)
   const initialFormData = {
     first_name: '',
     last_name: '',
+    fullname: '',
     email: '',
     password: '',
     phone: '',
@@ -96,6 +100,7 @@ const Users = () => {
     const res = await axios.get(`${API_BASE_URL}/users/deleted`)
 
     setDeletedUsers(res.data.data || [])
+    setCurrentPage(1)
   }
 
   const handleRestore = async (id) => {
@@ -161,6 +166,7 @@ const Users = () => {
       const data = res.data
 
       setUsers(Array.isArray(data) ? data : data?.data || data?.users || [])
+      setCurrentPage(1)
     } catch (error) {
       if (error.response?.status === 401) {
         localStorage.removeItem('token')
@@ -182,83 +188,32 @@ const Users = () => {
           getAuthHeaders(),
         )
 
-        // console.log('companiesRes', companiesRes.data)
-
         const rolesRes = await axios.get(
           `${API_BASE_URL}/users/`,
           getAuthHeaders(),
         )
 
-        // console.log('rolesRes', rolesRes.data)
-
-        // const clientsRes = await axios.get(
-        //   `${API_BASE_URL}/users/`,
-        //   getAuthHeaders(),
-        // )
-
-        // const clientData = Array.isArray(clientsRes.data?.data)
-        //   ? clientsRes.data.data
-        //   : Array.isArray(clientsRes.data)
-        //     ? clientsRes.data
-        //     : []
-
-        // setClients(clientData)
-        // setAvailableClients(clientData)
-
-        // console.log('clientsRes', clientsRes.data)
+        const branchesRes = await axios.get(
+          `${API_BASE_URL}/branch`,
+          getAuthHeaders(),
+        )
 
         setCompanies(companiesRes.data.data)
         setRoles(rolesRes.data)
-        // setClients(clientsRes.data.data)
-        // setAvailableClients(clientsRes.data.data)
+        setBranches(branchesRes.data.data || [])
       } catch (error) {
         console.log('FULL ERROR =>', error)
-
-        console.log('ERROR RESPONSE =>', error.response)
-
-        console.log('ERROR DATA =>', error.response?.data)
-
-        console.log('ERROR STATUS =>', error.response?.status)
-
         setError('Failed to fetch dropdown data')
       } finally {
         await fetchUsers()
+        await fetchDeletedUsers()
       }
     }
     fetchInitialData()
     // console.log(clients, availableClients);
   }, [])
 
-  // Fetch branches only when the selected company changes
-  useEffect(() => {
-    const fetchBranches = async () => {
-      try {
-        if (!formData.company_id) {
-          setBranches([])
-          return
-        }
-
-        console.log('SELECTED COMPANY =>', formData.company_id)
-
-        const token = localStorage.getItem('token')
-
-        const res = await axios.get(`${API_BASE_URL}/branch`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-        console.log('BRANCH API RESPONSE =>', res.data)
-
-        setBranches(res.data.data || [])
-      } catch (error) {
-        console.error('BRANCH FETCH ERROR =>', error)
-        setBranches([])
-      }
-    }
-
-    fetchBranches()
-  }, [formData.company_id])
+  // Branch dropdown is filtered client-side based on the selected company
   // --- Form Handlers ---
 
   const handleInputChange = (e) => {
@@ -267,10 +222,21 @@ const Users = () => {
     console.log('FIELD =>', name)
     console.log('VALUE =>', value)
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        [name]: value,
+      }
+
+      // Automatically sync first_name and last_name when fullname is changed
+      if (name === 'fullname') {
+        const parts = value.trim().split(/\s+/)
+        updated.first_name = parts[0] || ''
+        updated.last_name = parts.slice(1).join(' ') || ''
+      }
+
+      return updated
+    })
   }
 
   const handleFileChange = (e) => {
@@ -352,8 +318,18 @@ const Users = () => {
     try {
       const data = new FormData()
 
-      data.append('first_name', formData.first_name)
-      data.append('last_name', formData.last_name)
+      // Sync name fields just in case before submitting
+      let derivedFirstName = formData.first_name
+      let derivedLastName = formData.last_name
+      if (formData.fullname && (!derivedFirstName || !derivedLastName)) {
+        const parts = formData.fullname.trim().split(/\s+/)
+        derivedFirstName = parts[0] || ''
+        derivedLastName = parts.slice(1).join(' ') || ''
+      }
+
+      data.append('first_name', derivedFirstName)
+      data.append('last_name', derivedLastName)
+      data.append('fullname', formData.fullname)
       data.append('email', formData.email)
       data.append('password', formData.password)
       data.append('role', formData.role)
@@ -402,10 +378,12 @@ const Users = () => {
 
     setIsEditing(user)
 
+    const derivedFullname = user.fullname || `${user.first_name || ''} ${user.last_name || ''}`.trim()
+
     setFormData({
       first_name: user.first_name || '',
       last_name: user.last_name || '',
-      fullname: user.fullname || '',
+      fullname: derivedFullname || '',
       email: user.email || '',
       password: '',
       phone: user.phone || '',
@@ -419,7 +397,7 @@ const Users = () => {
 
     setLogoPreview(
       user.profile_image
-        ? `${import.meta.env.VITE_API_URL}/${user.profile_image.replace(/\\/g, '/')}`
+        ? `${IMAGE_BASE_URL}/${user.profile_image}`
         : null,
     )
 
@@ -432,6 +410,7 @@ const Users = () => {
         await axios.delete(`${API_BASE_URL}/users/${id}`, getAuthHeaders())
         alert('User deleted successfully')
         fetchUsers()
+        fetchDeletedUsers()
       } catch (error) {
         if (error.response?.status === 401) {
           localStorage.removeItem('token')
@@ -449,12 +428,18 @@ const Users = () => {
   }
 
   useEffect(() => {
-    fetchUsers()
-  }, [searchFields, dateFilter])
+    setCurrentPage(1)
+    if (activeTab === 'active') {
+      fetchUsers()
+    } else {
+      fetchDeletedUsers()
+    }
+  }, [activeTab, searchFields, dateFilter])
 
   const resetSearch = () => {
     setSearchFields([{ field: 'email', keyword: '' }])
     setDateFilter({ from: '', to: '' })
+    setCurrentPage(1)
     fetchUsers()
   }
 
@@ -473,7 +458,7 @@ const Users = () => {
       const randomNumber = Math.floor(1000000000 + Math.random() * 9000000000)
 
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/users/export`,
+        `${API_BASE_URL}/users/export`,
         {
           params,
           responseType: 'blob', // IMPORTANT
@@ -632,10 +617,7 @@ const Users = () => {
               {viewUser.profile_image && (
                 <div className="text-center mt-3">
                   <Image
-                    src={`${import.meta.env.VITE_API_URL}/${viewUser.profile_image.replace(
-                      /\\/g,
-                      '/',
-                    )}`}
+                    src={`${IMAGE_BASE_URL}/${viewUser.profile_image}`}
                     alt={viewUser.name}
                     roundedCircle
                     fluid
@@ -913,11 +895,26 @@ const Users = () => {
                   >
                     <option value="">Select Branch</option>
 
-                    {branches.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.branch_name}
-                      </option>
-                    ))}
+                    {branches
+                      .filter((item) => {
+                        const isActive = item.active == 0;
+                        let isAssigned = false;
+                        if (formData.company_id) {
+                          const selectedCompanyId = String(formData.company_id);
+                          if (item.company_id) {
+                            const assignedCompanyIds = item.company_id
+                              .split(',')
+                              .map((id) => id.trim());
+                            isAssigned = assignedCompanyIds.includes(selectedCompanyId);
+                          }
+                        }
+                        return isActive && isAssigned;
+                      })
+                      .map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.branch_name}
+                        </option>
+                      ))}
                   </Form.Select>
 
                   <Form.Control.Feedback type="invalid">
@@ -1082,123 +1079,132 @@ const Users = () => {
               {error}
             </Alert>
           ) : (
-            <Table
-              bordered
-              hover
-              className="list-table align-middle table-sm w-auto mb-0"
-            >
-              <thead className="table text-center">
-                <tr>
-                  <th width="250" className="text-center">
-                    Name
-                  </th>
-                  <th width="200">Email ID</th>
-                  <th width="150">Role</th>
-                  <th width="150">Branch</th>
-                  <th width="120">Contact No</th>
-                  <th width="90" className="text-center">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="text-center">
-                {activeTab === 'active' ? (
-                  users.length === 0 ? (
+            <>
+              <Table
+                bordered
+                hover
+                className="list-table align-middle table-sm w-auto mb-0"
+              >
+                <thead className="table text-center">
+                  <tr>
+                    <th width="250" className="text-center">
+                      Name
+                    </th>
+                    <th width="200">Email ID</th>
+                    <th width="150">Role</th>
+                    <th width="150">Branch</th>
+                    <th width="120">Contact No</th>
+                    <th width="90" className="text-center">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="text-center">
+                  {activeTab === 'active' ? (
+                    users.length === 0 ? (
+                      <tr>
+                        <td colSpan="6">No active users found</td>
+                      </tr>
+                    ) : (
+                      users
+                        .slice((currentPage - 1) * 10, currentPage * 10)
+                        .map((user) => (
+                          <tr key={user.id}>
+                            <td>
+                              <div className="info">
+                                <img
+                                  src={
+                                    user.profile_image
+                                      ? `${IMAGE_BASE_URL}/${user.profile_image}`
+                                      : defaultImg
+                                  }
+                                  style={{
+                                    height: '30px',
+                                  }}
+                                  alt={user.first_name}
+                                  className="user-avatar"
+                                  onError={(e) => {
+                                    e.target.src = defaultImg
+                                  }}
+                                />
+                                <div className="user-details">
+                                  <span className="user-name">
+                                    {user.fullname || user.name || user.first_name}
+                                  </span>
+                                </div>
+                              </div>
+                            </td>
+                            <td>{user.email}</td>
+                            <td>{user.role}</td>
+                            <td>{user.branch_name || 'NA'}</td>
+                            <td>{user.phone || 'NA'}</td>
+
+                            <td>
+                              <Dropdown>
+                                <Dropdown.Toggle variant="secondary" size="sm">
+                                  <BsThreeDotsVertical />
+                                </Dropdown.Toggle>
+
+                                <Dropdown.Menu popperConfig={{ strategy: 'fixed' }}>
+                                  <Dropdown.Item onClick={() => handleView(user)}>
+                                    <FaEye className="me-2 text-info" />
+                                    View
+                                  </Dropdown.Item>
+
+                                  <Dropdown.Item onClick={() => handleEdit(user)}>
+                                    <FaPen className="me-2 text-primary" />
+                                    Edit
+                                  </Dropdown.Item>
+
+                                  <Dropdown.Item
+                                    className="text-danger"
+                                    onClick={() => handleDelete(user.id)}
+                                  >
+                                    <FaTrashAlt className="me-2" />
+                                    Delete
+                                  </Dropdown.Item>
+                                </Dropdown.Menu>
+                              </Dropdown>
+                            </td>
+                          </tr>
+                        ))
+                    )
+                  ) : deletedUsers.length === 0 ? (
                     <tr>
-                      <td colSpan="6">No active users found</td>
+                      <td colSpan="6">No deleted users found</td>
                     </tr>
                   ) : (
-                    users.map((user) => (
-                      <tr key={user.id}>
-                        <td>
-                          <div className="info">
-                            <img
-                              src={
-                                user.profile_image
-                                  ? `${import.meta.env.VITE_API_URL}/${user.profile_image.replace(
-                                      /\\/g,
-                                      '/',
-                                    )}`
-                                  : defaultImg
-                              }
-                              style={{
-                                height: '30px',
-                              }}
-                              alt={user.first_name}
-                              className="user-avatar"
-                              onError={(e) => {
-                                e.target.src = defaultImg
-                              }}
-                            />
-                            <div className="user-details">
-                              <span className="user-name">
-                                {user.fullname || user.name || user.first_name}
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-                        <td>{user.email}</td>
-                        <td>{user.role}</td>
-                        <td>{user.branch_name || 'NA'}</td>
-                        <td>{user.phone || 'NA'}</td>
+                    deletedUsers
+                      .slice((currentPage - 1) * 10, currentPage * 10)
+                      .map((user) => (
+                        <tr key={user.id}>
+                          <td>{user.fullname}</td>
+                          <td>{user.email}</td>
+                          <td>{user.role}</td>
+                          <td>{user.branch_name}</td>
+                          <td>{user.phone}</td>
 
-                        <td>
-                          <Dropdown>
-                            <Dropdown.Toggle variant="secondary" size="sm">
-                              <BsThreeDotsVertical />
-                            </Dropdown.Toggle>
-
-                            <Dropdown.Menu>
-                              <Dropdown.Item onClick={() => handleView(user)}>
-                                <FaEye className="me-2 text-info" />
-                                View
-                              </Dropdown.Item>
-
-                              <Dropdown.Item onClick={() => handleEdit(user)}>
-                                <FaPen className="me-2 text-primary" />
-                                Edit
-                              </Dropdown.Item>
-
-                              <Dropdown.Item
-                                className="text-danger"
-                                onClick={() => handleDelete(user.id)}
-                              >
-                                <FaTrashAlt className="me-2" />
-                                Delete
-                              </Dropdown.Item>
-                            </Dropdown.Menu>
-                          </Dropdown>
-                        </td>
-                      </tr>
-                    ))
-                  )
-                ) : deletedUsers.length === 0 ? (
-                  <tr>
-                    <td colSpan="6">No deleted users found</td>
-                  </tr>
-                ) : (
-                  deletedUsers.map((user) => (
-                    <tr key={user.id}>
-                      <td>{user.fullname}</td>
-                      <td>{user.email}</td>
-                      <td>{user.role}</td>
-                      <td>{user.branch_name}</td>
-                      <td>{user.phone}</td>
-
-                      <td>
-                        <Button
-                          size="sm"
-                          variant="success"
-                          onClick={() => handleRestore(user.id)}
-                        >
-                          Restore
-                        </Button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </Table>
+                          <td>
+                            <Button
+                              size="sm"
+                              variant="success"
+                              onClick={() => handleRestore(user.id)}
+                            >
+                              Restore
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+              </Table>
+              <Pagination
+                totalItems={activeTab === 'active' ? users.length : deletedUsers.length}
+                itemsPerPage={10}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
+            </>
           )}
         </Card>
       )}

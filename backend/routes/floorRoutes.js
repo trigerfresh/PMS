@@ -10,6 +10,26 @@ router.get('/floors/:hotel_id', floorController.getFloorsByHotel)
 router.put('/floor/:id', floorController.updateFloor)
 router.delete('/floor/:id', floorController.deleteFloor)
 router.put('/floor/restore/:id', floorController.restoreFloor)
+router.get('/floors', async (req, res) => {
+  try {
+    const pool = await poolPromise
+
+    const result = await pool.request().query(`
+      SELECT *
+      FROM floor_master
+      WHERE active = '0'
+      ORDER BY floor_number
+    `)
+
+    res.json({
+      data: result.recordset,
+    })
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    })
+  }
+})
 //search
 // router.get('/hotel/:hotel_id', floorController.getFloorsByHotel)
 // ================= ROOMS BY FLOOR =================

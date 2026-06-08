@@ -23,6 +23,7 @@ import { useEffect, useState } from 'react'
 import { Dropdown } from 'react-bootstrap'
 import { FaEllipsisV, FaEye } from 'react-icons/fa'
 import '../css/RoomMaster.css'
+import Pagination from '../../utils/Pagination'
 import { BsThreeDotsVertical } from 'react-icons/bs'
 
 const RoomsMaster = () => {
@@ -46,6 +47,7 @@ const RoomsMaster = () => {
   const [selectedRoom, setSelectedRoom] = useState(null)
   const [showSettingsModal, setShowSettingsModal] = useState(false)
   const [deletedRooms, setDeletedRooms] = useState([])
+  const [currentPage, setCurrentPage] = useState(1)
 
   const [previewImages, setPreviewImages] = useState({
     room_photo1: '',
@@ -161,6 +163,7 @@ const RoomsMaster = () => {
 
   const handleStatClick = (type) => {
     setSelectedStat(type)
+    setCurrentPage(1)
     if (type === 'total') setRooms(allRooms)
     if (type === 'occupied')
       setRooms(allRooms.filter((r) => r.status?.toLowerCase() === 'occupied'))
@@ -221,6 +224,7 @@ const RoomsMaster = () => {
       })
       const data = res.data.data
       setRooms(data)
+      setCurrentPage(1)
       setRoomStats(calculateStats(data))
     } catch (err) {
       console.log(err)
@@ -284,6 +288,7 @@ const RoomsMaster = () => {
       const data = res.data.data
       setRooms(data)
       setAllRooms(data)
+      setCurrentPage(1)
       setRoomStats(calculateStats(data))
     } catch (err) {
       console.log(err)
@@ -909,53 +914,55 @@ const RoomsMaster = () => {
               </thead>
               <tbody className="text-center">
                 {rooms.length > 0 ? (
-                  rooms.map((room) => (
-                    <tr key={room.room_id}>
-                      <td>{room.hotel_name}</td>
-                      <td>{room.floor_name}</td>
-                      <td>{room.room_no}</td>
-                      <td>{room.room_type}</td>
-                      <td>{room.price}</td>
-                      <td>{room.status}</td>
-                      <td>
-                        <Dropdown align="end">
-                          <Dropdown.Toggle
-                            variant="outline-secondary"
-                            size="sm"
-                            id={`dropdown-${room.room_id}`}
-                            className="bg-secondary text-white shadow-sm border"
-                          >
-                            <BsThreeDotsVertical />
-                          </Dropdown.Toggle>
-                          <Dropdown.Menu>
-                            <Dropdown.Item onClick={() => handleView(room)}>
-                              <FaEye className="me-2 text-primary" /> View
-                            </Dropdown.Item>
-                            {selectedStat !== 'deleted' && (
-                              <Dropdown.Item onClick={() => handleEdit(room)}>
-                                <FaPen className="me-2 text-warning" /> Edit
+                  rooms
+                    .slice((currentPage - 1) * 10, currentPage * 10)
+                    .map((room) => (
+                      <tr key={room.room_id}>
+                        <td>{room.hotel_name}</td>
+                        <td>{room.floor_name}</td>
+                        <td>{room.room_no}</td>
+                        <td>{room.room_type}</td>
+                        <td>{room.price}</td>
+                        <td>{room.status}</td>
+                        <td>
+                          <Dropdown align="end">
+                            <Dropdown.Toggle
+                              variant="outline-secondary"
+                              size="sm"
+                              id={`dropdown-${room.room_id}`}
+                              className="bg-secondary text-white shadow-sm border"
+                            >
+                              <BsThreeDotsVertical />
+                            </Dropdown.Toggle>
+                            <Dropdown.Menu>
+                              <Dropdown.Item onClick={() => handleView(room)}>
+                                <FaEye className="me-2 text-primary" /> View
                               </Dropdown.Item>
-                            )}
-                            <Dropdown.Divider />
-                            {selectedStat === 'deleted' ? (
-                              <Dropdown.Item
-                                onClick={() => handleRestore(room.room_id)}
-                              >
-                                Restore Room
-                              </Dropdown.Item>
-                            ) : (
-                              <Dropdown.Item
-                                onClick={() => handleDelete(room.room_id)}
-                              >
-                                <FaTrashAlt className="me-2" />
-                                Delete
-                              </Dropdown.Item>
-                            )}
-                          </Dropdown.Menu>
-                        </Dropdown>
-                      </td>
-                    </tr>
-                  ))
+                              {selectedStat !== 'deleted' && (
+                                <Dropdown.Item onClick={() => handleEdit(room)}>
+                                  <FaPen className="me-2 text-warning" /> Edit
+                                </Dropdown.Item>
+                              )}
+                              <Dropdown.Divider />
+                              {selectedStat === 'deleted' ? (
+                                <Dropdown.Item
+                                  onClick={() => handleRestore(room.room_id)}
+                                >
+                                  Restore Room
+                                </Dropdown.Item>
+                              ) : (
+                                <Dropdown.Item
+                                  onClick={() => handleDelete(room.room_id)}
+                                >
+                                  <FaTrashAlt className="me-2" />
+                                  Delete
+                                </Dropdown.Item>
+                              )}
+                            </Dropdown.Menu>
+                          </Dropdown>
+                        </td>
+                      </tr>
+                    ))
                 ) : (
                   <tr>
                     <td colSpan="7" className="text-center py-3">
@@ -965,6 +972,12 @@ const RoomsMaster = () => {
                 )}
               </tbody>
             </Table>
+            <Pagination
+              totalItems={rooms.length}
+              itemsPerPage={10}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+            />
           </Card>
         </div>
       )}

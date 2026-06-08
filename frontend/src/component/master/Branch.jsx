@@ -10,6 +10,7 @@ import {
   FaArrowLeft,
 } from 'react-icons/fa' // Import icons
 import SearchPanel from '../../utils/FilterPanel'
+import Pagination from '../../utils/Pagination'
 import {
   Alert,
   Button,
@@ -39,6 +40,7 @@ const BranchPage = () => {
   const [viewData, setViewData] = useState(null)
 
   const [statusFilter, setStatusFilter] = useState('all')
+  const [currentPage, setCurrentPage] = useState(1)
   const [counts, setCounts] = useState({
     totalBranches: 0,
     approvedBranches: 0,
@@ -148,6 +150,7 @@ const BranchPage = () => {
   }
 
   useEffect(() => {
+    setCurrentPage(1)
     fetchBranches()
   }, [searchFields, dateFilter, statusFilter])
 
@@ -723,109 +726,99 @@ const BranchPage = () => {
               {error}
             </Alert>
           ) : (
-            <Table
-              hover
-              bordered
-              className="list-table align-middle table-sm w-auto"
-            >
-              <thead className="table text-center">
-                <tr>
-                  <th width="10">Branch Name</th>
-                  <th width="10">Address</th>
-                  <th width="10">Pincode</th>
-                  <th width="10">Companies</th>
-                  <th width="10">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="text-center">
-                {branches.length === 0 ? (
-                  <tr className="text-center">
-                    <td colSpan={5}>No data found</td>
+            <>
+              <Table
+                hover
+                bordered
+                className="list-table align-middle table-sm w-auto"
+              >
+                <thead className="table text-center">
+                  <tr>
+                    <th width="10">Branch Name</th>
+                    <th width="10">Address</th>
+                    <th width="10">Pincode</th>
+                    <th width="10">Companies</th>
+                    <th width="10">Actions</th>
                   </tr>
-                ) : (
-                  branches.map((branch) => (
-                    <tr key={branch.id}>
-                      <td>{branch.branch_name}</td>
-                      <td>{branch.address}</td>
-                      <td>{branch.pincode}</td>
-                      <td>{branch.company_name || '-'}</td>
-
-                      <td>
-                        <Dropdown align="end">
-                          <Dropdown.Toggle
-                            variant="outline-secondary"
-                            size="sm"
-                            id={`dropdown-${branch.id}`}
-                            className="bg-secondary text-white shadow-sm border"
-                          >
-                            <BsThreeDotsVertical />
-                          </Dropdown.Toggle>
-
-                          <Dropdown.Menu>
-                            {/* VIEW */}
-                            <Dropdown.Item
-                              // onClick={() =>
-                              //   alert(JSON.stringify(branch, null, 2))
-                              // }
-                              onClick={() => {
-                                setViewData(branch)
-                                setShowView(true)
-                              }}
-                            >
-                              <FaEye className="me-2 text-info" />
-                              View
-                            </Dropdown.Item>
-
-                            {/* EDIT */}
-                            <Dropdown.Item onClick={() => handleEdit(branch)}>
-                              <FaPen className="me-2 text-primary" />
-                              Edit
-                            </Dropdown.Item>
-
-                            {/* 🔴 ACTIVE = 0 → SHOW NORMAL DELETE */}
-                            {branch.active == 0 && (
-                              <Dropdown.Item
-                                onClick={() => handleDelete(branch.id)}
-                                className="text-danger"
-                              >
-                                <FaTrashAlt className="me-2" />
-                                Delete
-                              </Dropdown.Item>
-                            )}
-
-                            {/* 🟢 ACTIVE = 1 → ONLY RESTORE */}
-                            {branch.active == 1 && (
-                              <Dropdown.Item
-                                onClick={() => handleRestore(branch.id)}
-                              >
-                                ♻️ Restore
-                              </Dropdown.Item>
-                            )}
-                          </Dropdown.Menu>
-                        </Dropdown>
-                      </td>
-
-                      {/* <td>
-                        <div className="d-flex justify-content-center gap-2 flex-nowrap table-actions">
-                          <button
-                            className="icon-btn edit btn btn-sm btn-primary"
-                            onClick={() => handleEdit(branch)}
-                          >
-                            <FaPen />
-                          </button>
-                          <button
-                            className="icon-btn delete btn btn-sm btn-danger"
-                            onClick={() => handleDelete(branch.id)}
-                          >
-                            <FaTrashAlt />
-                          </button>
-                        </div>
-                      </td> */}
+                </thead>
+                <tbody className="text-center">
+                  {branches.length === 0 ? (
+                    <tr className="text-center">
+                      <td colSpan={5}>No data found</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </Table>
+                  ) : (
+                    branches
+                      .slice((currentPage - 1) * 10, currentPage * 10)
+                      .map((branch) => (
+                        <tr key={branch.id}>
+                          <td>{branch.branch_name}</td>
+                          <td>{branch.address}</td>
+                          <td>{branch.pincode}</td>
+                          <td>{branch.company_name || '-'}</td>
+
+                          <td>
+                            <Dropdown align="end">
+                              <Dropdown.Toggle
+                                variant="outline-secondary"
+                                size="sm"
+                                id={`dropdown-${branch.id}`}
+                                className="bg-secondary text-white shadow-sm border"
+                              >
+                                <BsThreeDotsVertical />
+                              </Dropdown.Toggle>
+
+                              <Dropdown.Menu popperConfig={{ strategy: 'fixed' }}>
+                                {/* VIEW */}
+                                <Dropdown.Item
+                                  onClick={() => {
+                                    setViewData(branch)
+                                    setShowView(true)
+                                  }}
+                                >
+                                  <FaEye className="me-2 text-info" />
+                                  View
+                                </Dropdown.Item>
+
+                                {/* EDIT */}
+                                <Dropdown.Item onClick={() => handleEdit(branch)}>
+                                  <FaPen className="me-2 text-primary" />
+                                  Edit
+                                </Dropdown.Item>
+
+                                {/* 🔴 ACTIVE = 0 → SHOW NORMAL DELETE */}
+                                {branch.active == 0 && (
+                                  <Dropdown.Item
+                                    onClick={() => handleDelete(branch.id)}
+                                    className="text-danger"
+                                  >
+                                    <FaTrashAlt className="me-2" />
+                                    Delete
+                                  </Dropdown.Item>
+                                )}
+
+                                {/* 🟢 ACTIVE = 1 → ONLY RESTORE */}
+                                {branch.active == 1 && (
+                                  <Dropdown.Item
+                                    onClick={() => handleRestore(branch.id)}
+                                  >
+                                    ♻️ Restore
+                                  </Dropdown.Item>
+                                )}
+                              </Dropdown.Menu>
+                            </Dropdown>
+                          </td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+              </Table>
+              <Pagination
+                totalItems={branches.length}
+                itemsPerPage={10}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
+            </>
           )}
         </Card>
       )}

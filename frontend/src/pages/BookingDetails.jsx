@@ -24,44 +24,150 @@ const BookingDetails = () => {
   const [showModal, setShowModal] = useState(false)
   const [selectedDetails, setSelectedDetails] = useState(null)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [rooms, setRooms] = useState([])
+  const [hotels, setHotels] = useState([])
+  const [floors, setFloors] = useState([])
+
+  const isCheckoutSoon = (checkOutDate, status) => {
+    if (!checkOutDate) return false
+
+    const s = status?.toLowerCase()
+
+    if (s === 'cancelled' || s === 'checkedout' || s === 'checked out')
+      return false
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const checkout = new Date(checkOutDate)
+    checkout.setHours(0, 0, 0, 0)
+
+    const diffDays = (checkout - today) / (1000 * 60 * 60 * 24)
+
+    return diffDays <= 1 && diffDays >= 0
+  }
+
+  const isCheckoutOverdue = (checkOutDate, status) => {
+    if (!checkOutDate) return false
+
+    const s = status?.toLowerCase().trim()
+
+    // Sirf active stay wale bookings overdue ho sakte hain
+    if (s !== 'booked' && s !== 'occupied') {
+      return false
+    }
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const checkout = new Date(checkOutDate)
+    checkout.setHours(0, 0, 0, 0)
+
+    return checkout < today
+  }
 
   const fetchBookingDetails = async () => {
     try {
-      setLoading(true)
+      const token = localStorage.getItem('token')
 
-      let data = []
-
-      if (statusType === 'maintenance') {
-        const res = await axios.get(`${API_URL}/api/rooms`)
-        data = res.data.data || []
-
-        data = data.filter(
-          (room) =>
-            Number(room.hotel_id) === Number(hotelId) &&
-            room.status?.toLowerCase() === 'maintenance',
-        )
-      } else {
-        const res = await axios.get(`${API_URL}/api/bookings`)
-        data = res.data.data || []
-
-        data = data.filter((b) => Number(b.hotel_id) === Number(hotelId))
-
-        if (statusType !== 'all') {
-          data = data.filter((b) => {
-            const status = b.status?.toLowerCase()
-
-            if (statusType === 'checkedout') {
-              return status === 'checkedout' || status === 'checked out'
-            }
-
-            return status === statusType
-          })
-        }
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
 
-      setBookings(data)
+      setLoading(true)
+
+      const [bookingRes, deletedRes, roomRes, hotelRes, floorRes] =
+        await Promise.all([
+          axios.get(`${API_URL}/api/bookings`, config),
+          axios.get(`${API_URL}/api/deleted-bookings`, config),
+          axios.get(`${API_URL}/api/rooms`, config),
+          axios.get(`${API_URL}/api/hotels`, config),
+          axios.get(`${API_URL}/api/floors`, config),
+        ])
+
+      const hotelData = hotelRes.data.data || []
+      const floorData = floorRes.data.data || []
+
+      setHotels(hotelData)
+      setFloors(floorData)
+
+      const bookingData = bookingRes.data.data || []
+      const deletedData = deletedRes.data.data || []
+      const roomData = roomRes.data.data || []
+
+      setRooms(roomData)
+
+      let data = statusType === 'deleted' ? deletedData : bookingData
+
+      // Hotel Filter
+      if (hotelId !== 'all') {
+        data = data.filter((b) => Number(b.hotel_id) === Number(hotelId))
+      }
+
+      // Status Filter
+      if (statusType !== 'all') {
+        data = data.filter((b) => {
+          const status = b.status?.toLowerCase().trim()
+
+          switch (statusType) {
+            case 'booked': {
+              const today = new Date().toISOString().split('T')[0]
+              const checkInDate = b.check_in_date?.split('T')[0]
+
+              return status === 'booked' && checkInDate === today
+            }
+
+            case 'reserved':
+              return status === 'reserved'
+
+            case 'cancelled':
+              return status === 'cancelled'
+
+            case 'checkedout':
+              return status === 'checkedout' || status === 'checked out'
+
+            case 'checkout_soon':
+              return isCheckoutSoon(b.check_out_date, b.status)
+
+            case 'checkout_overdue':
+              return isCheckoutOverdue(b.check_out_date, b.status)
+
+            case 'deleted':
+              return status === 'deleted'
+
+            default:
+              return true
+          }
+        })
+      }
+
+      // Room Join
+      const finalData = data.map((booking) => {
+        const room = roomData.find(
+          (r) => Number(r.room_id) === Number(booking.room_id),
+        )
+
+        const hotel = hotelData.find(
+          (h) => Number(h.id) === Number(room?.hotel_id),
+        )
+
+        const floor = floorData.find(
+          (f) => Number(f.floor_id) === Number(room?.floor_id),
+        )
+
+        return {
+          ...booking,
+          hotel_name: hotel?.hotel_name || 'Unknown Hotel',
+          floor_id: room?.floor_id,
+          floor_name: floor?.floor_name || `Floor ${room?.floor_id}`,
+        }
+      })
+
+      setBookings(finalData)
     } catch (err) {
-      console.error('Error fetching booking details:', err)
+      console.error(err)
     } finally {
       setLoading(false)
     }
@@ -85,46 +191,67 @@ const BookingDetails = () => {
         return 'Checked Out Bookings List'
       case 'maintenance':
         return 'Maintenance Rooms List'
+
+      case 'deleted':
+        return 'Deleted Bookings List'
+
       default:
         return 'All Bookings List'
     }
   }
 
   // Color Mapping as per your request
-  const getStatusConfig = (status) => {
-    const currentStatus = status?.toLowerCase()
+  const getStatusConfig = (item) => {
+    // Overdue page ke liye hamesha red
+    if (
+      statusType === 'checkout_overdue' &&
+      isCheckoutOverdue(item.check_out_date, item.status)
+    ) {
+      return { bg: 'bg-danger text-white border-danger' }
+    }
+
+    const currentStatus = item.status?.toLowerCase()
+
     switch (currentStatus) {
       case 'booked':
       case 'occupied':
-        return { bg: 'bg-success text-white border-success' } // Green color
+        return { bg: 'bg-success text-white border-success' }
+
       case 'reserved':
-        return { bg: 'bg-primary text-white border-primary' } // Blue color
+        return { bg: 'bg-primary text-white border-primary' }
+
       case 'cancelled':
-        return { bg: 'bg-danger text-white border-danger' } // Red color
+        return { bg: 'bg-danger text-white border-danger' }
+
       case 'maintenance':
-        return { bg: 'bg-warning text-dark border-warning' } // Warning/Yellow color
+        return { bg: 'bg-warning text-dark border-warning' }
+
       case 'checkedout':
       case 'checked out':
       case 'vacant':
       default:
-        return { bg: 'bg-light text-dark border-secondary' } // Light color
+        return { bg: 'bg-light text-dark border-danger' }
     }
   }
 
   // Helper logic to group bookings floor wise
-  const groupBookingsByFloor = () => {
+  const groupBookingsByHotelFloor = () => {
     const groups = {}
-    bookings.forEach((item) => {
-      const floorName =
-        item.floor ||
-        `Floor ${Math.floor(Number(item.room_no) / 100)}` ||
-        'Other Floor'
 
-      if (!groups[floorName]) {
-        groups[floorName] = []
+    bookings.forEach((item) => {
+      const key = `${item.hotel_name}__${item.floor_name}`
+
+      if (!groups[key]) {
+        groups[key] = {
+          hotel_name: item.hotel_name,
+          floor_name: item.floor_name,
+          bookings: [],
+        }
       }
-      groups[floorName].push(item)
+
+      groups[key].bookings.push(item)
     })
+
     return groups
   }
 
@@ -164,18 +291,14 @@ const BookingDetails = () => {
     }
   }
 
-  const floorWiseBookings = groupBookingsByFloor()
+  const groupedBookings = groupBookingsByHotelFloor()
 
   return (
     <div className="page-container">
       {/* HEADER */}
       <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-        <h1
-          className="page-title mb-0"
-          style={{ fontSize: '25px' }}
-        >
-          {getTitle()}{' '}
-          <span className="text-success">({bookings.length})</span>
+        <h1 className="page-title mb-0" style={{ fontSize: '25px' }}>
+          {getTitle()} <span className="text-success">({bookings.length})</span>
         </h1>
 
         <div className="page-actions d-flex gap-3 align-items-center">
@@ -209,52 +332,64 @@ const BookingDetails = () => {
         </p>
       ) : (
         /* FLOOR WISE RENDERING */
-        Object.keys(floorWiseBookings).map((floor) => (
-          <div key={floor} className="mb-4">
-            {/* Floor Header */}
-            <h5 className="text-secondary fw-bold mb-2 border-bottom pb-1">
-              {floor}
-            </h5>
+        Object.keys(groupedBookings).map((key) => {
+          const group = groupedBookings[key]
 
-            {/* Rooms in a single line row */}
-            <Row className="g-2 row-cols-auto">
-              {floorWiseBookings[floor].map((item) => {
-                const config = getStatusConfig(item.status)
+          return (
+            <div key={key} className="mb-4">
+              {/* Hotel Header */}
+              <h4 className="text-primary fw-bold mb-1">{group.hotel_name}</h4>
 
-                return (
-                  <Col key={item.booking_id || item.id}>
-                    <Card
-                      onClick={() => handleCardClick(item)}
-                      className={`text-center shadow-sm ${config.bg}`}
-                      style={{
-                        cursor: 'pointer',
-                        minWidth: '90px',
-                        maxWidth: '130px',
-                      }}
-                    >
-                      <Card.Body className="p-2 d-flex flex-column align-items-center justify-content-center">
-                        {/* Room Number Display */}
-                        <div
-                          className="fw-bold"
-                          style={{ fontSize: '1rem', lineHeight: '1.2' }}
-                        >
-                          {item.room_no}
-                        </div>
-                        {/* Room Status Display */}
-                        <div
-                          className="text-capitalize opacity-75"
-                          style={{ fontSize: '0.7rem', mt: '2px' }}
-                        >
-                          {item.status || 'Vacant'}
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                )
-              })}
-            </Row>
-          </div>
-        ))
+              {/* Floor Header */}
+              <h5 className="text-secondary fw-bold mb-2 border-bottom pb-1">
+                {group.floor_name}
+              </h5>
+
+              {/* Rooms */}
+              <Row className="g-2 row-cols-auto">
+                {group.bookings.map((item) => {
+                  const config = getStatusConfig(item.status)
+
+                  return (
+                    <Col key={item.booking_id || item.id}>
+                      <Card
+                        onClick={() => handleCardClick(item)}
+                        className={`text-center shadow-sm ${config.bg}`}
+                        style={{
+                          cursor: 'pointer',
+                          minWidth: '90px',
+                          maxWidth: '130px',
+                        }}
+                      >
+                        <Card.Body className="p-2 d-flex flex-column align-items-center justify-content-center">
+                          <div
+                            className="fw-bold"
+                            style={{
+                              fontSize: '1rem',
+                              lineHeight: '1.2',
+                            }}
+                          >
+                            {item.room_no}
+                          </div>
+
+                          <div
+                            className="text-capitalize opacity-75"
+                            style={{
+                              fontSize: '0.7rem',
+                              marginTop: '2px',
+                            }}
+                          >
+                            {item.status || 'Vacant'}
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  )
+                })}
+              </Row>
+            </div>
+          )
+        })
       )}
 
       {/* DETAILED INFO & CHECKOUT POPUP (MODAL) */}

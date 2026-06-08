@@ -9,6 +9,7 @@ import {
   FaArrowLeft,
 } from 'react-icons/fa' // Import icons
 import SearchPanel from '../../utils/FilterPanel'
+import Pagination from '../../utils/Pagination'
 import download from './download.jfif'
 import {
   Alert,
@@ -41,6 +42,7 @@ const HotelPage = () => {
   const [showModal, setShowModal] = useState(false)
   const [selectedHotel, setSelectedHotel] = useState(null)
   const [statusFilter, setStatusFilter] = useState('all')
+  const [currentPage, setCurrentPage] = useState(1)
   const [counts, setCounts] = useState({
     totalHotels: 0,
     approvedHotels: 0,
@@ -393,6 +395,7 @@ const HotelPage = () => {
   }
 
   useEffect(() => {
+    setCurrentPage(1)
     fetchBranches()
   }, [searchFields, dateFilter, statusFilter])
 
@@ -895,106 +898,116 @@ const HotelPage = () => {
               {error}
             </Alert>
           ) : (
-            <Table
-              hover
-              bordered
-              responsive
-              className="list-table align-middle"
-            >
-              <thead className="table text-center">
-                <tr>
-                  <th width="80">Image</th>
-                  <th>Hotel Name</th>
-                  <th>Branch Name</th>
-                  <th>Address</th>
-                  <th>Pincode</th>
-                  <th>Companies</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody className="text-center">
-                {branches.length === 0 ? (
-                  <tr className="text-center">
-                    <td colSpan={7}>No data found</td>
+            <>
+              <Table
+                hover
+                bordered
+                responsive
+                className="list-table align-middle"
+              >
+                <thead className="table text-center">
+                  <tr>
+                    <th width="80">Image</th>
+                    <th>Hotel Name</th>
+                    <th>Branch Name</th>
+                    <th>Address</th>
+                    <th>Pincode</th>
+                    <th>Companies</th>
+                    <th>Actions</th>
                   </tr>
-                ) : (
-                  branches.map((branch) => (
-                    <tr key={branch.id}>
-                      <td>
-                        <img
-                          src={
-                            branch.thumbnail_image
-                              ? `http://localhost:5000/uploads/${branch.thumbnail_image}`
-                              : download
-                          }
-                          alt="Hotel"
-                          style={{
-                            width: '40px',
-                            height: '40px',
-                            objectFit: 'cover',
-                            border: '1px solid #eee',
-                            borderRadius: '4px',
-                            padding: '2px',
-                            backgroundColor: '#fff',
-                          }}
-                          onError={(e) => {
-                            e.target.src = download
-                          }}
-                        />
-                      </td>
-                      <td>{branch.hotel_name}</td>
-                      <td>{branch.branch_name}</td>
-                      <td>{branch.address}</td>
-                      <td>{branch.pincode}</td>
-                      <td>{branch.company_name || '-'}</td>
-                      <td className="text-center">
-                        <Dropdown>
-                          <Dropdown.Toggle
-                            variant="outline-secondary"
-                            size="sm"
-                            id={`dropdown-${branch.id}`}
-                            className="bg-secondary text-white shadow-sm border"
-                          >
-                            <BsThreeDotsVertical />
-                          </Dropdown.Toggle>
-
-                          <Dropdown.Menu>
-                            <Dropdown.Item onClick={() => handleView(branch)}>
-                              <FaEye className="me-2 text-info" />
-                              View
-                            </Dropdown.Item>
-
-                            <Dropdown.Item onClick={() => handleEdit(branch)}>
-                              <FaPen className="me-2 text-primary" />
-                              Edit
-                            </Dropdown.Item>
-
-                            {/* 🔴 ACTIVE = 0 → SHOW NORMAL DELETE */}
-                            {branch.active == 0 && (
-                              <Dropdown.Item
-                                onClick={() => handleDelete(branch.id)}
-                              >
-                                <FaTrashAlt className="me-2 text-danger" />
-                                Delete
-                              </Dropdown.Item>
-                            )}
-
-                            {/* 🟢 ACTIVE = 1 → ONLY RESTORE */}
-                            {branch.active == 1 && (
-                              <Dropdown.Item
-                                onClick={() => handleRestore(branch.id)}
-                              >
-                                ♻️ Restore
-                              </Dropdown.Item>
-                            )}
-                          </Dropdown.Menu>
-                        </Dropdown>
-                      </td>
+                </thead>
+                <tbody className="text-center">
+                  {branches.length === 0 ? (
+                    <tr className="text-center">
+                      <td colSpan={7}>No data found</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </Table>
+                  ) : (
+                    branches
+                      .slice((currentPage - 1) * 10, currentPage * 10)
+                      .map((branch) => (
+                        <tr key={branch.id}>
+                          <td>
+                            <img
+                              src={
+                                branch.thumbnail_image
+                                  ? `http://localhost:5000/uploads/${branch.thumbnail_image}`
+                                  : download
+                              }
+                              alt="Hotel"
+                              style={{
+                                width: '40px',
+                                height: '40px',
+                                objectFit: 'cover',
+                                border: '1px solid #eee',
+                                borderRadius: '4px',
+                                padding: '2px',
+                                backgroundColor: '#fff',
+                              }}
+                              onError={(e) => {
+                                e.target.src = download
+                              }}
+                            />
+                          </td>
+                          <td>{branch.hotel_name}</td>
+                          <td>{branch.branch_name}</td>
+                          <td>{branch.address}</td>
+                          <td>{branch.pincode}</td>
+                          <td>{branch.company_name || '-'}</td>
+                          <td className="text-center">
+                            <Dropdown>
+                              <Dropdown.Toggle
+                                variant="outline-secondary"
+                                size="sm"
+                                id={`dropdown-${branch.id}`}
+                                className="bg-secondary text-white shadow-sm border"
+                              >
+                                <BsThreeDotsVertical />
+                              </Dropdown.Toggle>
+
+                              <Dropdown.Menu>
+                                <Dropdown.Item onClick={() => handleView(branch)}>
+                                  <FaEye className="me-2 text-info" />
+                                  View
+                                </Dropdown.Item>
+
+                                <Dropdown.Item onClick={() => handleEdit(branch)}>
+                                  <FaPen className="me-2 text-primary" />
+                                  Edit
+                                </Dropdown.Item>
+
+                                {/* 🔴 ACTIVE = 0 → SHOW NORMAL DELETE */}
+                                {branch.active == 0 && (
+                                  <Dropdown.Item
+                                    onClick={() => handleDelete(branch.id)}
+                                  >
+                                    <FaTrashAlt className="me-2 text-danger" />
+                                    Delete
+                                  </Dropdown.Item>
+                                )}
+
+                                {/* 🟢 ACTIVE = 1 → ONLY RESTORE */}
+                                {branch.active == 1 && (
+                                  <Dropdown.Item
+                                    onClick={() => handleRestore(branch.id)}
+                                  >
+                                    ♻️ Restore
+                                  </Dropdown.Item>
+                                )}
+                              </Dropdown.Menu>
+                            </Dropdown>
+                          </td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+              </Table>
+              <Pagination
+                totalItems={branches.length}
+                itemsPerPage={10}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
+            </>
           )}
         </Card>
       )}

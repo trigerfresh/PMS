@@ -24,6 +24,13 @@ exports.login = async (req, res) => {
       })
     }
 
+    if (user.active === '1') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account has been deactivated/deleted',
+      })
+    }
+
     // TEMP password compare
     if (password !== user.password) {
       return res.status(400).json({

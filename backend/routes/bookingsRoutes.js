@@ -94,8 +94,6 @@ router.post(
         const check_in_date = item.check_in_date
         const check_out_date = item.check_out_date
 
-        const price_per_day = Number(item.price_per_day || 0)
-
         const payment_status = item.payment_status || 'Pending'
         const status = item.status || 'Booked'
 
@@ -121,13 +119,6 @@ router.post(
           })
         }
 
-        if (!price_per_day) {
-          return res.status(400).json({
-            success: false,
-            message: 'Price Per Day is required',
-          })
-        }
-
         const start = new Date(check_in_date)
         const end = new Date(check_out_date)
 
@@ -143,8 +134,6 @@ router.post(
           Math.ceil((end - start) / (1000 * 60 * 60 * 24)),
         )
 
-        const total_amount = total_days * price_per_day
-
         const cleanStatus = status.trim().toLowerCase()
 
         const roomStatus = getRoomStatus(cleanStatus)
@@ -152,7 +141,7 @@ router.post(
         // Room Check
         const roomCheck = await pool.request().input('room_id', sql.Int, roomId)
           .query(`
-            SELECT room_id,status
+            SELECT room_id, status, price
             FROM room_masters
             WHERE room_id = @room_id
           `)
@@ -166,6 +155,17 @@ router.post(
         }
 
         const currentStatus = roomCheck.recordset[0].status
+        const roomPrice = Number(roomCheck.recordset[0].price || 0)
+        const price_per_day = Number(item.price_per_day) || roomPrice
+
+        if (!price_per_day) {
+          return res.status(400).json({
+            success: false,
+            message: 'Price Per Day is required',
+          })
+        }
+
+        const total_amount = total_days * price_per_day
 
         if (currentStatus === 'Occupied' || currentStatus === 'Reserved') {
           skippedRooms.push({
@@ -834,7 +834,6 @@ router.put(
       const check_in_date = roomData.check_in_date
       const check_out_date = roomData.check_out_date
 
-      const price_per_day = Number(roomData.price_per_day || 0)
       const payment_status = roomData.payment_status || 'Pending'
       const status = roomData.status || 'Booked'
 
@@ -879,20 +878,22 @@ router.put(
       // ==========================
       // ROOM VALIDATION
       // ==========================
+      const roomCheck = await pool
+        .request()
+        .input('room_id', sql.Int, room_id).query(`
+          SELECT status, price FROM room_masters
+          WHERE room_id=@room_id
+        `)
+
+      if (!roomCheck.recordset.length) {
+        return res.status(404).json({ message: 'Room not found' })
+      }
+
+      const currentStatus = roomCheck.recordset[0].status
+      const roomPrice = Number(roomCheck.recordset[0].price || 0)
+      const price_per_day = Number(roomData.price_per_day) || roomPrice
+
       if (oldRoomId !== room_id) {
-        const roomCheck = await pool
-          .request()
-          .input('room_id', sql.Int, room_id).query(`
-            SELECT status FROM room_masters
-            WHERE room_id=@room_id
-          `)
-
-        if (!roomCheck.recordset.length) {
-          return res.status(404).json({ message: 'Room not found' })
-        }
-
-        const currentStatus = roomCheck.recordset[0].status
-
         if (currentStatus === 'Occupied' || currentStatus === 'Reserved') {
           return res.status(400).json({
             message: `Room already ${currentStatus}`,
@@ -1835,7 +1836,7 @@ router.put('/bookings/checkout/:id', async (req, res) => {
   } catch (err) {
     try {
       await transaction.rollback()
-    } catch {}
+    } catch { }
 
     return res.status(500).json({
       success: false,

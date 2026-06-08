@@ -24,6 +24,24 @@ exports.createRoom = async (req, res) => {
       room_video_url, // ✅ TEXT URL
     } = req.body
 
+    // Check if room already exists on the same hotel and floor
+    const roomCheck = await pool
+      .request()
+      .input('hotel_id', sql.Int, hotel_id)
+      .input('floor_id', sql.Int, floor_id)
+      .input('room_no', sql.VarChar, room_no)
+      .query(`
+        SELECT room_id FROM room_masters 
+        WHERE hotel_id = @hotel_id AND floor_id = @floor_id AND room_no = @room_no AND active = '0'
+      `)
+
+    if (roomCheck.recordset.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Room already created on this floor for the selected hotel',
+      })
+    }
+
     // ✅ FILES only for images
     const room_photo1 = req.files?.room_photo1?.[0]?.path || null
     const room_photo2 = req.files?.room_photo2?.[0]?.path || null
@@ -174,6 +192,38 @@ exports.updateRoom = async (req, res) => {
       room_amenities,
       room_video_url, // ✅ TEXT URL (from body)
     } = req.body
+
+    // Get existing room info to check old room number and get hotel/floor IDs
+    const existingRoom = await pool
+      .request()
+      .input('roomId', sql.Int, roomId)
+      .query('SELECT hotel_id, floor_id, room_no FROM room_masters WHERE room_id = @roomId')
+
+    if (!existingRoom.recordset.length) {
+      return res.status(404).json({ message: 'Room not found' })
+    }
+
+    const { hotel_id, floor_id, room_no: oldRoomNo } = existingRoom.recordset[0]
+
+    // If room number has changed, check for duplicates on the same floor & hotel
+    if (room_no && room_no !== oldRoomNo) {
+      const roomCheck = await pool
+        .request()
+        .input('hotel_id', sql.Int, hotel_id)
+        .input('floor_id', sql.Int, floor_id)
+        .input('room_no', sql.VarChar, room_no)
+        .query(`
+          SELECT room_id FROM room_masters 
+          WHERE hotel_id = @hotel_id AND floor_id = @floor_id AND room_no = @room_no AND active = '0'
+        `)
+
+      if (roomCheck.recordset.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Room already created on this floor for the selected hotel',
+        })
+      }
+    }
 
     // ✅ FILES from multer (optional update)
     const room_photo1 = req.files?.room_photo1?.[0]?.path

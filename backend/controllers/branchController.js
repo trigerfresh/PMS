@@ -178,7 +178,7 @@ exports.getBranches = async (req, res) => {
   try {
     const pool = await poolPromise
 
-    const { status, searchFields, fromDate, toDate } = req.query
+    const { status, searchFields, fromDate, toDate, company_id } = req.query
 
     let query = `
       SELECT *
@@ -186,6 +186,14 @@ exports.getBranches = async (req, res) => {
       WHERE 1=1
     `
     const request = pool.request()
+
+    // -------------------------
+    // COMPANY FILTER
+    // -------------------------
+    if (company_id) {
+      query += ` AND company_id = @company_id`
+      request.input('company_id', sql.Int, Number(company_id))
+    }
 
     // -------------------------
     // STATUS FILTER

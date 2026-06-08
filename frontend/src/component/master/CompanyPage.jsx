@@ -12,6 +12,7 @@ import {
 } from 'react-icons/fa'
 import { BsThreeDotsVertical } from 'react-icons/bs'
 import SearchPanel from '../../utils/FilterPanel'
+import Pagination from '../../utils/Pagination'
 import {
   Button,
   Card,
@@ -39,8 +40,10 @@ const CompanyPage = () => {
   const [validationErrors, setValidationErrors] = useState({})
   const [showViewModal, setShowViewModal] = useState(false)
   const [selectedCompany, setSelectedCompany] = useState(null)
+  const [itemsPerPage, setItemsPerPage] = useState(50)
 
   const [statusFilter, setStatusFilter] = useState('all')
+  const [currentPage, setCurrentPage] = useState(1)
   const [counts, setCounts] = useState({
     totalCompanies: 0,
     approvedCompanies: 0,
@@ -179,6 +182,7 @@ const CompanyPage = () => {
   }, [])
 
   useEffect(() => {
+    setCurrentPage(1)
     fetchCompanies()
   }, [searchFields, dateFilter, statusFilter])
 
@@ -596,6 +600,7 @@ const CompanyPage = () => {
   const handleReset = () => {
     setSearchFields([{ field: 'companyName', keyword: '' }])
     setDateFilter({ from: '', to: '' })
+    setCurrentPage(1)
     setTimeout(() => fetchCompanies(), 0)
   }
 
@@ -1337,6 +1342,27 @@ const CompanyPage = () => {
             </Alert>
           ) : (
             <div>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <h4 className="mb-0">Company List</h4>
+
+                <div className="d-flex align-items-center gap-2 p-3">
+                  <span>Show</span>
+
+                  <Form.Select
+                    size="sm"
+                    style={{ width: '90px' }}
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value))
+                      setCurrentPage(1)
+                    }}
+                  >
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                    <option value={150}>150</option>
+                  </Form.Select>
+                </div>
+              </div>
               <Table
                 bordered
                 hover
@@ -1360,92 +1386,105 @@ const CompanyPage = () => {
                       <td colSpan={7}>No data found</td>
                     </tr>
                   ) : (
-                    companies.map((company) => (
-                      <tr key={company.id}>
-                        <td>
-                          <img
-                            src={
-                              company.image
-                                ? `http://localhost:5000/uploads/${company.image}`
-                                : download
-                            }
-                            alt="Logo"
-                            style={{
-                              width: '40px',
-                              height: '40px',
-                              objectFit: 'contain',
-                              border: '1px solid #eee',
-                              borderRadius: '4px',
-                              padding: '2px',
-                              backgroundColor: '#fff',
-                            }}
-                            onError={(e) => {
-                              e.target.src = download
-                            }}
-                          />
-                        </td>
-                        <td>{company.company_name}</td>
-                        <td>{company.contact_person}</td>
-                        <td>{company.email_id}</td>
-                        <td>{company.contact_no}</td>
-                        <td>{company.city_name}</td>
-
-                        <td className="text-center">
-                          <Dropdown>
-                            <Dropdown.Toggle
-                              variant="outline-secondary"
-                              size="sm"
-                              id={`dropdown-${company.id}`}
-                              className="bg-secondary text-white"
+                    companies
+                      .slice(
+                        (currentPage - 1) * itemsPerPage,
+                        currentPage * itemsPerPage,
+                      )
+                      .map((company) => (
+                        <tr key={company.id}>
+                          <td>
+                            <img
+                              src={
+                                company.image
+                                  ? `http://localhost:5000/uploads/${company.image}`
+                                  : download
+                              }
+                              alt="Logo"
                               style={{
-                                border: '1px solid #ddd',
+                                width: '40px',
+                                height: '40px',
+                                objectFit: 'contain',
+                                border: '1px solid #eee',
+                                borderRadius: '4px',
+                                padding: '2px',
+                                backgroundColor: '#fff',
                               }}
-                            >
-                              <BsThreeDotsVertical />
-                            </Dropdown.Toggle>
+                              onError={(e) => {
+                                e.target.src = download
+                              }}
+                            />
+                          </td>
+                          <td>{company.company_name}</td>
+                          <td>{company.contact_person}</td>
+                          <td>{company.email_id}</td>
+                          <td>{company.contact_no}</td>
+                          <td>{company.city_name}</td>
 
-                            <Dropdown.Menu>
-                              <Dropdown.Item
-                                onClick={() => handleView(company)}
+                          <td className="text-center">
+                            <Dropdown>
+                              <Dropdown.Toggle
+                                variant="outline-secondary"
+                                size="sm"
+                                id={`dropdown-${company.id}`}
+                                className="bg-secondary text-white"
+                                style={{
+                                  border: '1px solid #ddd',
+                                }}
                               >
-                                <FaStreetView className="me-2 text-primary" />
-                                View
-                              </Dropdown.Item>
+                                <BsThreeDotsVertical />
+                              </Dropdown.Toggle>
 
-                              <Dropdown.Item
-                                onClick={() => handleEdit(company)}
+                              <Dropdown.Menu
+                                popperConfig={{ strategy: 'fixed' }}
                               >
-                                <FaPen className="me-2 text-primary" />
-                                Edit
-                              </Dropdown.Item>
-
-                              {/* 🔴 ACTIVE = 0 → SHOW NORMAL DELETE */}
-                              {company.active == 0 && (
                                 <Dropdown.Item
-                                  onClick={() => handleDelete(company.id)}
-                                  className="text-danger"
+                                  onClick={() => handleView(company)}
                                 >
-                                  <FaTrashAlt className="me-2" />
-                                  Delete
+                                  <FaStreetView className="me-2 text-primary" />
+                                  View
                                 </Dropdown.Item>
-                              )}
 
-                              {/* 🟢 ACTIVE = 1 → ONLY RESTORE */}
-                              {company.active == 1 && (
                                 <Dropdown.Item
-                                  onClick={() => handleRestore(company.id)}
+                                  onClick={() => handleEdit(company)}
                                 >
-                                  ♻️ Restore
+                                  <FaPen className="me-2 text-primary" />
+                                  Edit
                                 </Dropdown.Item>
-                              )}
-                            </Dropdown.Menu>
-                          </Dropdown>
-                        </td>
-                      </tr>
-                    ))
+
+                                {/* 🔴 ACTIVE = 0 → SHOW NORMAL DELETE */}
+                                {company.active == 0 && (
+                                  <Dropdown.Item
+                                    onClick={() => handleDelete(company.id)}
+                                    className="text-danger"
+                                  >
+                                    <FaTrashAlt className="me-2" />
+                                    Delete
+                                  </Dropdown.Item>
+                                )}
+
+                                {/* 🟢 ACTIVE = 1 → ONLY RESTORE */}
+                                {company.active == 1 && (
+                                  <Dropdown.Item
+                                    onClick={() => handleRestore(company.id)}
+                                  >
+                                    ♻️ Restore
+                                  </Dropdown.Item>
+                                )}
+                              </Dropdown.Menu>
+                            </Dropdown>
+                          </td>
+                        </tr>
+                      ))
                   )}
                 </tbody>
               </Table>
+              <Pagination
+                totalItems={companies.length}
+                itemsPerPage={10}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
             </div>
           )}
         </Card>

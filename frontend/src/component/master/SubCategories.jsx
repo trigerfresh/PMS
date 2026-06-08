@@ -12,6 +12,7 @@ import {
 } from 'react-bootstrap'
 import { FaSearch, FaPlus, FaTimes, FaArrowLeft } from 'react-icons/fa'
 import SearchPanel from '../../utils/filterPanel'
+import Pagination from '../../utils/Pagination'
 import './Company.css'
 import { BsThreeDotsVertical } from 'react-icons/bs'
 
@@ -50,6 +51,7 @@ export default function SubCategories() {
   })
 
   const [tabKey, setTabKey] = useState('active')
+  const [currentPage, setCurrentPage] = useState(1)
 
   const searchOptions = [
     {
@@ -98,6 +100,7 @@ export default function SubCategories() {
       const data = res.data.data || []
       setActiveList(data.filter((x) => x.active === '0'))
       setDeletedList(data.filter((x) => x.active === '1'))
+      setCurrentPage(1)
     } catch (err) {
       console.log(err)
     }
@@ -208,6 +211,7 @@ export default function SubCategories() {
       const data = res.data.data || []
       setActiveList(data.filter((x) => x.active === '0'))
       setDeletedList(data.filter((x) => x.active === '1'))
+      setCurrentPage(1)
     } catch (err) {
       console.log(err)
     }
@@ -220,6 +224,7 @@ export default function SubCategories() {
         keyword: '',
       },
     ])
+    setCurrentPage(1)
     loadSubcategories()
   }
 
@@ -445,41 +450,47 @@ export default function SubCategories() {
 
           <Tabs
             activeKey={tabKey}
-            onSelect={(k) => setTabKey(k)}
+            onSelect={(k) => {
+              setTabKey(k)
+              setCurrentPage(1)
+            }}
             className="mb-3 custom-bootstrap-tabs"
             style={{ overflow: 'visible', flexWrap: 'wrap' }}
           >
             {/* ACTIVE TAB */}
             <Tab eventKey="active" title="Active">
-              <table className="table table-bordered table-striped mt-3 shadow-sm bg-white table-sm w-auto">
-                <thead className="table text-center">
-                  <tr>
-                    <th width="50" className="text-center">
-                      ID
-                    </th>
-                    <th width="70" className="text-center">
-                      Image
-                    </th>
-                    <th width="150">Primary Category</th>
-                    <th width="150">Category</th>
-                    <th width="200">Subcategory</th>
-                    <th width="90" className="text-center">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="text-center">
-                  {activeList.length === 0 ? (
+              <>
+                <table className="table table-bordered table-striped mt-3 shadow-sm bg-white table-sm w-auto">
+                  <thead className="table text-center">
                     <tr>
-                      <td
-                        colSpan="6"
-                        className="text-center text-muted small py-3"
-                      >
-                        No active subcategories found.
-                      </td>
+                      <th width="50" className="text-center">
+                        ID
+                      </th>
+                      <th width="70" className="text-center">
+                        Image
+                      </th>
+                      <th width="150">Primary Category</th>
+                      <th width="150">Category</th>
+                      <th width="200">Subcategory</th>
+                      <th width="90" className="text-center">
+                        Action
+                      </th>
                     </tr>
-                  ) : (
-                    activeList.map((item) => (
+                  </thead>
+                  <tbody className="text-center">
+                    {activeList.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan="6"
+                          className="text-center text-muted small py-3"
+                        >
+                          No active subcategories found.
+                        </td>
+                      </tr>
+                    ) : (
+                      activeList
+                        .slice((currentPage - 1) * 10, currentPage * 10)
+                        .map((item) => (
                       <tr key={item.id} className="align-middle">
                         <td className="text-center">{item.id}</td>
                         <td className="text-center">
@@ -510,7 +521,7 @@ export default function SubCategories() {
                             >
                               <BsThreeDotsVertical />
                             </Dropdown.Toggle>
-                            <Dropdown.Menu>
+                            <Dropdown.Menu popperConfig={{ strategy: 'fixed' }}>
                               <Dropdown.Item onClick={() => handleEdit(item)}>
                                 Edit
                               </Dropdown.Item>
@@ -528,39 +539,49 @@ export default function SubCategories() {
                   )}
                 </tbody>
               </table>
-            </Tab>
+              <Pagination
+                totalItems={activeList.length}
+                itemsPerPage={10}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
+            </>
+          </Tab>
 
             {/* DELETED TAB */}
             <Tab eventKey="deleted" title="Deleted">
-              <table className="table table-bordered table-striped mt-3 shadow-sm bg-white table-sm w-auto">
-                <thead className="table-dark text-center">
-                  <tr>
-                    <th width="50" className="text-center">
-                      ID
-                    </th>
-                    <th width="70" className="text-center">
-                      Image
-                    </th>
-                    <th width="150">Primary Category</th>
-                    <th width="150">Category</th>
-                    <th width="200">Subcategory</th>
-                    <th width="90" className="text-center">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="text-center">
-                  {deletedList.length === 0 ? (
+              <>
+                <table className="table table-bordered table-striped mt-3 shadow-sm bg-white table-sm w-auto">
+                  <thead className="table-dark text-center">
                     <tr>
-                      <td
-                        colSpan="6"
-                        className="text-center text-muted small py-3"
-                      >
-                        No deleted items to restore.
-                      </td>
+                      <th width="50" className="text-center">
+                        ID
+                      </th>
+                      <th width="70" className="text-center">
+                        Image
+                      </th>
+                      <th width="150">Primary Category</th>
+                      <th width="150">Category</th>
+                      <th width="200">Subcategory</th>
+                      <th width="90" className="text-center">
+                        Action
+                      </th>
                     </tr>
-                  ) : (
-                    deletedList.map((item) => (
+                  </thead>
+                  <tbody className="text-center">
+                    {deletedList.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan="6"
+                          className="text-center text-muted small py-3"
+                        >
+                          No deleted items to restore.
+                        </td>
+                      </tr>
+                    ) : (
+                      deletedList
+                        .slice((currentPage - 1) * 10, currentPage * 10)
+                        .map((item) => (
                       <tr key={item.id} className="align-middle">
                         <td className="text-center">{item.id}</td>
                         <td className="text-center">
@@ -595,7 +616,14 @@ export default function SubCategories() {
                   )}
                 </tbody>
               </table>
-            </Tab>
+              <Pagination
+                totalItems={deletedList.length}
+                itemsPerPage={10}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
+            </>
+          </Tab>
           </Tabs>
         </>
       )}

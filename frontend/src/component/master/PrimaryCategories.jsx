@@ -11,6 +11,7 @@ import {
   Button,
 } from 'react-bootstrap'
 import SearchPanel from '../../utils/filterPanel'
+import Pagination from '../../utils/Pagination'
 import { FaSearch, FaPlus, FaArrowLeft } from 'react-icons/fa'
 import './Company.css'
 import { BsThreeDotsVertical } from 'react-icons/bs'
@@ -41,6 +42,7 @@ export default function PrimaryCategories() {
     to: '',
   })
   const [key, setKey] = useState('active')
+  const [currentPage, setCurrentPage] = useState(1)
 
   // ================= LOAD =================
   const loadData = async () => {
@@ -50,6 +52,7 @@ export default function PrimaryCategories() {
 
       setActiveList(data.filter((i) => i.active === '0'))
       setDeletedList(data.filter((i) => i.active === '1'))
+      setCurrentPage(1)
     } catch (err) {
       console.log(err)
     }
@@ -150,6 +153,7 @@ export default function PrimaryCategories() {
 
       setActiveList(data.filter((i) => i.active === '0'))
       setDeletedList(data.filter((i) => i.active === '1'))
+      setCurrentPage(1)
     } catch (err) {
       console.log(err)
     }
@@ -162,6 +166,7 @@ export default function PrimaryCategories() {
         keyword: '',
       },
     ])
+    setCurrentPage(1)
     loadData()
   }
 
@@ -352,7 +357,10 @@ export default function PrimaryCategories() {
 
           <Tabs
             activeKey={key}
-            onSelect={(k) => setKey(k)}
+            onSelect={(k) => {
+              setKey(k)
+              setCurrentPage(1)
+            }}
             className="mb-3 custom-bootstrap-tabs"
             style={{ overflow: 'visible', flexWrap: 'wrap' }}
           >
@@ -385,7 +393,9 @@ export default function PrimaryCategories() {
                         </td>
                       </tr>
                     ) : (
-                      activeList.map((item) => (
+                      activeList
+                        .slice((currentPage - 1) * 10, currentPage * 10)
+                        .map((item) => (
                         <tr key={item.id}>
                           <td className="text-center">{item.id}</td>
                           <td>{item.primary_categories_name}</td>
@@ -414,7 +424,7 @@ export default function PrimaryCategories() {
                               >
                                 <BsThreeDotsVertical />
                               </Dropdown.Toggle>
-                              <Dropdown.Menu>
+                              <Dropdown.Menu popperConfig={{ strategy: 'fixed' }}>
                                 <Dropdown.Item onClick={() => handleEdit(item)}>
                                   ✏️ Edit
                                 </Dropdown.Item>
@@ -432,6 +442,12 @@ export default function PrimaryCategories() {
                     )}
                   </tbody>
                 </table>
+                <Pagination
+                  totalItems={activeList.length}
+                  itemsPerPage={10}
+                  currentPage={currentPage}
+                  onPageChange={setCurrentPage}
+                />
               </div>
             </Tab>
 
@@ -464,7 +480,9 @@ export default function PrimaryCategories() {
                         </td>
                       </tr>
                     ) : (
-                      deletedList.map((item) => (
+                      deletedList
+                        .slice((currentPage - 1) * 10, currentPage * 10)
+                        .map((item) => (
                         <tr key={item.id}>
                           <td className="text-center">{item.id}</td>
                           <td>{item.primary_categories_name}</td>
@@ -497,6 +515,12 @@ export default function PrimaryCategories() {
                     )}
                   </tbody>
                 </table>
+                <Pagination
+                  totalItems={deletedList.length}
+                  itemsPerPage={10}
+                  currentPage={currentPage}
+                  onPageChange={setCurrentPage}
+                />
               </div>
             </Tab>
           </Tabs>

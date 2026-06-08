@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { Tabs, Tab, Dropdown, Modal, Table } from 'react-bootstrap'
-import SearchPanel from '../utils/filterPanel'
+import SearchPanel from '../utils/filterPanel_1'
+import Pagination from '../utils/Pagination'
 import {
   FaSearch,
   FaPlus,
@@ -16,6 +17,8 @@ const PRODUCT_URL = 'http://localhost:5000/api/product'
 const PRIMARY_URL = 'http://localhost:5000/api/primary-category'
 const CATEGORY_URL = 'http://localhost:5000/api/category'
 const SUBCATEGORY_URL = 'http://localhost:5000/api/subcategory'
+const HOTEL_URL = 'http://localhost:5000/api/hotels'
+const BRANCH_URL = 'http://localhost:5000/api/branch'
 
 const formatTime = (t) => {
   if (!t) return ''
@@ -47,6 +50,7 @@ export default function ProductPage() {
   const [productName, setProductName] = useState('')
   const [gst, setGst] = useState('')
   const [price, setPrice] = useState('')
+  const [description, setDescription] = useState('')
 
   const [image1, setImage1] = useState(null)
   const [image2, setImage2] = useState(null)
@@ -74,6 +78,12 @@ export default function ProductPage() {
     image4: '',
   })
 
+  const [hotelList, setHotelList] = useState([])
+  const [branchList, setBranchList] = useState([])
+
+  const [hotelId, setHotelId] = useState('')
+  const [branchId, setBranchId] = useState('')
+
   const DAYS = [
     'monday',
     'tuesday',
@@ -89,6 +99,11 @@ export default function ProductPage() {
   // const [endTime, setEndTime] = useState('')
 
   const [tab, setTab] = useState('active')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(50)
+  const [searchHotelId, setSearchHotelId] = useState('')
+  const [searchBranchId, setSearchBranchId] = useState('')
+  const [searchBranchList, setSearchBranchList] = useState([])
   const [searchFields, setSearchFields] = useState([
     {
       field: 'product_name',
@@ -144,15 +159,24 @@ export default function ProductPage() {
   const totalPrice =
     Number(price || 0) + (Number(price || 0) * Number(gst || 0)) / 100
 
-  const loadDropdowns = async () => {
-    const p = await axios.get(PRIMARY_URL)
-    const c = await axios.get(CATEGORY_URL)
-    const s = await axios.get(SUBCATEGORY_URL)
-
-    setPrimaryList((p.data.data || []).filter((x) => x.active === '0'))
-    setCategoryList((c.data.data || []).filter((x) => x.active === '0'))
-    setSubcategoryList((s.data.data || []).filter((x) => x.active === '0'))
+  const getAuthHeader = () => {
+    const token = localStorage.getItem('token')
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
   }
+
+  // const loadDropdowns = async () => {
+  //   const p = await axios.get(PRIMARY_URL)
+  //   const c = await axios.get(CATEGORY_URL)
+  //   const s = await axios.get(SUBCATEGORY_URL)
+
+  //   setPrimaryList((p.data.data || []).filter((x) => x.active === '0'))
+  //   setCategoryList((c.data.data || []).filter((x) => x.active === '0'))
+  //   setSubcategoryList((s.data.data || []).filter((x) => x.active === '0'))
+  // }
 
   const loadProducts = async () => {
     const res = await axios.get(PRODUCT_URL)
@@ -160,6 +184,93 @@ export default function ProductPage() {
     setProducts(data)
     setActiveList(data.filter((x) => x.active === '0'))
     setDeletedList(data.filter((x) => x.active === '1'))
+    setCurrentPage(1)
+  }
+
+  const loadDropdowns = async () => {
+    try {
+      const [hotelRes, primaryRes, categoryRes, subRes] = await Promise.all([
+        axios.get(HOTEL_URL, getAuthHeader()),
+        axios.get(PRIMARY_URL),
+        axios.get(CATEGORY_URL),
+        axios.get(SUBCATEGORY_URL),
+      ])
+
+      setHotelList(hotelRes.data.data || [])
+
+      setPrimaryList(
+        (primaryRes.data.data || []).filter((x) => x.active === '0'),
+      )
+
+      setCategoryList(
+        (categoryRes.data.data || []).filter((x) => x.active === '0'),
+      )
+
+      setSubcategoryList(
+        (subRes.data.data || []).filter((x) => x.active === '0'),
+      )
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  const handleHotelChange = async (e) => {
+    const hotel = e.target.value
+
+    setHotelId(hotel)
+
+    setBranchId('')
+    setPcatId('')
+    setCategoryId('')
+    setSubcategoryId('')
+
+    if (hotel) {
+      const selectedHotel = hotelList.find((h) => h.id == hotel)
+      if (selectedHotel && selectedHotel.branch_id) {
+        setBranchList([
+          {
+            id: selectedHotel.branch_id,
+            branch_name: selectedHotel.branch_name,
+          },
+        ])
+      } else {
+        setBranchList([])
+      }
+    } else {
+      setBranchList([])
+    }
+  }
+
+  const handleBranchChange = (e) => {
+    const branch = e.target.value
+
+    setBranchId(branch)
+
+    setPcatId('')
+    setCategoryId('')
+    setSubcategoryId('')
+  }
+
+  const handleSearchHotelChange = async (e) => {
+    const hotel = e.target.value
+    setSearchHotelId(hotel)
+    setSearchBranchId('')
+
+    if (hotel) {
+      const selectedHotel = hotelList.find((h) => h.id == hotel)
+      if (selectedHotel && selectedHotel.branch_id) {
+        setSearchBranchList([
+          {
+            id: selectedHotel.branch_id,
+            branch_name: selectedHotel.branch_name,
+          },
+        ])
+      } else {
+        setSearchBranchList([])
+      }
+    } else {
+      setSearchBranchList([])
+    }
   }
 
   const handleDayChange = (day) => {
@@ -207,6 +318,9 @@ export default function ProductPage() {
         }
       })
 
+      if (searchHotelId) params.hotel_id = searchHotelId
+      if (searchBranchId) params.branch_id = searchBranchId
+
       const res = await axios.get('http://localhost:5000/api/product/search', {
         params,
       })
@@ -215,6 +329,7 @@ export default function ProductPage() {
 
       setActiveList(data.filter((x) => x.active === '0'))
       setDeletedList(data.filter((x) => x.active === '1'))
+      setCurrentPage(1)
     } catch (err) {
       console.log(err)
     }
@@ -222,12 +337,16 @@ export default function ProductPage() {
 
   const resetSearch = async () => {
     try {
+      setSearchHotelId('')
+      setSearchBranchId('')
+      setSearchBranchList([])
       setSearchFields([
         {
           field: 'product_name',
           keyword: '',
         },
       ])
+      setCurrentPage(1)
 
       const res = await axios.get(PRODUCT_URL)
 
@@ -247,12 +366,16 @@ export default function ProductPage() {
 
     const formData = new FormData()
 
+    formData.append('hotel_id', hotelId)
+    formData.append('branch_id', branchId)
+
     formData.append('pcat_id', pcatId)
     formData.append('category_id', categoryId)
     formData.append('subcategory_id', subcategoryId)
     formData.append('product_name', productName)
     formData.append('gst', gst)
     formData.append('price', price)
+    formData.append('description', description)
 
     // NEW FIELDS
     if (image1) formData.append('image1', image1)
@@ -274,12 +397,15 @@ export default function ProductPage() {
   const resetForm = () => {
     setEditId(null)
 
+    setHotelId('')
+    setBranchId('')
     setPcatId('')
     setCategoryId('')
     setSubcategoryId('')
     setProductName('')
     setGst('')
     setPrice('')
+    setDescription('')
 
     setImage1(null)
     setImage2(null)
@@ -305,13 +431,32 @@ export default function ProductPage() {
   const handleEdit = (item) => {
     setEditId(item.id)
 
+    setHotelId(item.hotel_id || '')
+    setBranchId(item.branch_id || '')
     setPcatId(item.pcat_id || '')
     setCategoryId(item.category_id || '')
     setSubcategoryId(item.subcategory_id || '')
 
+    if (item.hotel_id) {
+      const selectedHotel = hotelList.find((h) => h.id == item.hotel_id)
+      if (selectedHotel && selectedHotel.branch_id) {
+        setBranchList([
+          {
+            id: selectedHotel.branch_id,
+            branch_name: selectedHotel.branch_name,
+          },
+        ])
+      } else {
+        setBranchList([])
+      }
+    } else {
+      setBranchList([])
+    }
+
     setProductName(item.product_name || '')
     setGst(item.gst || '')
     setPrice(item.price || '')
+    setDescription(item.description || '')
 
     setAvailability(
       item.availability?.length
@@ -464,7 +609,36 @@ export default function ProductPage() {
           onReset={resetSearch}
           searchOptions={productSearchOptions}
           onDownloadExcel={handleDownloadExcel}
-        />
+        >
+          <div className="col-12 col-md-3">
+            <select
+              className="form-select form-select-sm"
+              value={searchHotelId}
+              onChange={handleSearchHotelChange}
+            >
+              <option value="">Select Hotel</option>
+              {hotelList.map((h) => (
+                <option key={h.id} value={h.id}>
+                  {h.hotel_name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="col-12 col-md-3">
+            <select
+              className="form-select form-select-sm"
+              value={searchBranchId}
+              onChange={(e) => setSearchBranchId(e.target.value)}
+            >
+              <option value="">Select Branch</option>
+              {searchBranchList.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.branch_name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </SearchPanel>
       )}
 
       {/* ================= CONDITIONAL RENDERING: FORM VIEW ================= */}
@@ -476,9 +650,45 @@ export default function ProductPage() {
           <h5 className="mb-3">Product Details</h5>
           <div className="row g-3">
             <div className="col-md-4">
-              <label className="form-label fw-bold small">
-                Primary Category
-              </label>
+              <label className="form-label fw-bold small">Hotel</label>
+
+              <select
+                className="form-control"
+                value={hotelId}
+                onChange={handleHotelChange}
+                required
+              >
+                <option value="">Select Hotel</option>
+
+                {hotelList.map((h) => (
+                  <option key={h.id} value={h.id}>
+                    {h.hotel_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="col-md-4">
+              <label className="form-label fw-bold small">Branch</label>
+
+              <select
+                className="form-control"
+                value={branchId}
+                onChange={handleBranchChange}
+                required
+              >
+                <option value="">Select Branch</option>
+
+                {branchList.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.branch_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="col-md-4">
+              <label className="form-label fw-bold small">Food Type</label>
               <select
                 className="form-control"
                 value={pcatId}
@@ -495,7 +705,7 @@ export default function ProductPage() {
             </div>
 
             <div className="col-md-4">
-              <label className="form-label fw-bold small">Category</label>
+              <label className="form-label fw-bold small">Sub Food Type</label>
               <select
                 className="form-control"
                 value={categoryId}
@@ -514,7 +724,9 @@ export default function ProductPage() {
             </div>
 
             <div className="col-md-4">
-              <label className="form-label fw-bold small">Subcategory</label>
+              <label className="form-label fw-bold small">
+                Sub Product Name
+              </label>
               <select
                 className="form-control"
                 value={subcategoryId}
@@ -573,6 +785,17 @@ export default function ProductPage() {
                 className="form-control"
                 value={totalPrice.toFixed(2)}
                 readOnly
+              />
+            </div>
+
+            <div className="col-md-12">
+              <label className="form-label fw-bold small">Description</label>
+              <textarea
+                className="form-control"
+                placeholder="Enter Product Description"
+                rows="3"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
               />
             </div>
 
@@ -739,12 +962,34 @@ export default function ProductPage() {
         <div className="card branch-card">
           <Tabs
             activeKey={tab}
-            onSelect={(k) => setTab(k)}
+            onSelect={(k) => {
+              setTab(k)
+              setCurrentPage(1)
+            }}
             className="mb-3 custom-bootstrap-tabs"
             style={{ overflow: 'visible', flexWrap: 'wrap' }}
           >
             <Tab eventKey="active" title={`Active (${activeList.length})`}>
               <div className="table-responsive">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h4 className="m-1">Product List</h4>
+                  <div className="d-flex align-items-center">
+                    <span className="me-2 fw-bold text-muted small">Show:</span>
+                    <select
+                      className="form-select form-select-sm shadow-sm"
+                      style={{ width: '80px', borderRadius: '8px' }}
+                      value={itemsPerPage}
+                      onChange={(e) => {
+                        setItemsPerPage(Number(e.target.value))
+                        setCurrentPage(1)
+                      }}
+                    >
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                      <option value={150}>150</option>
+                    </select>
+                  </div>
+                </div>
                 <Table
                   hover
                   bordered
@@ -754,10 +999,12 @@ export default function ProductPage() {
                   <thead className="table text-center">
                     <tr>
                       <th>ID</th>
-                      <th>Primary</th>
-                      <th>Category</th>
-                      <th>Subcategory</th>
-                      <th>Product</th>
+                      <th>Hotel Name</th>
+                      <th>Branch Name</th>
+                      <th>Food Type</th>
+                      <th>Sub Food Type</th>
+                      <th>Sub Product Name</th>
+                      <th>Product Name</th>
                       <th>GST</th>
                       <th>Price</th>
                       <th>Total Price</th>
@@ -765,54 +1012,63 @@ export default function ProductPage() {
                     </tr>
                   </thead>
                   <tbody className="text-center">
-                    {activeList.map((item) => (
-                      <tr key={item.id}>
-                        <td>{item.id}</td>
-                        <td>{item.primary_categories_name}</td>
-                        <td>{item.category_name}</td>
-                        <td>{item.subcategory_name}</td>
-                        <td>{item.product_name}</td>
-                        <td>{item.gst}%</td>
-                        <td>₹{item.price}</td>
-                        <td className="fw-bold text-success">
-                          ₹
-                          {(
-                            Number(item.price) +
-                            (Number(item.price) * Number(item.gst)) / 100
-                          ).toFixed(2)}
-                        </td>
-                        <td className="text-center">
-                          <Dropdown>
-                            <Dropdown.Toggle
-                              variant="outline-secondary"
-                              size="sm"
-                              className="bg-secondary text-white shadow-sm border"
-                            >
-                              <BsThreeDotsVertical />
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu>
-                              <Dropdown.Item onClick={() => handleView(item)}>
-                                <FaEye className="me-2 text-info" />
-                                View
-                              </Dropdown.Item>
-
-                              <Dropdown.Item onClick={() => handleEdit(item)}>
-                                <FaPen className="me-2 text-primary" />
-                                Edit
-                              </Dropdown.Item>
-
-                              <Dropdown.Item
-                                className="text-danger"
-                                onClick={() => handleDelete(item.id)}
+                    {activeList
+                      .slice(
+                        (currentPage - 1) * itemsPerPage,
+                        currentPage * itemsPerPage,
+                      )
+                      .map((item) => (
+                        <tr key={item.id}>
+                          <td>{item.id}</td>
+                          <td>{item.hotel_name}</td>
+                          <td>{item.branch_name}</td>
+                          <td>{item.primary_categories_name}</td>
+                          <td>{item.category_name}</td>
+                          <td>{item.subcategory_name}</td>
+                          <td>{item.product_name}</td>
+                          <td>{item.gst}%</td>
+                          <td>₹{item.price}</td>
+                          <td className="fw-bold text-success">
+                            ₹
+                            {(
+                              Number(item.price) +
+                              (Number(item.price) * Number(item.gst)) / 100
+                            ).toFixed(2)}
+                          </td>
+                          <td className="text-center">
+                            <Dropdown>
+                              <Dropdown.Toggle
+                                variant="outline-secondary"
+                                size="sm"
+                                className="bg-secondary text-white shadow-sm border"
                               >
-                                <FaTrashAlt className="me-2" />
-                                Delete
-                              </Dropdown.Item>
-                            </Dropdown.Menu>
-                          </Dropdown>
-                        </td>
-                      </tr>
-                    ))}
+                                <BsThreeDotsVertical />
+                              </Dropdown.Toggle>
+                              <Dropdown.Menu
+                                popperConfig={{ strategy: 'fixed' }}
+                              >
+                                <Dropdown.Item onClick={() => handleView(item)}>
+                                  <FaEye className="me-2 text-info" />
+                                  View
+                                </Dropdown.Item>
+
+                                <Dropdown.Item onClick={() => handleEdit(item)}>
+                                  <FaPen className="me-2 text-primary" />
+                                  Edit
+                                </Dropdown.Item>
+
+                                <Dropdown.Item
+                                  className="text-danger"
+                                  onClick={() => handleDelete(item.id)}
+                                >
+                                  <FaTrashAlt className="me-2" />
+                                  Delete
+                                </Dropdown.Item>
+                              </Dropdown.Menu>
+                            </Dropdown>
+                          </td>
+                        </tr>
+                      ))}
                     {activeList.length === 0 && (
                       <tr>
                         <td colSpan="9" className="text-center py-4 text-muted">
@@ -823,10 +1079,35 @@ export default function ProductPage() {
                   </tbody>
                 </Table>
               </div>
+              <Pagination
+                totalItems={activeList.length}
+                itemsPerPage={itemsPerPage}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
             </Tab>
 
             <Tab eventKey="deleted" title={`Deleted (${deletedList.length})`}>
               <div className="table-responsive">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h4 className="m-1">Deleted List</h4>
+                  <div className="d-flex align-items-center">
+                    <span className="me-2 fw-bold text-muted small">Show:</span>
+                    <select
+                      className="form-select form-select-sm shadow-sm"
+                      style={{ width: '80px', borderRadius: '8px' }}
+                      value={itemsPerPage}
+                      onChange={(e) => {
+                        setItemsPerPage(Number(e.target.value))
+                        setCurrentPage(1)
+                      }}
+                    >
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                      <option value={150}>150</option>
+                    </select>
+                  </div>
+                </div>
                 <Table
                   hover
                   bordered
@@ -836,6 +1117,8 @@ export default function ProductPage() {
                   <thead className="table text-center">
                     <tr>
                       <th>ID</th>
+                      <th>Hotel Name</th>
+                      <th>Branch Name</th>
                       <th>Product Name</th>
                       <th>GST</th>
                       <th>Price</th>
@@ -844,32 +1127,41 @@ export default function ProductPage() {
                     </tr>
                   </thead>
                   <tbody className="text-center">
-                    {deletedList.map((item) => (
-                      <tr key={item.id}>
-                        <td>{item.id}</td>
-                        <td>{item.product_name}</td>
-                        <td>{item.gst}</td>
-                        <td>{item.price}</td>
-                        <td className="text-center">
-                          <Dropdown>
-                            <Dropdown.Toggle
-                              variant="outline-secondary"
-                              size="sm"
-                              className="bg-secondary text-white shadow-sm border"
-                            >
-                              <BsThreeDotsVertical />
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu>
-                              <Dropdown.Item
-                                onClick={() => handleRestore(item.id)}
+                    {deletedList
+                      .slice(
+                        (currentPage - 1) * itemsPerPage,
+                        currentPage * itemsPerPage,
+                      )
+                      .map((item) => (
+                        <tr key={item.id}>
+                          <td>{item.id}</td>
+                          <td>{item.hotel_name}</td>
+                          <td>{item.branch_name}</td>
+                          <td>{item.product_name}</td>
+                          <td>{item.gst}</td>
+                          <td>{item.price}</td>
+                          <td className="text-center">
+                            <Dropdown>
+                              <Dropdown.Toggle
+                                variant="outline-secondary"
+                                size="sm"
+                                className="bg-secondary text-white shadow-sm border"
                               >
-                                ♻️ Restore
-                              </Dropdown.Item>
-                            </Dropdown.Menu>
-                          </Dropdown>
-                        </td>
-                      </tr>
-                    ))}
+                                <BsThreeDotsVertical />
+                              </Dropdown.Toggle>
+                              <Dropdown.Menu
+                                popperConfig={{ strategy: 'fixed' }}
+                              >
+                                <Dropdown.Item
+                                  onClick={() => handleRestore(item.id)}
+                                >
+                                  ♻️ Restore
+                                </Dropdown.Item>
+                              </Dropdown.Menu>
+                            </Dropdown>
+                          </td>
+                        </tr>
+                      ))}
                     {deletedList.length === 0 && (
                       <tr>
                         <td colSpan="3" className="text-center py-4 text-muted">
@@ -880,6 +1172,12 @@ export default function ProductPage() {
                   </tbody>
                 </Table>
               </div>
+              <Pagination
+                totalItems={deletedList.length}
+                itemsPerPage={itemsPerPage}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
             </Tab>
           </Tabs>
         </div>
@@ -899,13 +1197,19 @@ export default function ProductPage() {
             <div className="row">
               <div className="col-md-6">
                 <p>
-                  <b>Primary Category:</b> {viewItem.primary_categories_name}
+                  <b>Hotel:</b> {viewItem.hotel_name}
                 </p>
                 <p>
-                  <b>Category:</b> {viewItem.category_name}
+                  <b>Branch:</b> {viewItem.branch_name}
                 </p>
                 <p>
-                  <b>Subcategory:</b> {viewItem.subcategory_name}
+                  <b>Food Type:</b> {viewItem.primary_categories_name}
+                </p>
+                <p>
+                  <b>Sub Food Type:</b> {viewItem.category_name}
+                </p>
+                <p>
+                  <b>Sub Food Name:</b> {viewItem.subcategory_name}
                 </p>
 
                 <p>
@@ -917,6 +1221,9 @@ export default function ProductPage() {
                 </p>
                 <p>
                   <b>Price:</b> ₹ {viewItem.price}
+                </p>
+                <p>
+                  <b>Description:</b> {viewItem.description || 'N/A'}
                 </p>
 
                 <div>

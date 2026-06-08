@@ -22,6 +22,7 @@ import {
   FaEye,
 } from 'react-icons/fa'
 import SearchPanel from '../../utils/filterPanel'
+import Pagination from '../../utils/Pagination'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { BsThreeDotsVertical } from 'react-icons/bs'
@@ -33,6 +34,8 @@ const BookingMaster = () => {
   const [bookings, setBookings] = useState([])
 
   const [isEdit, setIsEdit] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
   const [showForm, setShowForm] = useState(false) // New State for single screen toggle
   const latestFloorRef = useRef(null)
   const [bookingCounts, setBookingCounts] = useState({
@@ -42,12 +45,17 @@ const BookingMaster = () => {
     current_bookings: 0,
     reserved_bookings: 0,
     checkedout_bookings: 0,
+    about_to_checkout_bookings: 0,
+    checkout_overdue_bookings: 0,
   })
+  const [filterHotelId, setFilterHotelId] = useState('')
   const [filterType, setFilterType] = useState('all')
   const [deletedBookings, setDeletedBookings] = useState([])
   const [showSearch, setShowSearch] = useState(false)
   const [showView, setShowView] = useState(false)
   const [viewData, setViewData] = useState(null)
+  const [availableRoomsCount, setAvailableRoomsCount] = useState(0)
+  const [availableRooms, setAvailableRooms] = useState([])
   // const [deletedBookings, setDeletedBookings] = useState([])
 
   const [formData, setFormData] = useState({
@@ -126,12 +134,38 @@ const BookingMaster = () => {
     setRoomBookings(updated)
   }
 
+  useEffect(() => {
+    const count = rooms.filter((r) => {
+      const status = r.status?.toLowerCase()?.trim()
+
+      return (
+        status === 'vacant' || status === 'available' || status === 'checkedout'
+      )
+    }).length
+
+    setAvailableRoomsCount(count)
+
+    console.log('Rooms =>', rooms)
+    console.log('Available Count =>', count)
+  }, [rooms])
+
   const handleRoomBookingChange = (index, e) => {
     const { name, value } = e.target
 
     const updated = [...roomBookings]
 
     updated[index][name] = value
+
+    if (name === 'room_id') {
+      const selectedRoom = rooms.find(
+        (r) => Number(r.room_id) === Number(value),
+      )
+      if (selectedRoom) {
+        updated[index]['price_per_day'] = selectedRoom.price || ''
+      } else {
+        updated[index]['price_per_day'] = ''
+      }
+    }
 
     setRoomBookings(updated)
   }
@@ -142,14 +176,72 @@ const BookingMaster = () => {
     setRoomBookings(updated)
   }
 
+  const isAboutToCheckout = (checkOutDate, status) => {
+    if (!checkOutDate) return false
+
+    const s = status?.toLowerCase()
+    if (s === 'cancelled' || s === 'checkedout') return false
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const checkout = new Date(checkOutDate)
+    checkout.setHours(0, 0, 0, 0)
+
+    const diffDays = (checkout - today) / (1000 * 60 * 60 * 24)
+
+    return diffDays <= 1 && diffDays >= 0
+  }
+
+  const getOverdueDays = (checkOutDate) => {
+    if (!checkOutDate) return 0
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const checkout = new Date(checkOutDate)
+    checkout.setHours(0, 0, 0, 0)
+
+    const diffDays = Math.round((today - checkout) / (1000 * 60 * 60 * 24))
+    return diffDays > 0 ? diffDays : 0
+  }
+
+  const getCheckoutStatus = (checkOutDate, status) => {
+    if (!checkOutDate) return null
+
+    const s = status?.toLowerCase()
+
+    if (s === 'cancelled' || s === 'checkedout') return null
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const checkout = new Date(checkOutDate)
+    checkout.setHours(0, 0, 0, 0)
+
+    const diffDays = (checkout - today) / (1000 * 60 * 60 * 24)
+
+    if (diffDays < 0) {
+      return 'overdue'
+    }
+
+    if (diffDays <= 1 && diffDays >= 0) {
+      return 'soon'
+    }
+
+    return null
+  }
+
   const filteredBookings = bookings.filter((b) => {
+    // HOTEL FILTER
+    if (filterHotelId && String(b.hotel_id) !== String(filterHotelId)) {
+      return false
+    }
+
     // TOTAL BOOKINGS
     if (filterType === 'all') return true
 
     if (
       filterType === 'current' &&
       b.active === '0' &&
-      b.status?.toLowerCase() === 'booked'
+      b.status?.toLowerCase() === 'booked' &&
+      getCheckoutStatus(b.check_out_date, b.status) !== 'overdue'
     ) {
       return true
     }
@@ -182,35 +274,66 @@ const BookingMaster = () => {
       return true
     }
 
+    if (filterType === 'about_to_checkout' && b.active === '0') {
+      return isAboutToCheckout(b.check_out_date, b.status)
+    }
+
+    if (filterType === 'checkout_overdue' && b.active === '0') {
+      return getCheckoutStatus(b.check_out_date, b.status) === 'overdue'
+    }
+
     return false
   })
 
-  const calculateCounts = (data) => {
+  const calculateCounts = (activeData, deletedData) => {
     return {
-      total_bookings: data.length,
+      total_bookings: activeData.length + deletedData.length,
 
-      deleted_bookings: data.filter((b) => b.active === '1').length,
+      deleted_bookings: deletedData.length,
 
-      cancelled_bookings: data.filter(
-        (b) =>
-          b.active === '0' && b.status?.toLowerCase().trim() === 'cancelled',
+      cancelled_bookings: activeData.filter(
+        (b) => b.status?.toLowerCase().trim() === 'cancelled',
       ).length,
 
-      current_bookings: data.filter(
-        (b) => b.active === '0' && b.status?.toLowerCase().trim() === 'booked',
+      current_bookings: activeData.filter(
+        (b) =>
+          b.status?.toLowerCase().trim() === 'booked' &&
+          getCheckoutStatus(b.check_out_date, b.status) !== 'overdue',
       ).length,
 
-      reserved_bookings: data.filter(
-        (b) =>
-          b.active === '0' && b.status?.toLowerCase().trim() === 'reserved',
+      reserved_bookings: activeData.filter(
+        (b) => b.status?.toLowerCase().trim() === 'reserved',
       ).length,
 
-      checkedout_bookings: data.filter(
-        (b) =>
-          b.active === '0' && b.status?.toLowerCase().trim() === 'checkedout',
+      checkedout_bookings: activeData.filter(
+        (b) => b.status?.toLowerCase().trim() === 'checkedout',
+      ).length,
+
+      about_to_checkout_bookings: activeData.filter((b) =>
+        isAboutToCheckout(b.check_out_date, b.status),
+      ).length,
+
+      checkout_overdue_bookings: activeData.filter(
+        (b) => getCheckoutStatus(b.check_out_date, b.status) === 'overdue',
       ).length,
     }
   }
+
+  useEffect(() => {
+    let activeData = bookings
+    let deletedData = deletedBookings
+
+    if (filterHotelId) {
+      activeData = bookings.filter(
+        (b) => String(b.hotel_id) === String(filterHotelId),
+      )
+      deletedData = deletedBookings.filter(
+        (b) => String(b.hotel_id) === String(filterHotelId),
+      )
+    }
+
+    setBookingCounts(calculateCounts(activeData, deletedData))
+  }, [bookings, deletedBookings, filterHotelId])
 
   const [searchFields, setSearchFields] = useState([
     { field: 'guest_name', keyword: '' },
@@ -258,7 +381,6 @@ const BookingMaster = () => {
         toast.success('Booking restored successfully')
         fetchBookings() // Refresh active bookings
         fetchDeletedBookings() // Refresh deleted bookings
-        fetchBookingCounts() // Refresh counts
       } catch (err) {
         toast.error(err.response?.data?.message || 'Restore failed')
         console.log('Restore error:', err.message)
@@ -283,7 +405,6 @@ const BookingMaster = () => {
       alert('Checkout Successful')
 
       fetchBookings()
-      fetchBookingCounts()
     } catch (err) {
       console.log(err)
     }
@@ -312,9 +433,7 @@ const BookingMaster = () => {
       const data = res.data.data || []
 
       setBookings(data)
-
-      // 🔥 IMPORTANT: update counts from filtered data
-      setBookingCounts(calculateCounts(data))
+      setCurrentPage(1)
     } catch (err) {
       console.log('Search error:', err.message)
     }
@@ -346,25 +465,9 @@ const BookingMaster = () => {
       const data = res.data.data || []
 
       setBookings(data)
-      setBookingCounts(calculateCounts(data))
+      setCurrentPage(1)
     } catch (err) {
       console.log(err)
-    }
-  }
-
-  const fetchBookingCounts = async () => {
-    try {
-      const token = localStorage.getItem('token')
-
-      const res = await axios.get('http://localhost:5000/api/bookings-counts', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      setBookingCounts(res.data)
-    } catch (err) {
-      console.log('Count error:', err.message)
     }
   }
 
@@ -404,7 +507,6 @@ const BookingMaster = () => {
       alert('Booking Cancelled')
 
       fetchBookings()
-      fetchBookingCounts()
     } catch (err) {
       console.log(err)
     }
@@ -414,8 +516,8 @@ const BookingMaster = () => {
   useEffect(() => {
     fetchHotels()
     fetchBookings()
-    fetchBookingCounts()
     fetchDeletedBookings()
+    fetchRooms()
   }, [])
 
   // ================= HOTELS =================
@@ -472,6 +574,8 @@ const BookingMaster = () => {
           Authorization: `Bearer ${token}`,
         },
       })
+
+      console.log('ROOMS DATA =>', res.data.data)
 
       setRooms(res.data.data || [])
     } catch (err) {
@@ -531,6 +635,23 @@ const BookingMaster = () => {
       }))
       setFloors([])
       setRooms([])
+      setRoomBookings([
+        {
+          room_id: '',
+          floor_id: '',
+          guest_name: '',
+          guest_phone: '',
+          guest_email: '',
+          check_in_date: '',
+          check_out_date: '',
+          price_per_day: '',
+          payment_status: 'Pending',
+          status: 'Booked',
+          user_profile_pic: null,
+          adhar_card_pic: null,
+          pan_card_pic: null,
+        },
+      ])
 
       if (!isNaN(id) && value !== '') {
         fetchFloors(id)
@@ -547,9 +668,24 @@ const BookingMaster = () => {
         room_id: '', // only clear when NOT edit
       }))
 
-      if (!isEdit) {
-        setRooms([])
-      }
+      setRooms([])
+      setRoomBookings([
+        {
+          room_id: '',
+          floor_id: '',
+          guest_name: '',
+          guest_phone: '',
+          guest_email: '',
+          check_in_date: '',
+          check_out_date: '',
+          price_per_day: '',
+          payment_status: 'Pending',
+          status: 'Booked',
+          user_profile_pic: null,
+          adhar_card_pic: null,
+          pan_card_pic: null,
+        },
+      ])
 
       return
     }
@@ -624,26 +760,6 @@ const BookingMaster = () => {
         }
       })
 
-      // form.append('guest_name', formData.guest_name)
-      // form.append('guest_phone', formData.guest_phone)
-      // form.append('guest_email', formData.guest_email)
-
-      // form.append('check_in_date', formData.check_in_date)
-      // form.append('check_out_date', formData.check_out_date)
-
-      // form.append('price_per_day', formData.price_per_day)
-
-      // form.append('status', formData.status)
-      // form.append('payment_status', formData.payment_status)
-
-      // if (formData.user_profile_pic) {
-      //   form.append('user_profile_pic', formData.user_profile_pic)
-      // }
-
-      // if (formData.adhar_card_pic) {
-      //   form.append('adhar_card_pic', formData.adhar_card_pic)
-      // }
-
       for (let pair of form.entries()) {
         console.log(pair[0], pair[1])
       }
@@ -676,7 +792,6 @@ const BookingMaster = () => {
       setShowForm(false)
 
       fetchBookings()
-      fetchBookingCounts()
     } catch (err) {
       console.log(err)
       toast.error(err.response?.data?.message || 'Booking Save Failed')
@@ -753,26 +868,9 @@ const BookingMaster = () => {
     ])
   }
 
-  const isAboutToCheckout = (checkOutDate, status) => {
-    if (!checkOutDate) return false
-
-    const s = status?.toLowerCase()
-    if (s === 'cancelled' || s === 'checkedout') return false
-
-    const today = new Date()
-    const checkout = new Date(checkOutDate)
-
-    const diffDays = (checkout - today) / (1000 * 60 * 60 * 24)
-
-    return diffDays <= 1 && diffDays >= 0
-  }
-
   useEffect(() => {
     const soonToCheckout = bookings.filter(
-      (b) =>
-        (b.status?.toLowerCase() === 'booked' ||
-          b.status?.toLowerCase() === 'reserved') &&
-        isAboutToCheckout(b.check_out_date),
+      (b) => b.active === '0' && isAboutToCheckout(b.check_out_date, b.status),
     )
 
     if (soonToCheckout.length > 0) {
@@ -781,45 +879,6 @@ const BookingMaster = () => {
       )
     }
   }, [bookings])
-
-  useEffect(() => {
-    const soonToCheckout = bookings.filter((b) =>
-      isAboutToCheckout(b.check_out_date, b.status),
-    )
-
-    if (soonToCheckout.length > 0) {
-      toast.warning(
-        `${soonToCheckout.length} booking(s) checkout in next 24 hours`,
-      )
-    }
-  }, [bookings])
-
-  const getCheckoutStatus = (checkOutDate, status) => {
-    if (!checkOutDate) return null
-
-    const s = status?.toLowerCase()
-
-    // ❌ Cancelled / checkedout ko ignore karo
-    if (s === 'cancelled' || s === 'checkedout') return null
-
-    const today = new Date()
-    const checkout = new Date(checkOutDate)
-
-    const diffTime = checkout - today
-    const diffDays = diffTime / (1000 * 60 * 60 * 24)
-
-    // OVERDUE (sirf active bookings)
-    if (checkout < today) {
-      return 'overdue'
-    }
-
-    // SOON (next 24 hours)
-    if (diffDays <= 1 && diffDays >= 0) {
-      return 'soon'
-    }
-
-    return null
-  }
   // ================= DELETE =================
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this booking?')) {
@@ -830,7 +889,6 @@ const BookingMaster = () => {
         })
         fetchBookings()
         fetchDeletedBookings()
-        fetchBookingCounts()
       } catch (err) {
         console.log('Delete error:', err.message)
       }
@@ -940,6 +998,21 @@ const BookingMaster = () => {
 
         <div className="page-actions d-flex gap-3 align-items-center">
           {!showForm && (
+            <Form.Select
+              value={filterHotelId}
+              onChange={(e) => setFilterHotelId(e.target.value)}
+              className="shadow-sm rounded-3"
+              style={{ width: '200px' }}
+            >
+              <option value="">All Hotels</option>
+              {hotels.map((h) => (
+                <option key={h.id} value={h.id}>
+                  {h.hotel_name}
+                </option>
+              ))}
+            </Form.Select>
+          )}
+          {!showForm && (
             <button
               type="button"
               className="search-btn shadow-sm rounded-3"
@@ -1019,45 +1092,6 @@ const BookingMaster = () => {
                   </Form.Select>
                 </Col>
 
-                {/* FLOOR */}
-                {/* <Col md={4}>
-                  <Form.Label>Floor</Form.Label>
-                  <Form.Select
-                    name="floor_id"
-                    value={formData.floor_id || ''}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="">Select Floor</option>
-                    {floors.map((f) => (
-                      <option key={f.floor_id} value={f.floor_id}>
-                        {f.floor_name}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Col> */}
-
-                {/* ROOM */}
-                {/* <Col md={4}>
-                  <Form.Label>Room</Form.Label>
-                  <Form.Select
-                    name="room_id"
-                    value={formData.room_id || ''}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="">Select Room</option>
-                    {rooms.map((r) => (
-                      <option
-                        key={r.room_id}
-                        value={r.room_id}
-                        disabled={r.status === 'Occupied'}
-                      >
-                        {r.room_no} ({r.status})
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Col> */}
                 <Col md={4}>
                   <Button
                     variant="success"
@@ -1191,7 +1225,7 @@ const BookingMaster = () => {
                         >
                           <option value="Pending">Pending</option>
                           <option value="Paid">Paid</option>
-                          <option value="Paid">Partial</option>
+                          <option value="Partial">Partial</option>
                         </Form.Select>
                       </Col>
 
@@ -1288,144 +1322,6 @@ const BookingMaster = () => {
                     </div>
                   </Card>
                 ))}
-
-                {/* GUEST NAME */}
-                {/* <Col md={4}>
-                  <Form.Label>Guest Name</Form.Label>
-                  <Form.Control
-                    placeholder="Guest Name"
-                    name="guest_name"
-                    value={formData.guest_name}
-                    onChange={handleChange}
-                    required
-                  />
-                </Col> */}
-
-                {/* PHONE */}
-                {/* <Col md={4}>
-                  <Form.Label>Phone Number</Form.Label>
-                  <Form.Control
-                    placeholder="Phone"
-                    name="guest_phone"
-                    value={formData.guest_phone}
-                    onChange={handleChange}
-                    required
-                  />
-                </Col> */}
-
-                {/* EMAIL */}
-                {/* <Col md={4}>
-                  <Form.Label>Email Address</Form.Label>
-                  <Form.Control
-                    type="email"
-                    placeholder="Guest Email"
-                    name="guest_email"
-                    value={formData.guest_email}
-                    onChange={handleChange}
-                  />
-                </Col> */}
-
-                {/* CHECK IN */}
-                {/* <Col md={4}>
-                  <Form.Label>Check-In Date</Form.Label>
-                  <Form.Control
-                    type="date"
-                    name="check_in_date"
-                    value={formData.check_in_date}
-                    onChange={handleChange}
-                    required
-                  />
-                </Col> */}
-
-                {/* CHECK OUT */}
-                {/* <Col md={4}>
-                  <Form.Label>Check-Out Date</Form.Label>
-                  <Form.Control
-                    type="date"
-                    name="check_out_date"
-                    value={formData.check_out_date}
-                    onChange={handleChange}
-                    required
-                  />
-                </Col> */}
-
-                {/* PRICE */}
-                {/* <Col md={4}>
-                  <Form.Label>Price Per Day</Form.Label>
-                  <Form.Control
-                    placeholder="Price"
-                    name="price_per_day"
-                    value={formData.price_per_day}
-                    onChange={handleChange}
-                    required
-                  />
-                </Col> */}
-
-                {/* PAYMENT STATUS */}
-                {/* <Col md={4}>
-                  <Form.Label>Payment Status</Form.Label>
-                  <Form.Select
-                    name="payment_status"
-                    value={formData.payment_status}
-                    onChange={handleChange}
-                  >
-                    <option value="Pending">Pending</option>
-                    <option value="Paid">Paid</option>
-                    <option value="Partial">Partial</option>
-                  </Form.Select>
-                </Col> */}
-
-                {/* BOOKING STATUS */}
-                {/* <Col md={4}>
-                  <Form.Label>Room Status</Form.Label>
-
-                  <Form.Select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleChange}
-                  >
-                    <option value="Reserved">Reserved</option>
-                    <option value="Booked">Booked</option>
-                    <option value="Cancelled">Cancelled</option>
-                    <option value="CheckedOut">CheckedOut</option>
-                  </Form.Select>
-                </Col> */}
-
-                {/* PROFILE PIC */}
-                {/* <Col md={4}>
-                  <Form.Label>Profile Picture</Form.Label>
-                  <Form.Control
-                    type="file"
-                    name="user_profile_pic"
-                    onChange={handleFile}
-                  />
-                  {formData.old_user_profile_pic && (
-                    <img
-                      src={`http://localhost:5000/uploads/${formData.old_user_profile_pic}`}
-                      alt="Profile"
-                      width="80"
-                      className="mt-2 border rounded"
-                    />
-                  )}
-                </Col> */}
-
-                {/* AADHAR PIC */}
-                {/* <Col md={4}>
-                  <Form.Label>Aadhar Card Picture</Form.Label>
-                  <Form.Control
-                    type="file"
-                    name="adhar_card_pic"
-                    onChange={handleFile}
-                  />
-                  {formData.old_adhar_card_pic && (
-                    <img
-                      src={`http://localhost:5000/uploads/${formData.old_adhar_card_pic}`}
-                      alt="Aadhar"
-                      width="80"
-                      className="mt-2 border rounded"
-                    />
-                  )}
-                </Col> */}
               </Row>
 
               <div className="mt-4 d-flex gap-2">
@@ -1463,8 +1359,11 @@ const BookingMaster = () => {
 
           <Tabs
             id="booking-filter-tabs"
-            activeKey={filterType} // Aapka existing state variable (e.g., 'all', 'current', etc.)
-            onSelect={(k) => setFilterType(k)} // Tab click hone par filterType state update hogi
+            activeKey={filterType}
+            onSelect={(k) => {
+              setFilterType(k)
+              setCurrentPage(1)
+            }}
             className="mb-3 custom-bootstrap-tabs"
           >
             {/* TOTAL BOOKINGS */}
@@ -1496,6 +1395,16 @@ const BookingMaster = () => {
             />
 
             <Tab
+              eventKey="about_to_checkout"
+              title={`About to Checkout (${bookingCounts?.about_to_checkout_bookings || 0})`}
+            />
+
+            <Tab
+              eventKey="checkout_overdue"
+              title={`Checkout Overdue (${bookingCounts?.checkout_overdue_bookings || 0})`}
+            />
+
+            <Tab
               eventKey="deleted"
               title={`Deleted (${bookingCounts?.deleted_bookings || 0})`}
             >
@@ -1508,7 +1417,12 @@ const BookingMaster = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {deletedBookings.map((b) => (
+                  {(filterHotelId
+                    ? deletedBookings.filter(
+                        (b) => String(b.hotel_id) === String(filterHotelId),
+                      )
+                    : deletedBookings
+                  ).map((b) => (
                     <tr key={b.booking_id}>
                       <td>{b.room_no}</td>
                       <td>{b.guest_name}</td>
@@ -1529,7 +1443,38 @@ const BookingMaster = () => {
           </Tabs>
 
           <Card className="branch-card">
-            <h4 className="p-3 mb-0 border-bottom">Bookings List</h4>
+            <div className="p-3 mb-0 border-bottom d-flex justify-content-between align-items-center">
+              <h4 className="mb-0">Bookings List</h4>
+
+              <Card
+                className="mb-3 border-success"
+                style={{ cursor: 'pointer' }}
+              >
+                <Card.Body className="py-2">
+                  <h6 className="mb-0 text-success ">
+                    Available Rooms: {availableRoomsCount}
+                  </h6>
+                </Card.Body>
+              </Card>
+
+              <div className="d-flex align-items-center gap-2">
+                <span className="text-muted small">Show:</span>
+                <Form.Select
+                  size="sm"
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value))
+                    setCurrentPage(1)
+                  }}
+                  style={{ width: '80px', display: 'inline-block' }}
+                >
+                  <option value={10}>10</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                  <option value={150}>150</option>
+                </Form.Select>
+              </div>
+            </div>
             <Table bordered hover className="list-table align-middle mb-0">
               <thead className="table text-center">
                 <tr>
@@ -1537,8 +1482,6 @@ const BookingMaster = () => {
                   <th>Guest</th>
                   <th style={{ width: '10px' }}>Email</th>
                   <th>Profile</th>
-                  {/* <th>Adhar</th> */}
-
                   <th style={{ width: '120px' }}>Room Type</th>
                   <th>Check In</th>
                   <th>Check Out</th>
@@ -1550,7 +1493,7 @@ const BookingMaster = () => {
 
               <tbody className="text-center">
                 {filteredBookings.length > 0 ? (
-                  filteredBookings.map((b) => (
+                  filteredBookings.slice(0, itemsPerPage).map((b) => (
                     <tr key={b.booking_id}>
                       <td>{b.room_no || 'N/A'}</td>
                       <td>{b.guest_name}</td>
@@ -1566,17 +1509,6 @@ const BookingMaster = () => {
                           />
                         )}
                       </td>
-                      {/* <td>
-                        {b.adhar_card_pic && (
-                          <img
-                            src={`http://localhost:5000/uploads/${b.adhar_card_pic}`}
-                            alt=""
-                            width="50"
-                            height="50"
-                            style={{ objectFit: 'cover', borderRadius: '4px' }}
-                          />
-                        )}
-                      </td> */}
                       <td>{b.room_type || 'N/A'}</td>
                       <td> {b.check_in_date?.split('T')[0]}</td>
                       <td>
@@ -1584,7 +1516,9 @@ const BookingMaster = () => {
 
                         {getCheckoutStatus(b.check_out_date, b.status) ===
                           'overdue' && (
-                          <span className="badge bg-danger ms-2">Overdue</span>
+                          <span className="badge bg-danger ms-2">
+                            Overdue ({getOverdueDays(b.check_out_date)} days)
+                          </span>
                         )}
 
                         {getCheckoutStatus(b.check_out_date, b.status) ===
@@ -1606,23 +1540,6 @@ const BookingMaster = () => {
                           {b.payment_status}
                         </span>
                       </td>
-                      {/* <td>
-                        <Button
-                          variant="outline-primary"
-                          size="sm"
-                          className="me-2"
-                          onClick={() => handleEdit(b)}
-                        >
-                          <FaPen />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="danger"
-                          onClick={() => handleDelete(b.booking_id)}
-                        >
-                          <FaTrashAlt />
-                        </Button>
-                      </td> */}
                       <td className="text-center">
                         <Dropdown>
                           <Dropdown.Toggle
@@ -1678,7 +1595,7 @@ const BookingMaster = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="8" className="text-center py-3">
+                    <td colSpan="10" className="text-center py-3">
                       No bookings found.
                     </td>
                   </tr>

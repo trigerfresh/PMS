@@ -6,10 +6,10 @@ const { poolPromise, sql } = require('../config/db')
 ============================== */
 exports.createUser = async (req, res) => {
   try {
-    const {
+    let {
       first_name,
       last_name,
-      fullname, // ✅ NOW SEPARATE FIELD
+      fullname,
       email,
       password,
       role,
@@ -20,6 +20,15 @@ exports.createUser = async (req, res) => {
       company_id,
       branch_id,
     } = req.body
+
+    // Derive first_name, last_name, and fullname if any are missing/empty
+    if (fullname && (!first_name || !last_name)) {
+      const parts = fullname.trim().split(/\s+/)
+      first_name = parts[0] || ''
+      last_name = parts.slice(1).join(' ') || ''
+    } else if ((first_name || last_name) && !fullname) {
+      fullname = `${first_name || ''} ${last_name || ''}`.trim()
+    }
 
     const profile_image = req.file ? req.file.filename : null
 
@@ -32,6 +41,19 @@ exports.createUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10)
     const pool = await poolPromise
+
+    // Check if email already exists
+    const emailCheck = await pool
+      .request()
+      .input('email', sql.NVarChar, email)
+      .query("SELECT id FROM users WHERE email = @email AND active = '0'")
+
+    if (emailCheck.recordset.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'A user with this email address already exists',
+      })
+    }
 
     await pool
       .request()
@@ -153,9 +175,10 @@ exports.getUserById = async (req, res) => {
 ============================== */
 exports.updateUser = async (req, res) => {
   try {
-    const {
+    let {
       first_name,
       last_name,
+      fullname,
       role,
       phone,
       address,
@@ -181,7 +204,14 @@ exports.updateUser = async (req, res) => {
 
     const profile_image = req.file ? req.file.filename : existing.profile_image
 
-    const fullname = `${first_name || ''} ${last_name || ''}`.trim()
+    // Derive first_name, last_name, and fullname if any are missing/empty
+    if (fullname && (!first_name || !last_name)) {
+      const parts = fullname.trim().split(/\s+/)
+      first_name = parts[0] || ''
+      last_name = parts.slice(1).join(' ') || ''
+    } else if ((first_name || last_name) && !fullname) {
+      fullname = `${first_name || ''} ${last_name || ''}`.trim()
+    }
 
     let hashedPassword = existing.password
     if (password && password.trim() !== '') {

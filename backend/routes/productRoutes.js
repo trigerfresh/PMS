@@ -30,6 +30,8 @@ router.get('/product/search', async (req, res) => {
       subcategory_name,
       gst,
       price,
+      hotel_id,
+      branch_id,
     } = req.query
 
     let query = `
@@ -37,7 +39,9 @@ router.get('/product/search', async (req, res) => {
         p.*,
         pc.primary_categories_name,
         c.category_name,
-        s.subcategory_name
+        s.subcategory_name,
+        h.hotel_name,
+        b.branch_name
       FROM products p
       LEFT JOIN primary_categories pc
         ON p.pcat_id = pc.id
@@ -45,8 +49,20 @@ router.get('/product/search', async (req, res) => {
         ON p.category_id = c.id
       LEFT JOIN subcategories s
         ON p.subcategory_id = s.id
+      LEFT JOIN hotel h
+        ON h.id = TRY_CAST(p.hotel_id AS INT)
+      LEFT JOIN branch b
+        ON b.id = TRY_CAST(p.branch_id AS INT)
       WHERE 1=1
     `
+
+    if (hotel_id) {
+      query += ` AND p.hotel_id = '${hotel_id}'`
+    }
+
+    if (branch_id) {
+      query += ` AND p.branch_id = '${branch_id}'`
+    }
 
     if (product_name) {
       query += ` AND p.product_name LIKE '%${product_name}%'`
