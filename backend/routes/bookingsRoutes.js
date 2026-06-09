@@ -878,9 +878,8 @@ router.put(
       // ==========================
       // ROOM VALIDATION
       // ==========================
-      const roomCheck = await pool
-        .request()
-        .input('room_id', sql.Int, room_id).query(`
+      const roomCheck = await pool.request().input('room_id', sql.Int, room_id)
+        .query(`
           SELECT status, price FROM room_masters
           WHERE room_id=@room_id
         `)
@@ -1836,7 +1835,7 @@ router.put('/bookings/checkout/:id', async (req, res) => {
   } catch (err) {
     try {
       await transaction.rollback()
-    } catch { }
+    } catch {}
 
     return res.status(500).json({
       success: false,

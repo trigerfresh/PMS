@@ -384,3 +384,142 @@ exports.getUsersSearch = async (req, res) => {
     })
   }
 }
+
+// exports.getProfile = async (req, res) => {
+//   try {
+//     const pool = await poolPromise
+
+//     const result = await pool.request().input('id', sql.Int, req.params.id)
+//       .query(`
+//         SELECT
+//           id,
+//           fullname,
+//           email,
+//           role,
+//           phone,
+//           address,
+//           city,
+//           pincode,
+//           profile_image,
+//           company_id,
+//           branch_id
+//         FROM users
+//         WHERE id = @id
+//           AND active = '0'
+//       `)
+
+//     if (!result.recordset.length) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Profile not found',
+//       })
+//     }
+
+//     res.json({
+//       success: true,
+//       data: result.recordset[0],
+//     })
+//   } catch (err) {
+//     console.error('PROFILE ERROR:', err)
+//     res.status(500).json({
+//       success: false,
+//       message: err.message,
+//     })
+//   }
+// }
+
+exports.getProfile = async (req, res) => {
+  try {
+    const pool = await poolPromise
+
+    const result = await pool.request().input('id', sql.Int, req.user.id)
+      .query(`
+      SELECT
+        u.*,
+        c.company_name,
+        b.branch_name
+      FROM users u
+      LEFT JOIN companies c ON c.id = u.company_id
+      LEFT JOIN branch b ON b.id = u.branch_id
+      WHERE u.id = @id
+      AND u.active = '0'
+    `)
+
+    if (!result.recordset.length) {
+      return res.status(404).json({
+        success: false,
+        message: 'Profile not found',
+      })
+    }
+
+    res.json({
+      success: true,
+      data: result.recordset[0],
+    })
+  } catch (err) {
+    console.log(err)
+
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    })
+  }
+}
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id
+
+    const { fullname, phone, address, city, pincode } = req.body
+
+    const pool = await poolPromise
+
+    const oldUser = await pool
+      .request()
+      .input('id', sql.Int, userId)
+      .query('SELECT * FROM users WHERE id=@id')
+
+    if (!oldUser.recordset.length) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      })
+    }
+
+    const existing = oldUser.recordset[0]
+
+    const profile_image = req.file ? req.file.filename : existing.profile_image
+
+    await pool
+      .request()
+      .input('id', sql.Int, userId)
+      .input('fullname', sql.NVarChar, fullname)
+      .input('phone', sql.NVarChar, phone)
+      .input('address', sql.NVarChar, address)
+      .input('city', sql.NVarChar, city)
+      .input('pincode', sql.NVarChar, pincode)
+      .input('profile_image', sql.NVarChar, profile_image).query(`
+        UPDATE users
+        SET
+          fullname=@fullname,
+          phone=@phone,
+          address=@address,
+          city=@city,
+          pincode=@pincode,
+          profile_image=@profile_image
+        WHERE id=@id
+      `)
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+    })
+  } catch (err) {
+    console.log(err)
+
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    })
+  }
+}

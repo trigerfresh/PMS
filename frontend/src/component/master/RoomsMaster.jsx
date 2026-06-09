@@ -48,6 +48,7 @@ const RoomsMaster = () => {
   const [showSettingsModal, setShowSettingsModal] = useState(false)
   const [deletedRooms, setDeletedRooms] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   const [previewImages, setPreviewImages] = useState({
     room_photo1: '',
@@ -305,14 +306,11 @@ const RoomsMaster = () => {
 
       const randomNumber = Math.floor(1000000000 + Math.random() * 9000000000)
 
-      const res = await axios.get(
-        'http://localhost:5000/api/rooms/export',
-        {
-          params,
-          responseType: 'blob',
-          ...getAuthHeader(),
-        },
-      )
+      const res = await axios.get('http://localhost:5000/api/rooms/export', {
+        params,
+        responseType: 'blob',
+        ...getAuthHeader(),
+      })
 
       const blob = new Blob([res.data], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -549,8 +547,9 @@ const RoomsMaster = () => {
           )}
           <button
             type="button"
-            className={`shadow-sm rounded-3 ${showForm ? 'btn-danger' : 'btn-primary'
-              }`}
+            className={`shadow-sm rounded-3 ${
+              showForm ? 'btn-danger' : 'btn-primary'
+            }`}
             onClick={() => {
               if (showForm) {
                 setShowForm(false)
@@ -895,6 +894,26 @@ const RoomsMaster = () => {
           </Tabs>
 
           <Card className="branch-card">
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <h5 className="mb-0">Room List</h5>
+
+              <div className="d-flex align-items-center gap-2">
+                <span>Show:</span>
+
+                <Form.Select
+                  style={{ width: '120px' }}
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value))
+                    setCurrentPage(1)
+                  }}
+                >
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                  <option value={150}>150</option>
+                </Form.Select>
+              </div>
+            </div>
             <Table
               bordered
               hover
@@ -915,7 +934,7 @@ const RoomsMaster = () => {
               <tbody className="text-center">
                 {rooms.length > 0 ? (
                   rooms
-                    .slice((currentPage - 1) * 10, currentPage * 10)
+                    .slice((currentPage - 1) * pageSize, currentPage * pageSize)
                     .map((room) => (
                       <tr key={room.room_id}>
                         <td>{room.hotel_name}</td>
@@ -974,7 +993,7 @@ const RoomsMaster = () => {
             </Table>
             <Pagination
               totalItems={rooms.length}
-              itemsPerPage={10}
+              itemsPerPage={pageSize}
               currentPage={currentPage}
               onPageChange={setCurrentPage}
             />

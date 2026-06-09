@@ -30,6 +30,7 @@ export default function Categories() {
   const [primaryList, setPrimaryList] = useState([])
   const [activeList, setActiveList] = useState([])
   const [deletedList, setDeletedList] = useState([])
+  const [pageSize, setPageSize] = useState(10)
 
   const [showSearch, setShowSearch] = useState(false)
   const [showForm, setShowForm] = useState(false) // Toggle full form layout state
@@ -425,6 +426,26 @@ export default function Categories() {
             {/* ACTIVE TAB */}
             <Tab eventKey="active" title="Active">
               <>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h5 className="mb-0">Category List</h5>
+
+                  <div className="d-flex align-items-center gap-2">
+                    <span>Show:</span>
+
+                    <Form.Select
+                      style={{ width: '120px' }}
+                      value={pageSize}
+                      onChange={(e) => {
+                        setPageSize(Number(e.target.value))
+                        setCurrentPage(1)
+                      }}
+                    >
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                      <option value={150}>150</option>
+                    </Form.Select>
+                  </div>
+                </div>
                 <table className="table table-bordered table-striped mt-3 bg-white shadow-sm align-middle table-sm w-auto">
                   <thead className="table text-center">
                     <tr>
@@ -453,67 +474,96 @@ export default function Categories() {
                       </tr>
                     ) : (
                       activeList
-                        .slice((currentPage - 1) * 10, currentPage * 10)
+                        .slice(
+                          (currentPage - 1) * pageSize,
+                          currentPage * pageSize,
+                        )
                         .map((item) => (
-                      <tr key={item.id}>
-                        <td className="text-center">{item.id}</td>
-                        <td className="text-center">
-                          {item.image ? (
-                            <img
-                              src={`http://localhost:5000/uploads/${item.image}`}
-                              alt={item.category_name}
-                              width="30"
-                              height="30"
-                              style={{
-                                objectFit: 'cover',
-                                borderRadius: '4px',
-                              }}
-                            />
-                          ) : (
-                            <span className="text-muted small">—</span>
-                          )}
-                        </td>
-                        <td>{item.primary_categories_name}</td>
-                        <td className="fw-semibold">{item.category_name}</td>
-                        <td className="text-center">
-                          <Dropdown>
-                            <Dropdown.Toggle
-                              size="sm"
-                              variant="outline-secondary"
-                              className="bg-secondary text-white"
-                            >
-                              <BsThreeDotsVertical />
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu popperConfig={{ strategy: 'fixed' }}>
-                              <Dropdown.Item onClick={() => handleEdit(item)}>
-                                Edit
-                              </Dropdown.Item>
-                              <Dropdown.Item
-                                onClick={() => handleDelete(item.id)}
-                                className="text-danger"
-                              >
-                                Delete
-                              </Dropdown.Item>
-                            </Dropdown.Menu>
-                          </Dropdown>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-              <Pagination
-                totalItems={activeList.length}
-                itemsPerPage={10}
-                currentPage={currentPage}
-                onPageChange={setCurrentPage}
-              />
-            </>
-          </Tab>
+                          <tr key={item.id}>
+                            <td className="text-center">{item.id}</td>
+                            <td className="text-center">
+                              {item.image ? (
+                                <img
+                                  src={`http://localhost:5000/uploads/${item.image}`}
+                                  alt={item.category_name}
+                                  width="30"
+                                  height="30"
+                                  style={{
+                                    objectFit: 'cover',
+                                    borderRadius: '4px',
+                                  }}
+                                />
+                              ) : (
+                                <span className="text-muted small">—</span>
+                              )}
+                            </td>
+                            <td>{item.primary_categories_name}</td>
+                            <td className="fw-semibold">
+                              {item.category_name}
+                            </td>
+                            <td className="text-center">
+                              <Dropdown>
+                                <Dropdown.Toggle
+                                  size="sm"
+                                  variant="outline-secondary"
+                                  className="bg-secondary text-white"
+                                >
+                                  <BsThreeDotsVertical />
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu
+                                  popperConfig={{ strategy: 'fixed' }}
+                                >
+                                  <Dropdown.Item
+                                    onClick={() => handleEdit(item)}
+                                  >
+                                    Edit
+                                  </Dropdown.Item>
+                                  <Dropdown.Item
+                                    onClick={() => handleDelete(item.id)}
+                                    className="text-danger"
+                                  >
+                                    Delete
+                                  </Dropdown.Item>
+                                </Dropdown.Menu>
+                              </Dropdown>
+                            </td>
+                          </tr>
+                        ))
+                    )}
+                  </tbody>
+                </table>
+                <Pagination
+                  totalItems={activeList.length}
+                  itemsPerPage={pageSize}
+                  currentPage={currentPage}
+                  onPageChange={setCurrentPage}
+                />
+              </>
+            </Tab>
 
             {/* DELETED TAB */}
             <Tab eventKey="deleted" title="Deleted">
               <>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h5 className="mb-0">Category List</h5>
+
+                  <div className="d-flex align-items-center gap-2">
+                    <span>Show:</span>
+
+                    <Form.Select
+                      style={{ width: '120px' }}
+                      value={pageSize}
+                      onChange={(e) => {
+                        setPageSize(Number(e.target.value))
+                        setCurrentPage(1)
+                      }}
+                    >
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                      <option value={150}>150</option>
+                    </Form.Select>
+                  </div>
+                </div>
                 <table className="table table-bordered table-striped mt-3 bg-white shadow-sm align-middle table-sm w-auto">
                   <thead className="table">
                     <tr>
@@ -542,49 +592,52 @@ export default function Categories() {
                       </tr>
                     ) : (
                       deletedList
-                        .slice((currentPage - 1) * 10, currentPage * 10)
+                        .slice(
+                          (currentPage - 1) * pageSize,
+                          currentPage * pageSize,
+                        )
                         .map((item) => (
-                      <tr key={item.id}>
-                        <td className="text-center">{item.id}</td>
-                        <td className="text-center">
-                          {item.image ? (
-                            <img
-                              src={`http://localhost:5000/uploads/${item.image}`}
-                              alt={item.category_name}
-                              width="30"
-                              height="30"
-                              style={{
-                                objectFit: 'cover',
-                                borderRadius: '4px',
-                              }}
-                            />
-                          ) : (
-                            <span className="text-muted small">—</span>
-                          )}
-                        </td>
-                        <td>{item.primary_categories_name}</td>
-                        <td>{item.category_name}</td>
-                        <td className="text-center">
-                          <button
-                            className="btn btn-sm btn-success px-3"
-                            onClick={() => handleRestore(item.id)}
-                          >
-                            Restore
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-              <Pagination
-                totalItems={deletedList.length}
-                itemsPerPage={10}
-                currentPage={currentPage}
-                onPageChange={setCurrentPage}
-              />
-            </>
-          </Tab>
+                          <tr key={item.id}>
+                            <td className="text-center">{item.id}</td>
+                            <td className="text-center">
+                              {item.image ? (
+                                <img
+                                  src={`http://localhost:5000/uploads/${item.image}`}
+                                  alt={item.category_name}
+                                  width="30"
+                                  height="30"
+                                  style={{
+                                    objectFit: 'cover',
+                                    borderRadius: '4px',
+                                  }}
+                                />
+                              ) : (
+                                <span className="text-muted small">—</span>
+                              )}
+                            </td>
+                            <td>{item.primary_categories_name}</td>
+                            <td>{item.category_name}</td>
+                            <td className="text-center">
+                              <button
+                                className="btn btn-sm btn-success px-3"
+                                onClick={() => handleRestore(item.id)}
+                              >
+                                Restore
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                    )}
+                  </tbody>
+                </table>
+                <Pagination
+                  totalItems={deletedList.length}
+                  itemsPerPage={pageSize}
+                  currentPage={currentPage}
+                  onPageChange={setCurrentPage}
+                />
+              </>
+            </Tab>
           </Tabs>
         </>
       )}

@@ -38,6 +38,7 @@ const BranchPage = () => {
   const [validationErrors, setValidationErrors] = useState({})
   const [showView, setShowView] = useState(false)
   const [viewData, setViewData] = useState(null)
+  const [pageSize, setPageSize] = useState(10)
 
   const [statusFilter, setStatusFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
@@ -727,6 +728,26 @@ const BranchPage = () => {
             </Alert>
           ) : (
             <>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <h4 className="mb-0">Branch List</h4>
+
+                <div className="d-flex align-items-center gap-2">
+                  <span>Show:</span>
+
+                  <Form.Select
+                    style={{ width: '120px' }}
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value))
+                      setCurrentPage(1) // reset page
+                    }}
+                  >
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                    <option value={150}>150</option>
+                  </Form.Select>
+                </div>
+              </div>
               <Table
                 hover
                 bordered
@@ -748,7 +769,10 @@ const BranchPage = () => {
                     </tr>
                   ) : (
                     branches
-                      .slice((currentPage - 1) * 10, currentPage * 10)
+                      .slice(
+                        (currentPage - 1) * pageSize,
+                        currentPage * pageSize,
+                      )
                       .map((branch) => (
                         <tr key={branch.id}>
                           <td>{branch.branch_name}</td>
@@ -767,7 +791,9 @@ const BranchPage = () => {
                                 <BsThreeDotsVertical />
                               </Dropdown.Toggle>
 
-                              <Dropdown.Menu popperConfig={{ strategy: 'fixed' }}>
+                              <Dropdown.Menu
+                                popperConfig={{ strategy: 'fixed' }}
+                              >
                                 {/* VIEW */}
                                 <Dropdown.Item
                                   onClick={() => {
@@ -780,7 +806,9 @@ const BranchPage = () => {
                                 </Dropdown.Item>
 
                                 {/* EDIT */}
-                                <Dropdown.Item onClick={() => handleEdit(branch)}>
+                                <Dropdown.Item
+                                  onClick={() => handleEdit(branch)}
+                                >
                                   <FaPen className="me-2 text-primary" />
                                   Edit
                                 </Dropdown.Item>
@@ -814,7 +842,7 @@ const BranchPage = () => {
               </Table>
               <Pagination
                 totalItems={branches.length}
-                itemsPerPage={10}
+                itemsPerPage={pageSize}
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
               />

@@ -7,6 +7,7 @@ import {
   FaTimes,
   FaAngleDown,
   FaAngleRight,
+  FaAngleLeft,
   FaTachometerAlt,
   FaCog,
   FaBuilding,
@@ -83,8 +84,16 @@ const Sidebar = () => {
       )}
 
       {/* SIDEBAR */}
-      <div className={`page-sidebar ${sidebarOpen ? 'show-sidebar' : ''} ${collapsed ? 'collapsed' : ''}`}>
+      <button className="sidebar-toggle-btn" onClick={() => setCollapsed(!collapsed)} style={{ position: 'fixed', top: '15px', left: '150px', zIndex: 1100, background: 'transparent', border: 'none', color: '#fff', fontSize: '1.5rem', color: 'blue' }}>
+        {collapsed ? <FaAngleRight /> : <FaAngleLeft />}
+      </button>
+      <div
+        className={`page-sidebar ${sidebarOpen ? 'show-sidebar' : ''} ${collapsed ? 'collapsed' : ''}`}
+      >
         <div className="sidebar custom-scrollbar">
+          <div className="collapse-btn" onClick={() => setCollapsed(!collapsed)} style={{ cursor: 'pointer', padding: '5px', textAlign: 'right' }}>
+            {collapsed ? <FaAngleRight /> : <FaAngleLeft />}
+          </div>
           {/* MOBILE CLOSE */}
           {/* <div className="sidebar-top">
             <h4>Menu</h4>
@@ -128,7 +137,11 @@ const Sidebar = () => {
                 <FaMale className="submenu-icon me-3" />
                 <span>Master</span>
 
-                {openMenu === 'master' ? <FaAngleDown className="pull-right" /> : <FaAngleRight className="pull-right" />}
+                {openMenu === 'master' ? (
+                  <FaAngleDown className="pull-right" />
+                ) : (
+                  <FaAngleRight className="pull-right" />
+                )}
               </a>
 
               {openMenu === 'master' && (
@@ -245,7 +258,11 @@ const Sidebar = () => {
                 <FaChartLine className="submenu-icon me-3" />
                 <span>Orders</span>
 
-                {openMenu === 'sales' ? <FaAngleDown className="pull-right" /> : <FaAngleRight className="pull-right" />}
+                {openMenu === 'sales' ? (
+                  <FaAngleDown className="pull-right" />
+                ) : (
+                  <FaAngleRight className="pull-right" />
+                )}
               </a>
 
               {openMenu === 'sales' && (
@@ -266,32 +283,6 @@ const Sidebar = () => {
                 </ul>
               )}
             </li>
-
-            {/* LOGOUT */}
-            {user ? (
-              <li>
-                <a
-                  href="#!"
-                  className="sidebar-header logout-btn"
-                  onClick={handleLogout}
-                  style={{
-                    color: 'red',
-                  }}
-                >
-                  <span>Logout</span>
-                </a>
-              </li>
-            ) : (
-              <li>
-                <a
-                  href="#!"
-                  className="sidebar-header"
-                  onClick={() => handleNavigate('/login')}
-                >
-                  <span>Login</span>
-                </a>
-              </li>
-            )}
           </ul>
         </div>
       </div>

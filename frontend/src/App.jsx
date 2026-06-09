@@ -26,6 +26,10 @@ import PrimaryCategories from './component/master/PrimaryCategories'
 import Categories from './component/master/Categories'
 import SubCategories from './component/master/SubCategories'
 import ProductPage from './pages/Product'
+import Profile from './pages/Profile'
+import CheckoutOverdue from './pages/CheckoutOverdue'
+import CheckoutSoon from './pages/CheckoutSoon'
+import Reserved from './pages/Reserved'
 
 function App() {
   return (
@@ -36,7 +40,11 @@ function App() {
 
         {/* COMMON LAYOUT */}
         <Route path="/" element={<Layout />}>
+          <Route path="/profile" element={<Profile />} />
           <Route index element={<Home />} />
+          <Route path="/checkout-overdue" element={<CheckoutOverdue />} />
+          <Route path="/checkout-soon" element={<CheckoutSoon />} />
+          <Route path="/reserved" element={<Reserved />} />
 
           <Route path="users" element={<User />} />
           <Route path="/master/dashboard" element={<Dashboard />} />

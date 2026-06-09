@@ -51,6 +51,8 @@ const Users = () => {
 
   const [deletedUsers, setDeletedUsers] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+
   const initialFormData = {
     first_name: '',
     last_name: '',
@@ -378,7 +380,8 @@ const Users = () => {
 
     setIsEditing(user)
 
-    const derivedFullname = user.fullname || `${user.first_name || ''} ${user.last_name || ''}`.trim()
+    const derivedFullname =
+      user.fullname || `${user.first_name || ''} ${user.last_name || ''}`.trim()
 
     setFormData({
       first_name: user.first_name || '',
@@ -396,9 +399,7 @@ const Users = () => {
     })
 
     setLogoPreview(
-      user.profile_image
-        ? `${IMAGE_BASE_URL}/${user.profile_image}`
-        : null,
+      user.profile_image ? `${IMAGE_BASE_URL}/${user.profile_image}` : null,
     )
 
     setShowForm(true)
@@ -457,14 +458,11 @@ const Users = () => {
 
       const randomNumber = Math.floor(1000000000 + Math.random() * 9000000000)
 
-      const response = await axios.get(
-        `${API_BASE_URL}/users/export`,
-        {
-          params,
-          responseType: 'blob', // IMPORTANT
-          ...getAuthHeaders(),
-        },
-      )
+      const response = await axios.get(`${API_BASE_URL}/users/export`, {
+        params,
+        responseType: 'blob', // IMPORTANT
+        ...getAuthHeaders(),
+      })
 
       // Create Excel File
       const blob = new Blob([response.data], {
@@ -897,18 +895,19 @@ const Users = () => {
 
                     {branches
                       .filter((item) => {
-                        const isActive = item.active == 0;
-                        let isAssigned = false;
+                        const isActive = item.active == 0
+                        let isAssigned = false
                         if (formData.company_id) {
-                          const selectedCompanyId = String(formData.company_id);
+                          const selectedCompanyId = String(formData.company_id)
                           if (item.company_id) {
                             const assignedCompanyIds = item.company_id
                               .split(',')
-                              .map((id) => id.trim());
-                            isAssigned = assignedCompanyIds.includes(selectedCompanyId);
+                              .map((id) => id.trim())
+                            isAssigned =
+                              assignedCompanyIds.includes(selectedCompanyId)
                           }
                         }
-                        return isActive && isAssigned;
+                        return isActive && isAssigned
                       })
                       .map((b) => (
                         <option key={b.id} value={b.id}>
@@ -1080,6 +1079,26 @@ const Users = () => {
             </Alert>
           ) : (
             <>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <h5 className="mb-0">Primary Category List</h5>
+
+                <div className="d-flex align-items-center gap-2">
+                  <span>Show:</span>
+
+                  <Form.Select
+                    style={{ width: '120px' }}
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value))
+                      setCurrentPage(1)
+                    }}
+                  >
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                    <option value={150}>150</option>
+                  </Form.Select>
+                </div>
+              </div>
               <Table
                 bordered
                 hover
@@ -1107,7 +1126,10 @@ const Users = () => {
                       </tr>
                     ) : (
                       users
-                        .slice((currentPage - 1) * 10, currentPage * 10)
+                        .slice(
+                          (currentPage - 1) * pageSize,
+                          currentPage * pageSize,
+                        )
                         .map((user) => (
                           <tr key={user.id}>
                             <td>
@@ -1129,7 +1151,9 @@ const Users = () => {
                                 />
                                 <div className="user-details">
                                   <span className="user-name">
-                                    {user.fullname || user.name || user.first_name}
+                                    {user.fullname ||
+                                      user.name ||
+                                      user.first_name}
                                   </span>
                                 </div>
                               </div>
@@ -1145,13 +1169,19 @@ const Users = () => {
                                   <BsThreeDotsVertical />
                                 </Dropdown.Toggle>
 
-                                <Dropdown.Menu popperConfig={{ strategy: 'fixed' }}>
-                                  <Dropdown.Item onClick={() => handleView(user)}>
+                                <Dropdown.Menu
+                                  popperConfig={{ strategy: 'fixed' }}
+                                >
+                                  <Dropdown.Item
+                                    onClick={() => handleView(user)}
+                                  >
                                     <FaEye className="me-2 text-info" />
                                     View
                                   </Dropdown.Item>
 
-                                  <Dropdown.Item onClick={() => handleEdit(user)}>
+                                  <Dropdown.Item
+                                    onClick={() => handleEdit(user)}
+                                  >
                                     <FaPen className="me-2 text-primary" />
                                     Edit
                                   </Dropdown.Item>
@@ -1175,7 +1205,10 @@ const Users = () => {
                     </tr>
                   ) : (
                     deletedUsers
-                      .slice((currentPage - 1) * 10, currentPage * 10)
+                      .slice(
+                        (currentPage - 1) * pageSize,
+                        currentPage * pageSize,
+                      )
                       .map((user) => (
                         <tr key={user.id}>
                           <td>{user.fullname}</td>
@@ -1199,8 +1232,10 @@ const Users = () => {
                 </tbody>
               </Table>
               <Pagination
-                totalItems={activeTab === 'active' ? users.length : deletedUsers.length}
-                itemsPerPage={10}
+                totalItems={
+                  activeTab === 'active' ? users.length : deletedUsers.length
+                }
+                itemsPerPage={pageSize}
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
               />

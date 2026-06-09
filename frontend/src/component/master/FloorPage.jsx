@@ -16,6 +16,7 @@ import Tab from 'react-bootstrap/Tab'
 import Table from 'react-bootstrap/Table'
 import axios from 'axios'
 import { BsThreeDotsVertical } from 'react-icons/bs'
+import Pagination from '../../utils/Pagination'
 
 export default function FloorPage() {
   const [hotels, setHotels] = useState([])
@@ -24,6 +25,8 @@ export default function FloorPage() {
   const [hotelId, setHotelId] = useState('')
   const [floorName, setFloorName] = useState('')
   const [floorNumber, setFloorNumber] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   const [editId, setEditId] = useState(null)
   const [showSearch, setShowSearch] = useState(false)
@@ -116,6 +119,7 @@ export default function FloorPage() {
 
   // when hotel changes
   useEffect(() => {
+    setCurrentPage(1)
     if (hotelId) {
       loadFloors(hotelId, searchFields, floorStatus)
     }
@@ -292,6 +296,28 @@ export default function FloorPage() {
 
       {/* TABLE */}
       <div className="card branch-card">
+        <div className="d-flex justify-content-between align-items-center p-2">
+          <h5 className="mb-0">Floor List</h5>
+
+          <div className="d-flex align-items-center gap-2">
+            <span>Show:</span>
+
+            <select
+              className="form-select"
+              style={{ width: '120px' }}
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value))
+                setCurrentPage(1)
+              }}
+            >
+              <option value={10}>10</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={150}>150</option>
+            </select>
+          </div>
+        </div>
         <div className="card-body p-0">
           <Table
             hover
@@ -300,68 +326,80 @@ export default function FloorPage() {
           >
             <thead className="table text-center">
               <tr>
-                <th width="100" className="text-center">Floor No</th>
+                <th width="100" className="text-center">
+                  Floor No
+                </th>
                 <th width="200">Floor Name</th>
-                <th width="90" className="text-center">Action</th>
+                <th width="90" className="text-center">
+                  Action
+                </th>
               </tr>
             </thead>
 
             <tbody className="text-center">
-              {floors.map((f) => (
-                <tr key={f.floor_id}>
-                  <td>{f.floor_number}</td>
-                  <td>{f.floor_name}</td>
+              {floors
+                .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+                .map((f) => (
+                  <tr key={f.floor_id}>
+                    <td>{f.floor_number}</td>
+                    <td>{f.floor_name}</td>
 
-                  <td className="text-center">
-                    <Dropdown>
-                      <Dropdown.Toggle
-                        variant="outline-secondary"
-                        size="sm"
-                        id={`dropdown-${f.floor_id}`}
-                        className="bg-secondary text-white shadow-sm border"
-                      >
-                        <BsThreeDotsVertical />
-                      </Dropdown.Toggle>
-
-                      <Dropdown.Menu>
-                        <Dropdown.Item
-                        // onClick={() => handleView(branch)}
+                    <td className="text-center">
+                      <Dropdown>
+                        <Dropdown.Toggle
+                          variant="outline-secondary"
+                          size="sm"
+                          id={`dropdown-${f.floor_id}`}
+                          className="bg-secondary text-white shadow-sm border"
                         >
-                          <FaEye
-                            className="me-2 text-info"
-                            onClick={() => handleView(f)}
-                          />
-                          View
-                        </Dropdown.Item>
+                          <BsThreeDotsVertical />
+                        </Dropdown.Toggle>
 
-                        <Dropdown.Item onClick={() => handleEdit(f)}>
-                          <FaPen className="me-2 text-primary" />
-                          Edit
-                        </Dropdown.Item>
-
-                        {floorStatus === '0' && (
+                        <Dropdown.Menu>
                           <Dropdown.Item
-                            onClick={() => handleDelete(f.floor_id)}
+                          // onClick={() => handleView(branch)}
                           >
-                            <FaTrashAlt className="me-2 text-danger" />
-                            Delete
+                            <FaEye
+                              className="me-2 text-info"
+                              onClick={() => handleView(f)}
+                            />
+                            View
                           </Dropdown.Item>
-                        )}
 
-                        {floorStatus === '1' && (
-                          <Dropdown.Item
-                            onClick={() => handleRestore(f.floor_id)}
-                          >
-                            ♻ Restore
+                          <Dropdown.Item onClick={() => handleEdit(f)}>
+                            <FaPen className="me-2 text-primary" />
+                            Edit
                           </Dropdown.Item>
-                        )}
-                      </Dropdown.Menu>
-                    </Dropdown>
-                  </td>
-                </tr>
-              ))}
+
+                          {floorStatus === '0' && (
+                            <Dropdown.Item
+                              onClick={() => handleDelete(f.floor_id)}
+                            >
+                              <FaTrashAlt className="me-2 text-danger" />
+                              Delete
+                            </Dropdown.Item>
+                          )}
+
+                          {floorStatus === '1' && (
+                            <Dropdown.Item
+                              onClick={() => handleRestore(f.floor_id)}
+                            >
+                              ♻ Restore
+                            </Dropdown.Item>
+                          )}
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </Table>
+          <Pagination
+            totalItems={floors.length}
+            itemsPerPage={pageSize}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+          />
         </div>
       </div>
 

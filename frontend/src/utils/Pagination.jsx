@@ -1,6 +1,11 @@
 import React from 'react'
 
-const Pagination = ({ totalItems, itemsPerPage = 10, currentPage, onPageChange }) => {
+const Pagination = ({
+  totalItems,
+  itemsPerPage = 10,
+  currentPage,
+  onPageChange,
+}) => {
   const totalPages = Math.ceil(totalItems / itemsPerPage)
 
   if (totalPages <= 1) return null
@@ -33,7 +38,7 @@ const Pagination = ({ totalItems, itemsPerPage = 10, currentPage, onPageChange }
 
   return (
     <nav aria-label="Page navigation" className="mt-3">
-      <ul className="pagination justify-content-center mb-0">
+      {/* <ul className="pagination justify-content-center mb-0">
         <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
           <button
             className="page-link"
@@ -66,7 +71,7 @@ const Pagination = ({ totalItems, itemsPerPage = 10, currentPage, onPageChange }
             Next
           </button>
         </li>
-      </ul>
+      </ul> */}
     </nav>
   )
 }

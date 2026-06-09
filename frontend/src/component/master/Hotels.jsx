@@ -43,6 +43,8 @@ const HotelPage = () => {
   const [selectedHotel, setSelectedHotel] = useState(null)
   const [statusFilter, setStatusFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+
   const [counts, setCounts] = useState({
     totalHotels: 0,
     approvedHotels: 0,
@@ -757,18 +759,19 @@ const HotelPage = () => {
 
                     {branch
                       .filter((item) => {
-                        const isActive = item.active == 0;
-                        let isAssigned = false;
+                        const isActive = item.active == 0
+                        let isAssigned = false
                         if (formData.companyId) {
-                          const selectedCompanyId = String(formData.companyId);
+                          const selectedCompanyId = String(formData.companyId)
                           if (item.company_id) {
                             const assignedCompanyIds = item.company_id
                               .split(',')
-                              .map((id) => id.trim());
-                            isAssigned = assignedCompanyIds.includes(selectedCompanyId);
+                              .map((id) => id.trim())
+                            isAssigned =
+                              assignedCompanyIds.includes(selectedCompanyId)
                           }
                         }
-                        return isActive && isAssigned;
+                        return isActive && isAssigned
                       })
                       .map((item) => (
                         <option key={item.id} value={item.id}>
@@ -899,6 +902,26 @@ const HotelPage = () => {
             </Alert>
           ) : (
             <>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <h4 className="mb-0">Hotels List</h4>
+
+                <div className="d-flex align-items-center gap-2">
+                  <span>Show:</span>
+
+                  <Form.Select
+                    style={{ width: '120px' }}
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value))
+                      setCurrentPage(1) // reset page
+                    }}
+                  >
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                    <option value={150}>150</option>
+                  </Form.Select>
+                </div>
+              </div>
               <Table
                 hover
                 bordered
@@ -923,7 +946,10 @@ const HotelPage = () => {
                     </tr>
                   ) : (
                     branches
-                      .slice((currentPage - 1) * 10, currentPage * 10)
+                      .slice(
+                        (currentPage - 1) * pageSize,
+                        currentPage * pageSize,
+                      )
                       .map((branch) => (
                         <tr key={branch.id}>
                           <td>
@@ -965,12 +991,16 @@ const HotelPage = () => {
                               </Dropdown.Toggle>
 
                               <Dropdown.Menu>
-                                <Dropdown.Item onClick={() => handleView(branch)}>
+                                <Dropdown.Item
+                                  onClick={() => handleView(branch)}
+                                >
                                   <FaEye className="me-2 text-info" />
                                   View
                                 </Dropdown.Item>
 
-                                <Dropdown.Item onClick={() => handleEdit(branch)}>
+                                <Dropdown.Item
+                                  onClick={() => handleEdit(branch)}
+                                >
                                   <FaPen className="me-2 text-primary" />
                                   Edit
                                 </Dropdown.Item>
@@ -1003,7 +1033,7 @@ const HotelPage = () => {
               </Table>
               <Pagination
                 totalItems={branches.length}
-                itemsPerPage={10}
+                itemsPerPage={pageSize}
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
               />
