@@ -1,9 +1,10 @@
 .page-sidebar {
   width: 250px;
-  transition: 0.3s;
-  background: #1e1e2f;
-  /* dark modern blue */
-  color: #fff;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  background: linear-gradient(180deg, #0b1a30 0%, #19365d 100%);
+  color: #f8fafc;
+  box-shadow: 4px 0 15px rgba(0,0,0,0.15);
+  z-index: 1040;
 }
 
 .page-wrapper .page-body-wrapper .page-sidebar.collapsed {
@@ -59,22 +60,86 @@
 }
 
 .sidebar {
-  background-color: #1e1e2f;
+  background: transparent;
 }
 
 /* menu item style */
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
 .sidebar-menu li a {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   cursor: pointer;
+  padding: 12px 20px;
+  margin: 4px 16px;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #cbd5e1;
+  text-decoration: none;
+  font-weight: 500;
+  letter-spacing: 0.3px;
 }
 
-/* collapse button */
+.sidebar-menu li a:hover,
+.sidebar-menu li.active > a {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  transform: translateX(4px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.sidebar-menu li a .menu-icon,
+.sidebar-menu li a .submenu-icon {
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+}
+
+.sidebar-menu li a:hover .menu-icon,
+.sidebar-menu li a:hover .submenu-icon {
+  transform: scale(1.15);
+  color: #38bdf8;
+}
+
+/* collapse button inside sidebar */
 .collapse-btn {
   cursor: pointer;
-  padding: 10px;
+  padding: 15px;
   text-align: right;
+  color: #cbd5e1;
+  transition: all 0.3s ease;
+}
+.collapse-btn:hover {
+  color: #ffffff;
+}
+
+/* Floating Sidebar Toggle Button */
+.sidebar-toggle-btn {
+  position: fixed;
+  top: 15px;
+  left: 180px;
+  z-index: 1100;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border: none;
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-toggle-btn:hover {
+  transform: scale(1.1);
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
 }
 
 /* collapsed layout overrides */

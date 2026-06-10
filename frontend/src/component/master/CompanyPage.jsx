@@ -25,6 +25,7 @@ import {
   Alert,
   Dropdown,
   Modal,
+  Container,
 } from 'react-bootstrap'
 import './Company.css'
 import download from './download.jfif'
@@ -88,8 +89,8 @@ const CompanyPage = () => {
       console.error(err)
       alert(
         err.response?.data?.message ||
-          err.response?.data?.error ||
-          'Failed to fetch company details.',
+        err.response?.data?.error ||
+        'Failed to fetch company details.',
       )
     }
   }
@@ -468,8 +469,8 @@ const CompanyPage = () => {
 
       alert(
         err.response?.data?.message ||
-          err.response?.data?.error ||
-          'Something went wrong',
+        err.response?.data?.error ||
+        'Something went wrong',
       )
     }
   }
@@ -552,8 +553,8 @@ const CompanyPage = () => {
       console.error(err)
       alert(
         err.response?.data?.message ||
-          err.response?.data?.error ||
-          'Failed to fetch company details for editing.',
+        err.response?.data?.error ||
+        'Failed to fetch company details for editing.',
       )
     }
   }
@@ -657,7 +658,11 @@ const CompanyPage = () => {
   ]
 
   return (
-    <div className="page-container">
+    <Container fluid className="page-container" style={{
+      background: 'linear-gradient(135deg, #f6f8fc 0%, #e9edf5 100%)',
+      minHeight: '100vh',
+      transition: 'background-color 0.5s ease',
+    }}>
       {/* Header */}
       <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <h1
@@ -734,27 +739,16 @@ const CompanyPage = () => {
       </div>
 
       {/* Search */}
-      {showSearch && (
-        <SearchPanel
-          searchFields={searchFields}
-          setSearchFields={setSearchFields}
-          dateFilter={dateFilter}
-          setDateFilter={setDateFilter}
-          onSearch={handleSearch}
-          onReset={handleReset}
-          onDownloadExcel={handleDownloadExcel}
-          searchOptions={searchOptions}
-        />
-      )}
 
       {/* Form */}
-      {showForm && (
-        <Card className="company-card">
-          <h2 className="card-header mb-4">
+      {showForm ? (
+        <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4" style={{ transition: 'all 0.3s ease' }}>
+          <Card.Body className="p-4">
+          <h2 className="mb-4 fw-bold text-secondary" style={{ fontSize: '1.5rem' }}>
             {isEditing ? (
               <span>Edit Company - {isEditing.company_name}</span>
             ) : (
-              ''
+              'Company Details'
             )}
           </h2>
 
@@ -768,10 +762,8 @@ const CompanyPage = () => {
             <Form className="company-form" onSubmit={handleSubmit}>
               <Tabs
                 activeKey={activeTab}
-                onSelect={() => {}}
-                className="mb-3 custom-bootstrap-tabs"
-                style={{ overflow: 'visible', flexWrap: 'wrap' }}
-                fill
+                onSelect={(k) => setActiveTab(k)}
+                className="mb-3"
               >
                 {/* Company Details Tab */}
                 <Tab eventKey="companyDetails" title="Company Details">
@@ -1253,13 +1245,15 @@ const CompanyPage = () => {
                           </td>
                           <td>
                             <div className="table-actions">
-                              <button
-                                type="button"
-                                className="icon-btn delete"
-                                onClick={() => removeBankRow(idx)}
-                              >
-                                <FaTimes />
-                              </button>
+                              {idx > 0 && (
+                                <button
+                                  type="button"
+                                  className="icon-btn delete"
+                                  onClick={() => removeBankRow(idx)}
+                                >
+                                  <FaTimes />
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -1269,10 +1263,10 @@ const CompanyPage = () => {
 
                   <div
                     className="form-actions d-flex justify-content-end mt-3"
-                    // style={{
-                    //   position: 'relative',
-                    //   left: '-20%',
-                    // }}
+                  // style={{
+                  //   position: 'relative',
+                  //   left: '-20%',
+                  // }}
                   >
                     <Button
                       variant="outline-secondary"
@@ -1301,12 +1295,24 @@ const CompanyPage = () => {
               </Tabs>
             </Form>
           </div>
+          </Card.Body>
         </Card>
-      )}
-
-      {/* Company Status Tabs */}
-      {!showForm && (
-        <div className="mb-4">
+      ) : (
+      /* Company Status Tabs */
+        <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+          <Card.Body className="p-4">
+          {showSearch && (
+            <SearchPanel
+              searchFields={searchFields}
+              setSearchFields={setSearchFields}
+              dateFilter={dateFilter}
+              setDateFilter={setDateFilter}
+              onSearch={handleSearch}
+              onReset={handleReset}
+              onDownloadExcel={handleDownloadExcel}
+              searchOptions={searchOptions}
+            />
+          )}
           <Tabs
             activeKey={statusFilter}
             onSelect={(key) => setStatusFilter(key)}
@@ -1326,12 +1332,8 @@ const CompanyPage = () => {
               title={`Deleted (${counts.deletedCompanies})`}
             />
           </Tabs>
-        </div>
-      )}
 
       {/* Company List Table */}
-      {!showForm && (
-        <Card>
           {loading ? (
             <Alert variant="warning" className="mb-0 text-center">
               Loading...
@@ -1363,130 +1365,131 @@ const CompanyPage = () => {
                   </Form.Select>
                 </div>
               </div>
-              <Table
-                bordered
-                hover
-                className="list-table align-middle table-sm w-auto"
-              >
-                <thead className="table text-center">
-                  <tr>
-                    <th width="80">Logo</th>
-                    <th width="180">Company</th>
-                    <th width="150">Contact Person</th>
-                    <th width="200">Email ID</th>
-                    <th width="120">Contact No</th>
-                    <th width="120">City</th>
-                    <th width="90">Actions</th>
-                  </tr>
-                </thead>
-
-                <tbody className="text-center">
-                  {companies.length === 0 ? (
-                    <tr className="text-center">
-                      <td colSpan={7}>No data found</td>
+              <div className="table-responsive" style={{ overflowX: 'auto', minHeight: '200px' }}>
+                <Table
+                  bordered
+                  hover
+                  className="list-table align-middle table-sm w-100"
+                >
+                  <thead className="table text-center">
+                    <tr>
+                      <th>Logo</th>
+                      <th>Company</th>
+                      <th>Contact Person</th>
+                      <th>Email ID</th>
+                      <th>Contact No</th>
+                      <th>City</th>
+                      <th>Actions</th>
                     </tr>
-                  ) : (
-                    companies
-                      .slice(
-                        (currentPage - 1) * itemsPerPage,
-                        currentPage * itemsPerPage,
-                      )
-                      .map((company) => (
-                        <tr key={company.id}>
-                          <td>
-                            <img
-                              src={
-                                company.image
-                                  ? `http://localhost:5000/uploads/${company.image}`
-                                  : download
-                              }
-                              alt="Logo"
-                              style={{
-                                width: '40px',
-                                height: '40px',
-                                objectFit: 'contain',
-                                border: '1px solid #eee',
-                                borderRadius: '4px',
-                                padding: '2px',
-                                backgroundColor: '#fff',
-                              }}
-                              onError={(e) => {
-                                e.target.src = download
-                              }}
-                            />
-                          </td>
-                          <td>{company.company_name}</td>
-                          <td>{company.contact_person}</td>
-                          <td>{company.email_id}</td>
-                          <td>{company.contact_no}</td>
-                          <td>{company.city_name}</td>
+                  </thead>
 
-                          <td className="text-center">
-                            <Dropdown>
-                              <Dropdown.Toggle
-                                variant="outline-secondary"
-                                size="sm"
-                                id={`dropdown-${company.id}`}
-                                className="bg-secondary text-white"
+                  <tbody className="text-center">
+                    {companies.length === 0 ? (
+                      <tr className="text-center">
+                        <td colSpan={7}>No data found</td>
+                      </tr>
+                    ) : (
+                      companies
+                        .slice(
+                          (currentPage - 1) * itemsPerPage,
+                          currentPage * itemsPerPage,
+                        )
+                        .map((company) => (
+                          <tr key={company.id}>
+                            <td>
+                              <img
+                                src={
+                                  company.image
+                                    ? `http://localhost:5000/uploads/${company.image}`
+                                    : download
+                                }
+                                alt="Logo"
                                 style={{
-                                  border: '1px solid #ddd',
+                                  width: '40px',
+                                  height: '40px',
+                                  objectFit: 'contain',
+                                  border: '1px solid #eee',
+                                  borderRadius: '4px',
+                                  padding: '2px',
+                                  backgroundColor: '#fff',
                                 }}
-                              >
-                                <BsThreeDotsVertical />
-                              </Dropdown.Toggle>
+                                onError={(e) => {
+                                  e.target.src = download
+                                }}
+                              />
+                            </td>
+                            <td>{company.company_name}</td>
+                            <td>{company.contact_person}</td>
+                            <td>{company.email_id}</td>
+                            <td>{company.contact_no}</td>
+                            <td>{company.city_name}</td>
 
-                              <Dropdown.Menu
-                                popperConfig={{ strategy: 'fixed' }}
-                              >
-                                <Dropdown.Item
-                                  onClick={() => handleView(company)}
+                            <td className="text-center">
+                              <Dropdown>
+                                <Dropdown.Toggle
+                                  variant="outline-secondary"
+                                  size="sm"
+                                  id={`dropdown-${company.id}`}
+                                  className="bg-secondary text-white"
+                                  style={{
+                                    border: '1px solid #ddd',
+                                  }}
                                 >
-                                  <FaStreetView className="me-2 text-primary" />
-                                  View
-                                </Dropdown.Item>
+                                  <BsThreeDotsVertical />
+                                </Dropdown.Toggle>
 
-                                <Dropdown.Item
-                                  onClick={() => handleEdit(company)}
-                                >
-                                  <FaPen className="me-2 text-primary" />
-                                  Edit
-                                </Dropdown.Item>
-
-                                {/* 🔴 ACTIVE = 0 → SHOW NORMAL DELETE */}
-                                {company.active == 0 && (
+                                <Dropdown.Menu>
                                   <Dropdown.Item
-                                    onClick={() => handleDelete(company.id)}
-                                    className="text-danger"
+                                    onClick={() => handleView(company)}
                                   >
-                                    <FaTrashAlt className="me-2" />
-                                    Delete
+                                    <FaStreetView className="me-2 text-primary" />
+                                    View
                                   </Dropdown.Item>
-                                )}
 
-                                {/* 🟢 ACTIVE = 1 → ONLY RESTORE */}
-                                {company.active == 1 && (
                                   <Dropdown.Item
-                                    onClick={() => handleRestore(company.id)}
+                                    onClick={() => handleEdit(company)}
                                   >
-                                    ♻️ Restore
+                                    <FaPen className="me-2 text-primary" />
+                                    Edit
                                   </Dropdown.Item>
-                                )}
-                              </Dropdown.Menu>
-                            </Dropdown>
-                          </td>
-                        </tr>
-                      ))
-                  )}
-                </tbody>
-              </Table>
-              <Pagination
-                totalItems={companies.length}
-                itemsPerPage={10}
-                currentPage={currentPage}
-                onPageChange={setCurrentPage}
-              />
+
+                                  {/* 🔴 ACTIVE = 0 → SHOW NORMAL DELETE */}
+                                  {company.active == 0 && (
+                                    <Dropdown.Item
+                                      onClick={() => handleDelete(company.id)}
+                                      className="text-danger"
+                                    >
+                                      <FaTrashAlt className="me-2" />
+                                      Delete
+                                    </Dropdown.Item>
+                                  )}
+
+                                  {/* 🟢 ACTIVE = 1 → ONLY RESTORE */}
+                                  {company.active == 1 && (
+                                    <Dropdown.Item
+                                      onClick={() => handleRestore(company.id)}
+                                    >
+                                      ♻️ Restore
+                                    </Dropdown.Item>
+                                  )}
+                                </Dropdown.Menu>
+                              </Dropdown>
+                            </td>
+                          </tr>
+                        ))
+                    )}
+                  </tbody>
+                </Table>
+                <Pagination
+                  totalItems={companies.length}
+                  itemsPerPage={10}
+                  currentPage={currentPage}
+                  onPageChange={setCurrentPage}
+                />
+              </div>
             </div>
           )}
+          </Card.Body>
         </Card>
       )}
       <Modal
@@ -1666,7 +1669,7 @@ const CompanyPage = () => {
           </Button>
         </Modal.Footer>
       </Modal>
-    </div>
+    </Container>
   )
 }
 

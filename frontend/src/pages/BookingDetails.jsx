@@ -24,150 +24,88 @@ const BookingDetails = () => {
   const [showModal, setShowModal] = useState(false)
   const [selectedDetails, setSelectedDetails] = useState(null)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
-  const [rooms, setRooms] = useState([])
-  const [hotels, setHotels] = useState([])
-  const [floors, setFloors] = useState([])
-
-  const isCheckoutSoon = (checkOutDate, status) => {
-    if (!checkOutDate) return false
-
-    const s = status?.toLowerCase()
-
-    if (s === 'cancelled' || s === 'checkedout' || s === 'checked out')
-      return false
-
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    const checkout = new Date(checkOutDate)
-    checkout.setHours(0, 0, 0, 0)
-
-    const diffDays = (checkout - today) / (1000 * 60 * 60 * 24)
-
-    return diffDays <= 1 && diffDays >= 0
-  }
-
-  const isCheckoutOverdue = (checkOutDate, status) => {
-    if (!checkOutDate) return false
-
-    const s = status?.toLowerCase().trim()
-
-    // Sirf active stay wale bookings overdue ho sakte hain
-    if (s !== 'booked' && s !== 'occupied') {
-      return false
-    }
-
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    const checkout = new Date(checkOutDate)
-    checkout.setHours(0, 0, 0, 0)
-
-    return checkout < today
-  }
 
   const fetchBookingDetails = async () => {
     try {
-      const token = localStorage.getItem('token')
-
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-
       setLoading(true)
 
-      const [bookingRes, deletedRes, roomRes, hotelRes, floorRes] =
-        await Promise.all([
-          axios.get(`${API_URL}/api/bookings`, config),
-          axios.get(`${API_URL}/api/deleted-bookings`, config),
-          axios.get(`${API_URL}/api/rooms`, config),
-          axios.get(`${API_URL}/api/hotels`, config),
-          axios.get(`${API_URL}/api/floors`, config),
-        ])
+      let data = []
 
-      const hotelData = hotelRes.data.data || []
-      const floorData = floorRes.data.data || []
+      if (statusType === 'maintenance') {
+        const res = await axios.get(`${API_URL}/api/rooms`)
+        data = res.data.data || []
 
-      setHotels(hotelData)
-      setFloors(floorData)
+        if (hotelId && hotelId !== 'all') {
+          data = data.filter((room) => Number(room.hotel_id) === Number(hotelId))
+        }
 
-      const bookingData = bookingRes.data.data || []
-      const deletedData = deletedRes.data.data || []
-      const roomData = roomRes.data.data || []
+        data = data.filter((room) => room.status?.toLowerCase() === 'maintenance')
+      } else if (statusType === 'deleted') {
+        const token = localStorage.getItem('token')
+        const res = await axios.get(`${API_URL}/api/deleted-bookings`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        data = res.data.data || []
 
-      setRooms(roomData)
+        if (hotelId && hotelId !== 'all') {
+          data = data.filter((b) => Number(b.hotel_id) === Number(hotelId))
+        }
 
-      let data = statusType === 'deleted' ? deletedData : bookingData
+        // Add status for color config
+        data = data.map(d => ({ ...d, status: 'deleted' }))
+      } else {
+        const res = await axios.get(`${API_URL}/api/bookings`)
+        data = res.data.data || []
 
-      // Hotel Filter
-      if (hotelId !== 'all') {
-        data = data.filter((b) => Number(b.hotel_id) === Number(hotelId))
-      }
+        if (hotelId && hotelId !== 'all') {
+          data = data.filter((b) => Number(b.hotel_id) === Number(hotelId))
+        }
 
-      // Status Filter
-      if (statusType !== 'all') {
-        data = data.filter((b) => {
-          const status = b.status?.toLowerCase().trim()
+        if (statusType !== 'all') {
+          const now = new Date()
+          const oneDayMs = 24 * 60 * 60 * 1000
+          const normalize = (s) => (s || '').toLowerCase().replace(/\s+/g, '')
 
-          switch (statusType) {
-            case 'booked': {
-              const today = new Date().toISOString().split('T')[0]
-              const checkInDate = b.check_in_date?.split('T')[0]
+          data = data.filter((b) => {
+            const status = normalize(b.status)
 
-              return status === 'booked' && checkInDate === today
+            if (statusType === 'checkedout') {
+              return status === 'checkedout' || status === 'checkedout'
             }
 
-            case 'reserved':
-              return status === 'reserved'
+            if (statusType === 'checkout_soon') {
+              const checkout = new Date(b.check_out_date)
+              const diff = checkout - now
+              const isSoon = diff > 0 && diff <= oneDayMs && status !== 'cancelled' && status !== 'deleted'
+              if (isSoon) b.displayStatus = 'Checkout Soon'
+              return isSoon
+            }
 
-            case 'cancelled':
-              return status === 'cancelled'
+            if (statusType === 'checkout_overdue') {
+              const checkout = new Date(b.check_out_date)
+              const isOverdue = checkout < now && status !== 'cancelled' && status !== 'deleted'
+              if (isOverdue) {
+                const today = new Date(now)
+                today.setHours(0, 0, 0, 0)
+                const checkOutDate = new Date(b.check_out_date)
+                checkOutDate.setHours(0, 0, 0, 0)
+                const diffTime = today.getTime() - checkOutDate.getTime()
+                const diffDays = Math.floor(diffTime / oneDayMs)
 
-            case 'checkedout':
-              return status === 'checkedout' || status === 'checked out'
+                b.displayStatus = `Overdue (${diffDays} day${diffDays > 1 ? 's' : ''})`
+                b.statusTypeForColor = 'checkoutoverdue'
+              }
+              return isOverdue
+            }
 
-            case 'checkout_soon':
-              return isCheckoutSoon(b.check_out_date, b.status)
-
-            case 'checkout_overdue':
-              return isCheckoutOverdue(b.check_out_date, b.status)
-
-            case 'deleted':
-              return status === 'deleted'
-
-            default:
-              return true
-          }
-        })
+            return status === normalize(statusType)
+          })
+        }
       }
 
-      // Room Join
-      const finalData = data.map((booking) => {
-        const room = roomData.find(
-          (r) => Number(r.room_id) === Number(booking.room_id),
-        )
-
-        const hotel = hotelData.find(
-          (h) => Number(h.id) === Number(room?.hotel_id),
-        )
-
-        const floor = floorData.find(
-          (f) => Number(f.floor_id) === Number(room?.floor_id),
-        )
-
-        return {
-          ...booking,
-          hotel_name: hotel?.hotel_name || 'Unknown Hotel',
-          floor_id: room?.floor_id,
-          floor_name: floor?.floor_name || `Floor ${room?.floor_id}`,
-        }
-      })
-
-      setBookings(finalData)
+      setBookings(data)
     } catch (err) {
-      console.error(err)
+      console.error('Error fetching booking details:', err)
     } finally {
       setLoading(false)
     }
@@ -191,67 +129,58 @@ const BookingDetails = () => {
         return 'Checked Out Bookings List'
       case 'maintenance':
         return 'Maintenance Rooms List'
-
+      case 'checkout_soon':
+        return 'Checkout Soon Bookings List'
+      case 'checkout_overdue':
+        return 'Checkout Overdue Bookings List'
       case 'deleted':
         return 'Deleted Bookings List'
-
       default:
         return 'All Bookings List'
     }
   }
 
   // Color Mapping as per your request
-  const getStatusConfig = (item) => {
-    // Overdue page ke liye hamesha red
-    if (
-      statusType === 'checkout_overdue' &&
-      isCheckoutOverdue(item.check_out_date, item.status)
-    ) {
-      return { bg: 'bg-danger text-white border-danger' }
-    }
-
-    const currentStatus = item.status?.toLowerCase()
-
+  const getStatusConfig = (status) => {
+    const currentStatus = status?.toLowerCase().replace(/\s+/g, '')
     switch (currentStatus) {
       case 'booked':
       case 'occupied':
-        return { bg: 'bg-success text-white border-success' }
-
+        return { bg: 'bg-success text-white border-success' } // Green color
       case 'reserved':
-        return { bg: 'bg-primary text-white border-primary' }
-
+        return { bg: 'bg-primary text-white border-primary' } // Blue color
       case 'cancelled':
-        return { bg: 'bg-danger text-white border-danger' }
-
+        return { bg: 'bg-danger text-white border-danger' } // Red color
+      case 'checkoutsoon':
       case 'maintenance':
-        return { bg: 'bg-warning text-dark border-warning' }
-
+        return { bg: 'bg-warning text-dark border-warning' } // Warning/Yellow color
+      case 'checkoutoverdue':
+        return { bg: 'bg-danger text-white border-danger' } // Red color
+      case 'deleted':
+        return { bg: 'bg-secondary text-white border-secondary' } // Grey color
       case 'checkedout':
-      case 'checked out':
       case 'vacant':
       default:
-        return { bg: 'bg-light text-dark border-danger' }
+        return { bg: 'bg-light text-dark border-secondary' } // Light color
     }
   }
 
   // Helper logic to group bookings floor wise
-  const groupBookingsByHotelFloor = () => {
+  const groupBookingsByFloor = () => {
     const groups = {}
-
     bookings.forEach((item) => {
-      const key = `${item.hotel_name}__${item.floor_name}`
+      const floorRaw =
+        item.floor ||
+        `Floor ${Math.floor(Number(item.room_no) / 100)}` ||
+        'Other Floor'
 
-      if (!groups[key]) {
-        groups[key] = {
-          hotel_name: item.hotel_name,
-          floor_name: item.floor_name,
-          bookings: [],
-        }
+      const floorName = hotelId === 'all' && item.hotel_name ? `${item.hotel_name} - ${floorRaw}` : floorRaw
+
+      if (!groups[floorName]) {
+        groups[floorName] = []
       }
-
-      groups[key].bookings.push(item)
+      groups[floorName].push(item)
     })
-
     return groups
   }
 
@@ -291,36 +220,38 @@ const BookingDetails = () => {
     }
   }
 
-  const groupedBookings = groupBookingsByHotelFloor()
+  const floorWiseBookings = groupBookingsByFloor()
 
   return (
-    <div className="page-container">
-      {/* HEADER */}
-      <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-        <h1 className="page-title mb-0" style={{ fontSize: '25px' }}>
-          {getTitle()} <span className="text-success">({bookings.length})</span>
-        </h1>
-
-        <div className="page-actions d-flex gap-3 align-items-center">
-          <button
-            type="button"
-            className="btn-danger shadow-sm rounded-3"
+    <Container fluid className="page-container" style={{ 
+      background: 'linear-gradient(135deg, #f6f8fc 0%, #e9edf5 100%)',
+      minHeight: '100vh',
+      transition: 'background-color 0.5s ease',
+    }}>
+      {/* Header */}
+      <Row className="align-items-center mb-4 pb-3 border-bottom" style={{ borderColor: 'rgba(0,0,0,0.05) !important' }}>
+        <Col className="d-flex align-items-center">
+          <Button
+            variant="light"
+            className="shadow-sm rounded-circle d-flex align-items-center justify-content-center me-3"
             onClick={() => navigate(-1)}
-            style={{
-              padding: '6px 14px',
-              border: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontWeight: '500',
-              transition: 'all 0.2s',
-              color: '#fff',
-            }}
+            style={{ width: '45px', height: '45px', border: '1px solid #e2e8f0', transition: 'all 0.2s' }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
           >
-            <FaArrowLeft /> Back to Dashboard
-          </button>
-        </div>
-      </div>
+            <span style={{ fontSize: '1.2rem', color: '#64748b' }}>←</span>
+          </Button>
+          <div>
+            <h2 className="fw-bold mb-0 text-capitalize d-flex align-items-center gap-3" style={{ color: '#2c3e50', letterSpacing: '-0.5px' }}>
+              {getTitle()}
+              <span className="badge bg-success bg-opacity-10 text-success rounded-pill fs-6 px-3">{bookings.length}</span>
+            </h2>
+            <small className="text-muted fw-bold" style={{ letterSpacing: '0.5px', textTransform: 'uppercase', fontSize: '0.75rem' }}>
+              Floor & Hotel Wise Details
+            </small>
+          </div>
+        </Col>
+      </Row>
 
       {loading ? (
         <div className="text-center py-4">
@@ -332,64 +263,56 @@ const BookingDetails = () => {
         </p>
       ) : (
         /* FLOOR WISE RENDERING */
-        Object.keys(groupedBookings).map((key) => {
-          const group = groupedBookings[key]
+        Object.keys(floorWiseBookings).map((floor) => (
+          <div key={floor} className="mb-4">
+            {/* Floor Header */}
+            <h5 className="text-secondary fw-bold mb-2 border-bottom pb-1">
+              {floor}
+            </h5>
 
-          return (
-            <div key={key} className="mb-4">
-              {/* Hotel Header */}
-              <h4 className="text-primary fw-bold mb-1">{group.hotel_name}</h4>
+            {/* Rooms in a single line row */}
+            <Row className="g-2 row-cols-auto">
+              {floorWiseBookings[floor].map((item) => {
+                const config = getStatusConfig(item.statusTypeForColor || item.displayStatus || item.status)
 
-              {/* Floor Header */}
-              <h5 className="text-secondary fw-bold mb-2 border-bottom pb-1">
-                {group.floor_name}
-              </h5>
-
-              {/* Rooms */}
-              <Row className="g-2 row-cols-auto">
-                {group.bookings.map((item) => {
-                  const config = getStatusConfig(item.status)
-
-                  return (
-                    <Col key={item.booking_id || item.id}>
-                      <Card
-                        onClick={() => handleCardClick(item)}
-                        className={`text-center shadow-sm ${config.bg}`}
-                        style={{
-                          cursor: 'pointer',
-                          minWidth: '90px',
-                          maxWidth: '130px',
-                        }}
-                      >
-                        <Card.Body className="p-2 d-flex flex-column align-items-center justify-content-center">
-                          <div
-                            className="fw-bold"
-                            style={{
-                              fontSize: '1rem',
-                              lineHeight: '1.2',
-                            }}
-                          >
-                            {item.room_no}
-                          </div>
-
-                          <div
-                            className="text-capitalize opacity-75"
-                            style={{
-                              fontSize: '0.7rem',
-                              marginTop: '2px',
-                            }}
-                          >
-                            {item.status || 'Vacant'}
-                          </div>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                  )
-                })}
-              </Row>
-            </div>
-          )
-        })
+                return (
+                  <Col key={item.booking_id || item.id}>
+                    <Card
+                      onClick={() => handleCardClick(item)}
+                      className={`text-center shadow-sm border-0 rounded-3 ${config.bg}`}
+                      style={{
+                        cursor: 'pointer',
+                        minWidth: '90px',
+                        maxWidth: '130px',
+                        transition: 'all 0.3s ease'
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.classList.add('shadow'); }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.classList.remove('shadow'); }}
+                    >
+                      <Card.Body className="p-2 d-flex flex-column align-items-center justify-content-center">
+                        {/* Room Number Display */}
+                        <div
+                          className="fw-bold px-1 text-truncate"
+                          style={{ fontSize: '1rem', lineHeight: '1.2', maxWidth: '100%' }}
+                          title={item.room_no || item.guest_name || 'No Room'}
+                        >
+                          {item.room_no || item.guest_name || 'No Room'}
+                        </div>
+                        {/* Room Status Display */}
+                        <div
+                          className="text-capitalize opacity-75"
+                          style={{ fontSize: '0.7rem', mt: '2px' }}
+                        >
+                          {item.displayStatus || item.status || 'Vacant'}
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                )
+              })}
+            </Row>
+          </div>
+        ))
       )}
 
       {/* DETAILED INFO & CHECKOUT POPUP (MODAL) */}
@@ -401,7 +324,7 @@ const BookingDetails = () => {
       >
         <Modal.Header closeButton className="py-2 px-3">
           <Modal.Title className="h6 fw-bold">
-            Room {selectedDetails?.room_no} - Info
+            {selectedDetails?.room_no ? `Room ${selectedDetails.room_no}` : 'Booking'} - Info
           </Modal.Title>
         </Modal.Header>
 
@@ -417,7 +340,7 @@ const BookingDetails = () => {
 
               {/* Conditional Display: Agar Room Booked/Occupied hai to baaki details dikhao */}
               {selectedDetails.status?.toLowerCase() === 'booked' ||
-              selectedDetails.status?.toLowerCase() === 'occupied' ? (
+                selectedDetails.status?.toLowerCase() === 'occupied' ? (
                 <>
                   <p className="mb-1">
                     <strong>Guest Name:</strong>{' '}
@@ -458,18 +381,18 @@ const BookingDetails = () => {
           {/* Confirm Checkout Button sirf tabhi dikhega jab room Booked ya Occupied ho */}
           {(selectedDetails?.status?.toLowerCase() === 'booked' ||
             selectedDetails?.status?.toLowerCase() === 'occupied') && (
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={handleCheckoutSubmit}
-              disabled={checkoutLoading}
-            >
-              {checkoutLoading ? 'Processing...' : 'Confirm Checkout'}
-            </Button>
-          )}
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={handleCheckoutSubmit}
+                disabled={checkoutLoading}
+              >
+                {checkoutLoading ? 'Processing...' : 'Confirm Checkout'}
+              </Button>
+            )}
         </Modal.Footer>
       </Modal>
-    </div>
+    </Container>
   )
 }
 

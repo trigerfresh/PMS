@@ -58,8 +58,8 @@ const RoomDetailsPage = () => {
         const rooms = roomsRes.data.data || []
         const bookings = bookingsRes.data.data || []
 
-        const hotelRooms = hotelId === 'all' 
-          ? rooms 
+        const hotelRooms = hotelId === 'all'
+          ? rooms
           : rooms.filter((room) => Number(room.hotel_id) === Number(hotelId))
 
         const hotelBookings = hotelId === 'all'
@@ -143,8 +143,8 @@ const RoomDetailsPage = () => {
         const rooms = roomsRes.data.data || []
         const bookings = bookingsRes.data.data || []
 
-        const hotelRooms = hotelId === 'all' 
-          ? rooms 
+        const hotelRooms = hotelId === 'all'
+          ? rooms
           : rooms.filter((room) => Number(room.hotel_id) === Number(hotelId))
 
         const occupiedBookings = bookings
@@ -228,7 +228,7 @@ const RoomDetailsPage = () => {
         item.floor ||
         `Floor ${Math.floor(Number(item.room_no) / 100)}` ||
         'Other Floor'
-      
+
       const floorName = hotelId === 'all' && item.hotel_name ? `${item.hotel_name} - ${floorRaw}` : floorRaw
 
       if (!groups[floorName]) {
@@ -288,19 +288,34 @@ const RoomDetailsPage = () => {
   const floorWiseData = groupDataByFloor(activeDataset)
 
   return (
-    <Container className="py-3">
-      <Button
-        variant="outline-secondary"
-        size="sm"
-        className="mb-3"
-        onClick={() => navigate(-1)}
-      >
-        ← Back to Dashboard
-      </Button>
-
-      <h4 className="text-capitalize mb-4 fw-bold">
-        {status === 'all' ? 'All' : status} Rooms Information
-      </h4>
+    <Container fluid className="page-container" style={{
+      background: 'linear-gradient(135deg, #f6f8fc 0%, #e9edf5 100%)',
+      minHeight: '100vh',
+      transition: 'background-color 0.5s ease',
+    }}>
+      {/* Header */}
+      <Row className="align-items-center mb-4 pb-3 border-bottom" style={{ borderColor: 'rgba(0,0,0,0.05) !important' }}>
+        <Col className="d-flex align-items-center">
+          <Button
+            variant="light"
+            className="shadow-sm rounded-circle d-flex align-items-center justify-content-center me-3"
+            onClick={() => navigate(-1)}
+            style={{ width: '45px', height: '45px', border: '1px solid #e2e8f0', transition: 'all 0.2s' }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+          >
+            <span style={{ fontSize: '1.2rem', color: '#64748b' }}>←</span>
+          </Button>
+          <div>
+            <h2 className="fw-bold mb-0 text-capitalize" style={{ color: '#2c3e50', letterSpacing: '-0.5px' }}>
+              {status === 'all' ? 'All' : status} Rooms Information
+            </h2>
+            <small className="text-muted fw-bold" style={{ letterSpacing: '0.5px', textTransform: 'uppercase', fontSize: '0.75rem' }}>
+              Floor & Hotel Wise Details
+            </small>
+          </div>
+        </Col>
+      </Row>
 
       {loading ? (
         <div className="text-center py-4">
@@ -329,12 +344,15 @@ const RoomDetailsPage = () => {
                   <Col key={item.room_id || item.id || item.room_no}>
                     <Card
                       onClick={() => handleCardClick(item)}
-                      className={`text-center shadow-sm ${config.bg}`}
+                      className={`text-center shadow-sm border-0 rounded-3 ${config.bg}`}
                       style={{
                         cursor: 'pointer',
                         minWidth: '95px',
                         maxWidth: '135px',
+                        transition: 'all 0.3s ease'
                       }}
+                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.classList.add('shadow'); }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.classList.remove('shadow'); }}
                     >
                       <Card.Body className="p-2 d-flex flex-column align-items-center justify-content-center">
                         {/* Room Number */}

@@ -273,8 +273,8 @@ const BranchPage = () => {
 
       alert(
         err.response?.data?.error ||
-          err.response?.data?.message ||
-          'Operation failed',
+        err.response?.data?.message ||
+        'Operation failed',
       )
     }
   }
@@ -409,7 +409,11 @@ const BranchPage = () => {
   }
 
   return (
-    <div className="page-container">
+    <Container fluid className="page-container" style={{
+      background: 'linear-gradient(135deg, #f6f8fc 0%, #e9edf5 100%)',
+      minHeight: '100vh',
+      transition: 'background-color 0.5s ease',
+    }}>
       <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <h1
           className="page-title mb-0"
@@ -484,26 +488,14 @@ const BranchPage = () => {
         </div>
       </div>
 
-      {showSearch && (
-        <SearchPanel
-          searchFields={searchFields}
-          setSearchFields={setSearchFields}
-          dateFilter={dateFilter}
-          setDateFilter={setDateFilter}
-          onSearch={handleSearch}
-          onReset={resetSearch}
-          onDownloadExcel={handleDownloadExcel}
-          searchOptions={branchSearchOptions}
-        />
-      )}
-
-      {showForm && (
-        <Card className="branch-card">
-          <h2 className="card-header mb-4">
+      {showForm ? (
+        <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4" style={{ transition: 'all 0.3s ease' }}>
+          <Card.Body className="p-4">
+          <h2 className="mb-4 fw-bold text-secondary" style={{ fontSize: '1.5rem' }}>
             {isEditing ? (
               <span>Edit Branch - {isEditing.branch_name}</span>
             ) : (
-              ''
+              'Branch Details'
             )}
           </h2>
           {Object.keys(validationErrors).length > 0 && (
@@ -687,12 +679,24 @@ const BranchPage = () => {
               </Button>
             </div>
           </Form>
+          </Card.Body>
         </Card>
-      )}
-
-      {/* Branch Status Tabs */}
-      {!showForm && (
-        <div className="mb-4">
+      ) : (
+      /* Branch Status Tabs */
+        <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+          <Card.Body className="p-4">
+          {showSearch && (
+            <SearchPanel
+              searchFields={searchFields}
+              setSearchFields={setSearchFields}
+              dateFilter={dateFilter}
+              setDateFilter={setDateFilter}
+              onSearch={handleSearch}
+              onReset={resetSearch}
+              onDownloadExcel={handleDownloadExcel}
+              searchOptions={branchSearchOptions}
+            />
+          )}
           <Tabs
             id="branch-status-tabs"
             activeKey={statusFilter}
@@ -712,12 +716,8 @@ const BranchPage = () => {
               title={`Deleted (${counts.deletedBranches})`}
             />
           </Tabs>
-        </div>
-      )}
 
       {/* Branch List Table */}
-      {!showForm && (
-        <Card className="branch-card">
           {loading ? (
             <Alert variant="warning" className="mb-0 text-center">
               Loading...
@@ -748,20 +748,21 @@ const BranchPage = () => {
                   </Form.Select>
                 </div>
               </div>
-              <Table
-                hover
-                bordered
-                className="list-table align-middle table-sm w-auto"
-              >
-                <thead className="table text-center">
-                  <tr>
-                    <th width="10">Branch Name</th>
-                    <th width="10">Address</th>
-                    <th width="10">Pincode</th>
-                    <th width="10">Companies</th>
-                    <th width="10">Actions</th>
-                  </tr>
-                </thead>
+              <div className="table-responsive" style={{ overflowX: 'auto', minHeight: '200px' }}>
+                <Table
+                  hover
+                  bordered
+                  className="list-table align-middle table-sm w-100"
+                >
+                  <thead className="table text-center">
+                    <tr>
+                      <th>Branch Name</th>
+                      <th>Address</th>
+                      <th>Pincode</th>
+                      <th>Companies</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
                 <tbody className="text-center">
                   {branches.length === 0 ? (
                     <tr className="text-center">
@@ -791,9 +792,7 @@ const BranchPage = () => {
                                 <BsThreeDotsVertical />
                               </Dropdown.Toggle>
 
-                              <Dropdown.Menu
-                                popperConfig={{ strategy: 'fixed' }}
-                              >
+                              <Dropdown.Menu>
                                 {/* VIEW */}
                                 <Dropdown.Item
                                   onClick={() => {
@@ -846,8 +845,10 @@ const BranchPage = () => {
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
               />
+            </div>
             </>
           )}
+          </Card.Body>
         </Card>
       )}
       <Modal show={showView} onHide={() => setShowView(false)} centered>
@@ -870,7 +871,7 @@ const BranchPage = () => {
           </p>
         </Modal.Body>
       </Modal>
-    </div>
+    </Container>
   )
 }
 

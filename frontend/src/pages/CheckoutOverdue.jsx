@@ -9,11 +9,15 @@ import {
   Row,
   Col,
   Table,
+  Container,
 } from 'react-bootstrap'
+import { useNavigate } from 'react-router-dom'
+import { FaArrowLeft } from 'react-icons/fa'
 
 const API_URL = 'http://localhost:5000'
 
 const CheckoutOverdue = () => {
+  const navigate = useNavigate()
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -161,152 +165,183 @@ const CheckoutOverdue = () => {
   const notificationCount = bookings.length
 
   return (
-    <div className="d-flex justify-content-center">
-      <div style={{ width: '900px' }} className="p-3">
-        {/* HEADER */}
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <h4 className="text-danger fw-bold mb-0">
-            Checkout Overdue Dashboard
-          </h4>
+    <Container fluid className="page-container" style={{
+      background: 'linear-gradient(135deg, #f6f8fc 0%, #e9edf5 100%)',
+      minHeight: '100vh',
+      transition: 'background-color 0.5s ease',
+    }}>
+      {/* Header */}
+      <Row className="align-items-center mb-4 pb-3 border-bottom" style={{ borderColor: 'rgba(0,0,0,0.05) !important' }}>
+        <Col className="d-flex align-items-center">
+          <Button
+            variant="light"
+            className="shadow-sm rounded-circle d-flex align-items-center justify-content-center me-3"
+            onClick={() => navigate(-1)}
+            style={{ width: '45px', height: '45px', border: '1px solid #e2e8f0', transition: 'all 0.2s' }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+          >
+            <span style={{ fontSize: '1.2rem', color: '#64748b' }}>←</span>
+          </Button>
+          <div>
+            <h2 className="fw-bold mb-0 text-capitalize d-flex align-items-center gap-3" style={{ color: '#2c3e50', letterSpacing: '-0.5px' }}>
+              Checkout Overdue Dashboard
+              <span className="badge bg-danger text-white rounded-pill fs-6 px-3">{notificationCount}</span>
+            </h2>
+            <small className="text-muted fw-bold" style={{ letterSpacing: '0.5px', textTransform: 'uppercase', fontSize: '0.75rem' }}>
+              Floor & Hotel Wise Details
+            </small>
+          </div>
+        </Col>
+      </Row>
 
-          <Badge bg="danger" pill>
-            {notificationCount} Overdue
-          </Badge>
-        </div>
+      {/* BODY */}
+      {loading ? (
+        <Spinner animation="border" />
+      ) : bookings.length === 0 ? (
+        <p>No overdue data</p>
+      ) : (
+        Object.values(grouped).map((g, i) => (
+          <div key={i} className="mb-4">
+            <h5 className="text-secondary fw-bold mb-2 border-bottom pb-1">{g.hotel} - {g.floor}</h5>
 
-        {/* BODY */}
-        {loading ? (
-          <Spinner animation="border" />
-        ) : bookings.length === 0 ? (
-          <p>No overdue data</p>
-        ) : (
-          Object.values(grouped).map((g, i) => (
-            <div key={i} className="mb-4">
-              <h5 className="text-primary fw-bold">{g.hotel}</h5>
-              <h6 className="text-secondary border-bottom pb-1">{g.floor}</h6>
+            <Row className="g-2 row-cols-auto">
+              {g.items.map((item) => {
+                const info = getInfo(item)
 
-              <Row className="g-2">
-                {g.items.map((item) => {
-                  const info = getInfo(item)
-
-                  const totalAmount = Number(item.total_amount || 0)
-                  const overdueAmount = Number(info?.overdueAmount || 0)
-                  const finalAmount = totalAmount + overdueAmount
-
-                  return (
-                    <Col md={4} key={item.id || item.booking_id}>
-                      <Card
-                        onClick={() => handleClick(item)}
-                        className="border-danger shadow-sm"
-                        style={{ cursor: 'pointer' }}
-                      >
-                        <Card.Body>
-                          <div className="d-flex justify-content-between">
-                            <strong>Room {item.room_no}</strong>
-                            <Badge bg="danger">{info?.days} days</Badge>
-                          </div>
-
-                          <div className="small text-muted">
-                            {item.guest_name}
-                          </div>
-
-                          <div className="text-danger fw-bold mt-2">
-                            ₹ {finalAmount}
-                          </div>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                  )
-                })}
-              </Row>
-            </div>
-          ))
-        )}
-
-        {/* MODAL */}
-        <Modal
-          show={showModal}
-          onHide={() => setShowModal(false)}
-          size="md"
-          centered
-        >
-          <Modal.Header closeButton>
-            <Modal.Title>Room {selected?.room_no} - Full Details</Modal.Title>
-          </Modal.Header>
-
-          <Modal.Body>
-            {selected &&
-              (() => {
-                const info = getInfo(selected)
-
-                const totalAmount = Number(selected.total_amount || 0)
+                const totalAmount = Number(item.total_amount || 0)
                 const overdueAmount = Number(info?.overdueAmount || 0)
                 const finalAmount = totalAmount + overdueAmount
 
                 return (
-                  <Table bordered size="sm">
+                  <Col key={item.id || item.booking_id}>
+                    <Card
+                      onClick={() => handleClick(item)}
+                      className="border-danger shadow-sm"
+                      style={{ cursor: 'pointer', minWidth: '150px', transition: 'all 0.3s ease' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.classList.add('shadow'); }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.classList.remove('shadow'); }}
+                    >
+                      <Card.Body className="p-2 d-flex flex-column align-items-center justify-content-center">
+                        <div className="fw-bold px-1 text-truncate" style={{ fontSize: '1rem', lineHeight: '1.2', maxWidth: '100%' }}>
+                          Room {item.room_no || item.guest_name || 'N/A'}
+                        </div>
+                        <Badge bg="danger" className="mt-1">{info?.days} days</Badge>
+                        <div className="small text-muted text-truncate w-100 text-center mt-1">
+                          {item.guest_name}
+                        </div>
+                        <div className="text-danger fw-bold mt-1">
+                          ₹ {finalAmount}
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                )
+              })}
+            </Row>
+          </div>
+        ))
+      )}
+
+      {/* MODAL */}
+      <Modal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        size="md"
+        centered
+        contentClassName="border-0 shadow-lg"
+      >
+        <Modal.Header closeButton className="bg-danger text-white border-0 py-3">
+          <Modal.Title className="fw-bold fs-5 d-flex align-items-center gap-2">
+            <span className="bg-white text-danger px-2 py-1 rounded-3 fs-6">Room {selected?.room_no}</span>
+            Full Details
+          </Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body className="p-0">
+          {selected &&
+            (() => {
+              const info = getInfo(selected)
+
+              const totalAmount = Number(selected.total_amount || 0)
+              const overdueAmount = Number(info?.overdueAmount || 0)
+              const finalAmount = totalAmount + overdueAmount
+
+              return (
+                <div className="p-3">
+                  <Table borderless hover size="sm" className="mb-0" style={{ fontSize: '0.85rem' }}>
                     <tbody>
-                      <tr>
-                        <td>Guest</td>
-                        <td>{selected.guest_name}</td>
+                      <tr className="border-bottom">
+                        <td className="text-secondary fw-semibold py-2" style={{ letterSpacing: '0.3px' }}>Guest Name</td>
+                        <td className="fw-bold text-dark py-2 text-end">{selected.guest_name}</td>
                       </tr>
-                      <tr>
-                        <td>Check-in</td>
-                        <td>{selected.check_in_date?.split('T')[0]}</td>
+                      <tr className="border-bottom">
+                        <td className="text-secondary fw-semibold py-2" style={{ letterSpacing: '0.3px' }}>Check-in Date</td>
+                        <td className="fw-medium text-dark py-2 text-end">{selected.check_in_date?.split('T')[0]}</td>
                       </tr>
-                      <tr>
-                        <td>Check-out</td>
-                        <td>{selected.check_out_date?.split('T')[0]}</td>
-                      </tr>
-
-                      <tr>
-                        <td>Total Amount</td>
-                        <td>₹ {totalAmount}</td>
+                      <tr className="border-bottom">
+                        <td className="text-secondary fw-semibold py-2" style={{ letterSpacing: '0.3px' }}>Check-out Date</td>
+                        <td className="fw-medium text-dark py-2 text-end">{selected.check_out_date?.split('T')[0]}</td>
                       </tr>
 
-                      <tr>
-                        <td>Overdue Days</td>
-                        <td className="text-danger fw-bold">{info?.days}</td>
+                      <tr className="border-bottom">
+                        <td className="text-secondary fw-semibold py-2" style={{ letterSpacing: '0.3px' }}>Base Amount</td>
+                        <td className="fw-bold text-dark py-2 text-end">₹ {totalAmount}</td>
                       </tr>
 
-                      <tr>
-                        <td>Per Day Rate</td>
-                        <td>₹ {info?.perDayRate?.toFixed(2)}</td>
-                      </tr>
-
-                      <tr>
-                        <td>Overdue Amount</td>
-                        <td className="text-danger fw-bold">
-                          ₹ {overdueAmount}
+                      <tr className="border-bottom">
+                        <td className="text-secondary fw-semibold py-2 align-middle" style={{ letterSpacing: '0.3px' }}>Overdue Penalty</td>
+                        <td className="py-2 text-end">
+                          <Badge bg="danger" className="fw-normal px-2 py-1 rounded-pill">{info?.days} Days</Badge>
                         </td>
                       </tr>
 
-                      <tr className="bg-light fw-bold">
-                        <td>Final Amount</td>
-                        <td>₹ {finalAmount}</td>
+                      <tr className="border-bottom">
+                        <td className="text-secondary fw-semibold py-2" style={{ letterSpacing: '0.3px' }}>Rate (Per Day)</td>
+                        <td className="fw-medium text-dark py-2 text-end">₹ {info?.perDayRate?.toFixed(2)}</td>
+                      </tr>
+
+                      <tr>
+                        <td className="text-danger fw-semibold py-2" style={{ letterSpacing: '0.3px' }}>Overdue Charge</td>
+                        <td className="text-danger fw-bold py-2 text-end">+ ₹ {overdueAmount}</td>
                       </tr>
                     </tbody>
                   </Table>
-                )
-              })()}
-          </Modal.Body>
+                  <div className="mt-2 pt-3 border-top d-flex justify-content-between align-items-center rounded-3 bg-light px-3 py-2 border">
+                    <span className="text-dark fw-bold" style={{ fontSize: '0.9rem', letterSpacing: '0.5px' }}>FINAL AMOUNT</span>
+                    <span className="text-danger fw-bold text-end" style={{ fontSize: '1.15rem' }}>₹ {finalAmount}</span>
+                  </div>
+                </div>
+              )
+            })()}
+        </Modal.Body>
 
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowModal(false)}>
-              Close
-            </Button>
+        <Modal.Footer className="bg-light border-0 py-3">
+          <Button
+            variant="outline-secondary"
+            onClick={() => setShowModal(false)}
+            className="rounded-pill px-4"
+          >
+            Close
+          </Button>
 
-            <Button
-              variant="danger"
-              onClick={handleCheckout}
-              disabled={checkoutLoading}
-            >
-              {checkoutLoading ? 'Processing...' : 'Checkout Now'}
-            </Button>
-          </Modal.Footer>
-        </Modal>
-      </div>
-    </div>
+          <Button
+            variant="danger"
+            onClick={handleCheckout}
+            disabled={checkoutLoading}
+            className="rounded-pill px-4 shadow-sm d-flex align-items-center gap-2"
+            style={{ transition: 'all 0.2s ease' }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)' }}
+          >
+            {checkoutLoading ? (
+              <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+            ) : null}
+            <span className="fw-bold">{checkoutLoading ? 'Processing...' : 'Checkout Now'}</span>
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </Container>
   )
 }
 

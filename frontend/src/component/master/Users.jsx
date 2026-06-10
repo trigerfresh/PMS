@@ -24,6 +24,7 @@ import {
   Dropdown,
   Tabs,
   Tab,
+  Container,
 } from 'react-bootstrap'
 import defaultImg from './download.jfif'
 
@@ -507,8 +508,8 @@ const Users = () => {
     const selectedIds = all
       ? availableClients.map((c) => String(c.id))
       : Array.from(
-          document.getElementById('availableClients').selectedOptions,
-        ).map((opt) => opt.value)
+        document.getElementById('availableClients').selectedOptions,
+      ).map((opt) => opt.value)
     moveItems(
       availableClients,
       selectedClients,
@@ -521,8 +522,8 @@ const Users = () => {
     const selectedIds = all
       ? selectedClients.map((c) => String(c.id))
       : Array.from(
-          document.getElementById('selectedClients').selectedOptions,
-        ).map((opt) => opt.value)
+        document.getElementById('selectedClients').selectedOptions,
+      ).map((opt) => opt.value)
     moveItems(
       selectedClients,
       availableClients,
@@ -581,7 +582,11 @@ const Users = () => {
 
   // --- RENDER ---
   return (
-    <div className="page-container">
+    <Container fluid className="page-container" style={{
+      background: 'linear-gradient(135deg, #f6f8fc 0%, #e9edf5 100%)',
+      minHeight: '100vh',
+      transition: 'background-color 0.5s ease',
+    }}>
       <Modal
         show={!!viewUser}
         onHide={() => setViewUser(null)}
@@ -709,20 +714,16 @@ const Users = () => {
         </div>
       </div>
 
-      {showSearch && (
-        <SearchPanel
-          searchFields={searchFields}
-          setSearchFields={setSearchFields}
-          dateFilter={dateFilter}
-          setDateFilter={setDateFilter}
-          onSearch={handleSearch}
-          onReset={resetSearch}
-          onDownloadExcel={handleDownloadExcel}
-          searchOptions={userSearchOptions}
-        />
-      )}
-      {showForm && (
-        <Card className="user-card p-4 shadow-sm">
+      {showForm ? (
+        <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4" style={{ transition: 'all 0.3s ease' }}>
+          <Card.Body className="p-4">
+          <h2 className="mb-4 fw-bold text-secondary" style={{ fontSize: '1.5rem' }}>
+            {isEditing ? (
+              <span>Edit User - {isEditing.name || isEditing.fullname || isEditing.first_name}</span>
+            ) : (
+              'User Details'
+            )}
+          </h2>
           {Object.keys(validationErrors).length > 0 && (
             <Alert variant="danger">
               Please fix the validation errors below.
@@ -950,7 +951,7 @@ const Users = () => {
 
             <Row
               className="d-flex justify-content-center align-items-center text-center"
-              // style={{ minHeight: "250px" }}
+            // style={{ minHeight: "250px" }}
             >
               {/* <Col
                 xs={12}
@@ -1051,24 +1052,36 @@ const Users = () => {
               </Button>
             </div>
           </Form>
+          </Card.Body>
         </Card>
-      )}
-
-      <Tabs
-        activeKey={activeTab}
-        onSelect={(k) => setActiveTab(k)}
-        className="mb-3 custom-bootstrap-tabs"
-        style={{ overflow: 'visible', flexWrap: 'wrap' }}
-      >
-        <Tab eventKey="active" title={`Active Users (${users.length})`} />
-        <Tab
-          eventKey="deleted"
-          title={`Deleted Users (${deletedUsers.length})`}
-        />
-      </Tabs>
-      {/* Users List Table */}
-      {!showForm && (
-        <Card className="user-card">
+      ) : (
+      /* User Status Tabs & Table */
+        <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+          <Card.Body className="p-4">
+          {showSearch && (
+            <SearchPanel
+              searchFields={searchFields}
+              setSearchFields={setSearchFields}
+              dateFilter={dateFilter}
+              setDateFilter={setDateFilter}
+              onSearch={handleSearch}
+              onReset={resetSearch}
+              onDownloadExcel={handleDownloadExcel}
+              searchOptions={userSearchOptions}
+            />
+          )}
+          <Tabs
+            activeKey={activeTab}
+            onSelect={(k) => setActiveTab(k)}
+            className="mb-3 custom-bootstrap-tabs"
+            style={{ overflow: 'visible', flexWrap: 'wrap' }}
+          >
+            <Tab eventKey="active" title={`Active Users (${users.length})`} />
+            <Tab
+              eventKey="deleted"
+              title={`Deleted Users (${deletedUsers.length})`}
+            />
+          </Tabs>
           {loading ? (
             <Alert variant="warning" className="mb-0 text-center">
               Loading...
@@ -1099,25 +1112,22 @@ const Users = () => {
                   </Form.Select>
                 </div>
               </div>
-              <Table
-                bordered
-                hover
-                className="list-table align-middle table-sm w-auto mb-0"
-              >
-                <thead className="table text-center">
-                  <tr>
-                    <th width="250" className="text-center">
-                      Name
-                    </th>
-                    <th width="200">Email ID</th>
-                    <th width="150">Role</th>
-                    <th width="150">Branch</th>
-                    <th width="120">Contact No</th>
-                    <th width="90" className="text-center">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
+              <div className="table-responsive" style={{ overflowX: 'auto', minHeight: '200px' }}>
+                <Table
+                  bordered
+                  hover
+                  className="list-table align-middle table-sm w-100 mb-0"
+                >
+                  <thead className="table text-center">
+                    <tr>
+                      <th className="text-center">Name</th>
+                      <th>Email ID</th>
+                      <th>Role</th>
+                      <th>Branch</th>
+                      <th>Contact No</th>
+                      <th className="text-center">Actions</th>
+                    </tr>
+                  </thead>
                 <tbody className="text-center">
                   {activeTab === 'active' ? (
                     users.length === 0 ? (
@@ -1169,9 +1179,7 @@ const Users = () => {
                                   <BsThreeDotsVertical />
                                 </Dropdown.Toggle>
 
-                                <Dropdown.Menu
-                                  popperConfig={{ strategy: 'fixed' }}
-                                >
+                                <Dropdown.Menu>
                                   <Dropdown.Item
                                     onClick={() => handleView(user)}
                                   >
@@ -1239,11 +1247,13 @@ const Users = () => {
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
               />
+            </div>
             </>
           )}
+          </Card.Body>
         </Card>
       )}
-    </div>
+    </Container>
   )
 }
 

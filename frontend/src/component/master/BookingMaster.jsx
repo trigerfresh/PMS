@@ -61,16 +61,17 @@ const BookingMaster = () => {
   const [formData, setFormData] = useState({
     booking_id: null,
     hotel_id: '',
-    // floor_id: '',
-    // room_id: '',
-    // guest_name: '',
-    // guest_phone: '',
-    // guest_email: '',
-    // check_in_date: '',
-    // check_out_date: '',
-    // price_per_day: '',
-    // status: 'Booked',
-    // payment_status: 'Pending',
+    guest_email: '',
+    check_in_date: '',
+    check_out_date: '',
+    price_per_day: '',
+    status: 'Booked',
+    payment_status: 'Pending',
+
+    user_profile_pic: null,
+    adhar_card_pic: null,
+    pan_card_pic: null,
+    otherGuests: [],
 
     // user_profile_pic: null,
     // adhar_card_pic: null,
@@ -99,6 +100,7 @@ const BookingMaster = () => {
       user_profile_pic: null,
       adhar_card_pic: null,
       pan_card_pic: null,
+      otherGuests: [],
     },
   ])
 
@@ -124,6 +126,7 @@ const BookingMaster = () => {
         user_profile_pic: null,
         adhar_card_pic: null,
         pan_card_pic: null,
+        otherGuests: [],
       },
     ])
   }
@@ -131,6 +134,38 @@ const BookingMaster = () => {
   const removeRoomBooking = (index) => {
     const updated = [...roomBookings]
     updated.splice(index, 1)
+    setRoomBookings(updated)
+  }
+
+  const addRoomGuest = (roomIndex) => {
+    const updated = [...roomBookings]
+    if (!updated[roomIndex].otherGuests) updated[roomIndex].otherGuests = []
+    updated[roomIndex].otherGuests.push({
+      guest_name: '',
+      guest_phone: '',
+      guest_email: '',
+      profile_pic: null,
+      adhar_card_pic: null,
+      pan_card_pic: null,
+    })
+    setRoomBookings(updated)
+  }
+
+  const removeRoomGuest = (roomIndex, guestIndex) => {
+    const updated = [...roomBookings]
+    updated[roomIndex].otherGuests.splice(guestIndex, 1)
+    setRoomBookings(updated)
+  }
+
+  const handleRoomGuestChange = (roomIndex, guestIndex, field, value) => {
+    const updated = [...roomBookings]
+    updated[roomIndex].otherGuests[guestIndex][field] = value
+    setRoomBookings(updated)
+  }
+
+  const handleRoomGuestFileChange = (roomIndex, guestIndex, field, file) => {
+    const updated = [...roomBookings]
+    updated[roomIndex].otherGuests[guestIndex][field] = file
     setRoomBookings(updated)
   }
 
@@ -239,7 +274,6 @@ const BookingMaster = () => {
 
     if (
       filterType === 'current' &&
-      b.active === '0' &&
       b.status?.toLowerCase() === 'booked' &&
       getCheckoutStatus(b.check_out_date, b.status) !== 'overdue'
     ) {
@@ -248,7 +282,6 @@ const BookingMaster = () => {
 
     if (
       filterType === 'reserved' &&
-      b.active === '0' &&
       b.status?.toLowerCase() === 'reserved'
     ) {
       return true
@@ -256,7 +289,6 @@ const BookingMaster = () => {
 
     if (
       filterType === 'cancelled' &&
-      b.active === '0' &&
       b.status?.toLowerCase() === 'cancelled'
     ) {
       return true
@@ -268,17 +300,16 @@ const BookingMaster = () => {
 
     if (
       filterType === 'checkedout' &&
-      b.active === '0' &&
       b.status?.toLowerCase() === 'checkedout'
     ) {
       return true
     }
 
-    if (filterType === 'about_to_checkout' && b.active === '0') {
+    if (filterType === 'about_to_checkout') {
       return isAboutToCheckout(b.check_out_date, b.status)
     }
 
-    if (filterType === 'checkout_overdue' && b.active === '0') {
+    if (filterType === 'checkout_overdue') {
       return getCheckoutStatus(b.check_out_date, b.status) === 'overdue'
     }
 
@@ -742,6 +773,15 @@ const BookingMaster = () => {
 
         payment_status: room.payment_status,
         status: room.status,
+
+        otherGuests: room.otherGuests ? room.otherGuests.map((g) => ({
+          guest_name: g.guest_name,
+          guest_phone: g.guest_phone,
+          guest_email: g.guest_email,
+          old_user_profile_pic: g.old_profile_pic || '',
+          old_adhar_card_pic: g.old_adhar_card_pic || '',
+          old_pan_card_pic: g.old_pan_card_pic || '',
+        })) : [],
       }))
 
       form.append('roomBookings', JSON.stringify(bookingData))
@@ -757,6 +797,20 @@ const BookingMaster = () => {
 
         if (room.pan_card_pic) {
           form.append('pan_card_pic', room.pan_card_pic)
+        }
+
+        if (room.otherGuests) {
+          room.otherGuests.forEach((g) => {
+            if (g.profile_pic) {
+              form.append('guest_user_profile_pic', g.profile_pic)
+            }
+            if (g.adhar_card_pic) {
+              form.append('guest_adhar_card_pic', g.adhar_card_pic)
+            }
+            if (g.pan_card_pic) {
+              form.append('guest_pan_card_pic', g.pan_card_pic)
+            }
+          })
         }
       })
 
@@ -864,6 +918,19 @@ const BookingMaster = () => {
 
         user_profile_pic: null,
         adhar_card_pic: null,
+        pan_card_pic: null,
+
+        otherGuests: (b.other_guests || []).map((g) => ({
+          guest_name: g.guest_name,
+          guest_phone: g.guest_phone,
+          guest_email: g.guest_email,
+          old_profile_pic: g.profile_pic,
+          old_adhar_card_pic: g.adhar_card_pic,
+          old_pan_card_pic: g.pan_card_pic,
+          profile_pic: null,
+          adhar_card_pic: null,
+          pan_card_pic: null,
+        })),
       },
     ])
   }
@@ -930,6 +997,8 @@ const BookingMaster = () => {
         status: 'Booked',
         user_profile_pic: null,
         adhar_card_pic: null,
+        pan_card_pic: null,
+        otherGuests: [],
       },
     ])
 
@@ -1309,14 +1378,116 @@ const BookingMaster = () => {
                       </Col>
                     </Row>
 
-                    <div className="mt-2">
+                    <div className="mt-3 border-top pt-3">
+                      <h6 className="text-secondary mb-3">Other Guests in this Room (Optional)</h6>
+                      {room.otherGuests && room.otherGuests.map((guest, guestIndex) => (
+                        <div key={guestIndex} className="bg-light p-3 rounded mb-3 position-relative border border-info">
+                          <Button
+                            variant="outline-danger"
+                            size="sm"
+                            className="position-absolute top-0 end-0 m-2"
+                            onClick={() => removeRoomGuest(index, guestIndex)}
+                          >
+                            Remove Guest
+                          </Button>
+                          <Row>
+                            <Col md={4} className="mb-2">
+                              <Form.Label>Guest Name</Form.Label>
+                              <Form.Control
+                                size="sm"
+                                placeholder="Name"
+                                value={guest.guest_name}
+                                onChange={(e) => handleRoomGuestChange(index, guestIndex, 'guest_name', e.target.value)}
+                              />
+                            </Col>
+                            <Col md={4} className="mb-2">
+                              <Form.Label>Phone</Form.Label>
+                              <Form.Control
+                                size="sm"
+                                placeholder="Phone"
+                                value={guest.guest_phone}
+                                onChange={(e) => handleRoomGuestChange(index, guestIndex, 'guest_phone', e.target.value)}
+                              />
+                            </Col>
+                            <Col md={4} className="mb-2">
+                              <Form.Label>Email</Form.Label>
+                              <Form.Control
+                                size="sm"
+                                placeholder="Email"
+                                type="email"
+                                value={guest.guest_email}
+                                onChange={(e) => handleRoomGuestChange(index, guestIndex, 'guest_email', e.target.value)}
+                              />
+                            </Col>
+                            <Col md={4} className="mb-2">
+                              <Form.Label>Profile Pic (Optional)</Form.Label>
+                              <Form.Control
+                                size="sm"
+                                type="file"
+                                onChange={(e) => handleRoomGuestFileChange(index, guestIndex, 'profile_pic', e.target.files[0])}
+                              />
+                              {guest.old_profile_pic && (
+                                <img
+                                  src={`http://localhost:5000/uploads/${guest.old_profile_pic}`}
+                                  width="50"
+                                  className="mt-2 border rounded"
+                                  alt="Old guest profile"
+                                />
+                              )}
+                            </Col>
+                            <Col md={4} className="mb-2">
+                              <Form.Label>Aadhar Card (Optional)</Form.Label>
+                              <Form.Control
+                                size="sm"
+                                type="file"
+                                onChange={(e) => handleRoomGuestFileChange(index, guestIndex, 'adhar_card_pic', e.target.files[0])}
+                              />
+                              {guest.old_adhar_card_pic && (
+                                <img
+                                  src={`http://localhost:5000/uploads/${guest.old_adhar_card_pic}`}
+                                  width="50"
+                                  className="mt-2 border rounded"
+                                  alt="Old Aadhar"
+                                />
+                              )}
+                            </Col>
+                            <Col md={4} className="mb-2">
+                              <Form.Label>PAN Card (Optional)</Form.Label>
+                              <Form.Control
+                                size="sm"
+                                type="file"
+                                onChange={(e) => handleRoomGuestFileChange(index, guestIndex, 'pan_card_pic', e.target.files[0])}
+                              />
+                              {guest.old_pan_card_pic && (
+                                <img
+                                  src={`http://localhost:5000/uploads/${guest.old_pan_card_pic}`}
+                                  width="50"
+                                  className="mt-2 border rounded"
+                                  alt="Old PAN"
+                                />
+                              )}
+                            </Col>
+                          </Row>
+                        </div>
+                      ))}
+
+                      <Button
+                        variant="outline-info"
+                        size="sm"
+                        onClick={() => addRoomGuest(index)}
+                      >
+                        + Add Another Guest
+                      </Button>
+                    </div>
+
+                    <div className="mt-3">
                       {roomBookings.length > 1 && (
                         <Button
                           variant="danger"
                           size="sm"
                           onClick={() => removeRoomBooking(index)}
                         >
-                          Remove
+                          Remove Room
                         </Button>
                       )}
                     </div>
@@ -1419,8 +1590,8 @@ const BookingMaster = () => {
                 <tbody>
                   {(filterHotelId
                     ? deletedBookings.filter(
-                        (b) => String(b.hotel_id) === String(filterHotelId),
-                      )
+                      (b) => String(b.hotel_id) === String(filterHotelId),
+                    )
                     : deletedBookings
                   ).map((b) => (
                     <tr key={b.booking_id}>
@@ -1516,15 +1687,15 @@ const BookingMaster = () => {
 
                         {getCheckoutStatus(b.check_out_date, b.status) ===
                           'overdue' && (
-                          <span className="badge bg-danger ms-2">
-                            Overdue ({getOverdueDays(b.check_out_date)} days)
-                          </span>
-                        )}
+                            <span className="badge bg-danger ms-2">
+                              Overdue ({getOverdueDays(b.check_out_date)} days)
+                            </span>
+                          )}
 
                         {getCheckoutStatus(b.check_out_date, b.status) ===
                           'soon' && (
-                          <span className="badge bg-warning ms-2">Soon</span>
-                        )}
+                            <span className="badge bg-warning ms-2">Soon</span>
+                          )}
                       </td>{' '}
                       <td>
                         <span
@@ -1541,7 +1712,7 @@ const BookingMaster = () => {
                         </span>
                       </td>
                       <td className="text-center">
-                        <Dropdown>
+                        <Dropdown drop="start">
                           <Dropdown.Toggle
                             variant="outline-secondary"
                             size="sm"
@@ -1657,7 +1828,7 @@ const BookingMaster = () => {
                   Math.ceil(
                     (new Date(viewData.check_out_date) -
                       new Date(viewData.check_in_date)) /
-                      (1000 * 60 * 60 * 24),
+                    (1000 * 60 * 60 * 24),
                   ),
                 )}
               </p>

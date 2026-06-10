@@ -102,7 +102,11 @@ const Profile = () => {
   }
 
   return (
-    <Container fluid className="px-4 py-3">
+    <Container fluid className="page-container" style={{
+      background: 'linear-gradient(135deg, #f6f8fc 0%, #e9edf5 100%)',
+      minHeight: '100vh',
+      transition: 'background-color 0.5s ease',
+    }}>
       {/* Cover Banner & Main Header */}
       <Card
         className="border-0 shadow-sm mb-4 position-relative overflow-hidden"
@@ -162,9 +166,9 @@ const Profile = () => {
                 </div>
 
                 <div className="text-center">
-                  <Button variant="primary" onClick={() => setEditMode(true)}>
-                    <FaUserEdit />
-                    <span>Edit Profile</span>
+                  <Button variant="primary" onClick={() => setEditMode(true)} className="rounded-pill px-4 shadow-sm" style={{ transition: 'all 0.3s ease' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
+                    <FaUserEdit className="me-2" />
+                    <span className="fw-bold">Edit Profile</span>
                   </Button>
                 </div>
               </div>
@@ -299,186 +303,133 @@ const Profile = () => {
         </Card>
       )}
 
-      {/* Sub Navigation Tabs */}
-      <Nav variant="tabs" className="mb-4 border-bottom-0 custom-tabs">
-        <Nav.Item>
-          <Nav.Link
-            active={activeTab === 'overview'}
-            onClick={() => setActiveTab('overview')}
-            className={`fw-bold px-4 py-2 rounded-top-3 border-0 ${activeTab === 'overview' ? 'bg-white text-primary border-bottom' : 'text-muted'}`}
-            style={{ cursor: 'pointer' }}
+      {/* Overview View */}
+      <Row className="g-4">
+        {/* Quick Metrics Column */}
+        <Col lg={4}>
+          <Card
+            className="border-0 shadow-sm h-100"
+            style={{ borderRadius: '12px' }}
           >
-            Overview
-          </Nav.Link>
-        </Nav.Item>
-        <Nav.Item>
-          <Nav.Link
-            active={activeTab === 'details'}
-            onClick={() => setActiveTab('details')}
-            className={`fw-bold px-4 py-2 rounded-top-3 border-0 ${activeTab === 'details' ? 'bg-white text-primary border-bottom' : 'text-muted'}`}
-            style={{ cursor: 'pointer' }}
-          >
-            Full Info Details
-          </Nav.Link>
-        </Nav.Item>
-      </Nav>
+            <Card.Body className="p-4">
+              <h5 className="fw-bold text-dark mb-4">Account Metadata</h5>
+              <ListGroup variant="flush" className="gap-3">
+                <ListGroup.Item className="d-flex align-items-center justify-content-between border-0 p-0">
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="p-2 bg-light rounded-3 text-primary">
+                      <FaIdCard />
+                    </div>
+                    <span className="text-muted small">User ID</span>
+                  </div>
+                  <span className="fw-bold text-dark">{userData.id}</span>
+                </ListGroup.Item>
+                <ListGroup.Item className="d-flex align-items-center justify-content-between border-0 p-0">
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="p-2 bg-light rounded-3 text-warning">
+                      <FaBuilding />
+                    </div>
+                    <span className="text-muted small">Company</span>
+                  </div>
+                  <span className="fw-medium text-dark">
+                    {userData.company_name || 'N/A'}
+                  </span>
+                </ListGroup.Item>
+                <ListGroup.Item className="d-flex align-items-center justify-content-between border-0 p-0">
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="p-2 bg-light rounded-3 text-danger">
+                      <FaCodeBranch />
+                    </div>
+                    <span className="text-muted small">Branch</span>
+                  </div>
+                  <span className="fw-medium text-dark">
+                    {userData.branch_name || 'N/A'}
+                  </span>
+                </ListGroup.Item>
+              </ListGroup>
+            </Card.Body>
+          </Card>
+        </Col>
 
-      {/* Dynamic Tab Views */}
-      {activeTab === 'overview' ? (
-        <Row className="g-4">
-          {/* Quick Metrics Column */}
-          <Col lg={4}>
-            <Card
-              className="border-0 shadow-sm h-100"
-              style={{ borderRadius: '12px' }}
-            >
-              <Card.Body className="p-4">
-                <h5 className="fw-bold text-dark mb-4">Account Metadata</h5>
-                <ListGroup variant="flush" className="gap-3">
-                  <ListGroup.Item className="d-flex align-items-center justify-content-between border-0 p-0">
-                    <div className="d-flex align-items-center gap-3">
-                      <div className="p-2 bg-light rounded-3 text-primary">
-                        <FaIdCard />
-                      </div>
-                      <span className="text-muted small">User ID</span>
+        {/* Primary Contact Cards Grid */}
+        <Col lg={8}>
+          <Row className="g-4">
+            <Col md={6}>
+              <Card
+                className="border-0 shadow-sm h-100 transition-up"
+                style={{ borderRadius: '12px' }}
+              >
+                <Card.Body className="p-4">
+                  <div className="d-flex align-items-center gap-3 mb-3">
+                    <div className="p-3 bg-primary-subtle text-primary rounded-circle">
+                      <FaEnvelope size={20} />
                     </div>
-                    <span className="fw-bold text-dark">{userData.id}</span>
-                  </ListGroup.Item>
-                  <ListGroup.Item className="d-flex align-items-center justify-content-between border-0 p-0">
-                    <div className="d-flex align-items-center gap-3">
-                      <div className="p-2 bg-light rounded-3 text-warning">
-                        <FaBuilding />
-                      </div>
-                      <span className="text-muted small">Company</span>
-                    </div>
-                    <span className="fw-medium text-dark">
-                      {userData.company_name || 'N/A'}
-                    </span>
-                  </ListGroup.Item>
-                  <ListGroup.Item className="d-flex align-items-center justify-content-between border-0 p-0">
-                    <div className="d-flex align-items-center gap-3">
-                      <div className="p-2 bg-light rounded-3 text-danger">
-                        <FaCodeBranch />
-                      </div>
-                      <span className="text-muted small">Branch</span>
-                    </div>
-                    <span className="fw-medium text-dark">
-                      {userData.branch_name || 'N/A'}
-                    </span>
-                  </ListGroup.Item>
-                </ListGroup>
-              </Card.Body>
-            </Card>
-          </Col>
+                    <h6 className="fw-bold mb-0 text-dark">
+                      Contact Information
+                    </h6>
+                  </div>
+                  <p className="mb-2 text-dark fw-medium">{userData.email}</p>
+                  <p className="mb-0 text-muted small">
+                    <FaPhone className="me-2 text-success" />
+                    {userData.phone || 'N/A'}
+                  </p>
+                </Card.Body>
+              </Card>
+            </Col>
 
-          {/* Primary Contact Cards Grid */}
-          <Col lg={8}>
-            <Row className="g-4">
-              <Col md={6}>
-                <Card
-                  className="border-0 shadow-sm h-100 transition-up"
-                  style={{ borderRadius: '12px' }}
-                >
-                  <Card.Body className="p-4">
-                    <div className="d-flex align-items-center gap-3 mb-3">
-                      <div className="p-3 bg-primary-subtle text-primary rounded-circle">
-                        <FaEnvelope size={20} />
-                      </div>
-                      <h6 className="fw-bold mb-0 text-dark">
-                        Contact Information
-                      </h6>
+            <Col md={6}>
+              <Card
+                className="border-0 shadow-sm h-100 transition-up"
+                style={{ borderRadius: '12px' }}
+              >
+                <Card.Body className="p-4">
+                  <div className="d-flex align-items-center gap-3 mb-3">
+                    <div className="p-3 bg-success-subtle text-success rounded-circle">
+                      <FaMapMarkerAlt size={20} />
                     </div>
-                    <p className="mb-2 text-dark fw-medium">{userData.email}</p>
-                    <p className="mb-0 text-muted small">
-                      <FaPhone className="me-2 text-success" />
-                      {userData.phone || 'N/A'}
-                    </p>
-                  </Card.Body>
-                </Card>
-              </Col>
+                    <h6 className="fw-bold mb-0 text-dark">
+                      Address Details
+                    </h6>
+                  </div>
+                  <p className="mb-1 text-dark fw-medium">
+                    {userData.address || 'N/A'}
+                  </p>
+                  <small className="text-muted d-block">
+                    {userData.city ? `${userData.city}, ` : ''}{' '}
+                    {userData.pincode || ''}
+                  </small>
+                </Card.Body>
+              </Card>
+            </Col>
 
-              <Col md={6}>
-                <Card
-                  className="border-0 shadow-sm h-100 transition-up"
-                  style={{ borderRadius: '12px' }}
-                >
-                  <Card.Body className="p-4">
-                    <div className="d-flex align-items-center gap-3 mb-3">
-                      <div className="p-3 bg-success-subtle text-success rounded-circle">
-                        <FaMapMarkerAlt size={20} />
-                      </div>
-                      <h6 className="fw-bold mb-0 text-dark">
-                        Address Details
-                      </h6>
-                    </div>
-                    <p className="mb-1 text-dark fw-medium">
-                      {userData.address || 'N/A'}
-                    </p>
-                    <small className="text-muted d-block">
-                      {userData.city ? `${userData.city}, ` : ''}{' '}
-                      {userData.pincode || ''}
-                    </small>
-                  </Card.Body>
-                </Card>
-              </Col>
+            <Col md={12}>
+              <Card
+                className="border-0 shadow-sm"
+                style={{ borderRadius: '12px' }}
+              >
+                <Card.Body className="p-4">
+                  <div className="d-flex align-items-center gap-2 mb-3">
+                    <FaShieldAlt className="text-secondary" />
+                    <h6 className="fw-bold mb-0 text-dark">
+                      System Authorization
+                    </h6>
+                  </div>
+                  <Row className="bg-light p-3 rounded-3 g-2 text-center text-md-start">
+                    <Col md={6}>
+                      <span className="text-muted d-block small">
+                        Assigned Role Scope
+                      </span>
+                      <span className="fw-bold text-primary">
+                        {userData.role}
+                      </span>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </Col>
+      </Row>
 
-              <Col md={12}>
-                <Card
-                  className="border-0 shadow-sm"
-                  style={{ borderRadius: '12px' }}
-                >
-                  <Card.Body className="p-4">
-                    <div className="d-flex align-items-center gap-2 mb-3">
-                      <FaShieldAlt className="text-secondary" />
-                      <h6 className="fw-bold mb-0 text-dark">
-                        System Authorization
-                      </h6>
-                    </div>
-                    <Row className="bg-light p-3 rounded-3 g-2 text-center text-md-start">
-                      <Col md={6}>
-                        <span className="text-muted d-block small">
-                          Assigned Role Scope
-                        </span>
-                        <span className="fw-bold text-primary">
-                          {userData.role}
-                        </span>
-                      </Col>
-                    </Row>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-          </Col>
-        </Row>
-      ) : (
-        /* Structural Full Details Tab Panel View */
-        <Card className="border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-          <Card.Body className="p-4">
-            <h5 className="fw-bold text-dark mb-4">Identity Specification</h5>
-            <Row className="g-4">
-              <Col md={4} className="border-end border-light">
-                <span className="text-muted d-block small mb-1">
-                  First Name
-                </span>
-                <p className="fw-bold text-dark fs-5 mb-0">
-                  {userData.first_name || 'N/A'}
-                </p>
-              </Col>
-              <Col md={4} className="border-end border-light">
-                <span className="text-muted d-block small mb-1">Last Name</span>
-                <p className="fw-bold text-dark fs-5 mb-0">
-                  {userData.last_name || 'N/A'}
-                </p>
-              </Col>
-              <Col md={4}>
-                <p className="fw-bold text-primary fs-5 mb-0">
-                  {userData.fullname}
-                </p>
-              </Col>
-            </Row>
-          </Card.Body>
-        </Card>
-      )}
     </Container>
   )
 }

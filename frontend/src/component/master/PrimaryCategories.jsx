@@ -9,6 +9,7 @@ import {
   Row,
   Col,
   Button,
+  Container,
 } from 'react-bootstrap'
 import SearchPanel from '../../utils/filterPanel'
 import Pagination from '../../utils/Pagination'
@@ -186,7 +187,11 @@ export default function PrimaryCategories() {
   }
 
   return (
-    <div className="page-container">
+    <Container fluid className="page-container" style={{
+      background: 'linear-gradient(135deg, #f6f8fc 0%, #e9edf5 100%)',
+      minHeight: '100vh',
+      transition: 'background-color 0.5s ease',
+    }}>
       {/* HEADER SECTION */}
       <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <h1
@@ -229,9 +234,8 @@ export default function PrimaryCategories() {
 
           <button
             type="button"
-            className={`btn shadow-sm rounded-3 text-white ${
-              showForm ? 'btn-danger' : 'btn-primary'
-            }`}
+            className={`btn shadow-sm rounded-3 text-white ${showForm ? 'btn-danger' : 'btn-primary'
+              }`}
             onClick={() => {
               if (showForm) {
                 resetForm()
@@ -265,12 +269,13 @@ export default function PrimaryCategories() {
 
       {/* VIEW 1: FORM LAYOUT */}
       {showForm ? (
-        <Card className="company-card">
-          <h2 className="card-header mb-4">
-            {editId ? <span>Edit Primary Category - {name}</span> : ''}
-          </h2>
+        <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4" style={{ transition: 'all 0.3s ease' }}>
+          <Card.Body className="p-4">
+            <h2 className="mb-4 fw-bold text-secondary" style={{ fontSize: '1.5rem' }}>
+              {editId ? <span>Edit Primary Category - {name}</span> : 'Primary Category Details'}
+            </h2>
 
-          <div className="company-form-wrapper">
+            <div className="company-form-wrapper">
             <Form className="company-form" onSubmit={handleSubmit}>
               <Row>
                 {/* PRIMARY CATEGORY NAME INPUT */}
@@ -339,11 +344,13 @@ export default function PrimaryCategories() {
               </div>
             </Form>
           </div>
+          </Card.Body>
         </Card>
       ) : (
         /* VIEW 2: TABS TABLE LIST (Fixed structure width attributes) */
-        <>
-          {showSearch && (
+        <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+          <Card.Body className="p-4">
+            {showSearch && (
             <SearchPanel
               searchFields={searchFields}
               setSearchFields={setSearchFields}
@@ -368,40 +375,37 @@ export default function PrimaryCategories() {
             {/* ACTIVE TAB */}
 
             <Tab eventKey="active" title="Active">
-              <div className="table-responsive" style={{ overflowX: 'auto' }}>
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <h5 className="mb-0">Primary Category List</h5>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <h5 className="mb-0">Primary Category List</h5>
 
-                  <div className="d-flex align-items-center gap-2">
-                    <span>Show:</span>
+                <div className="d-flex align-items-center gap-2">
+                  <span>Show:</span>
 
-                    <Form.Select
-                      style={{ width: '120px' }}
-                      value={pageSize}
-                      onChange={(e) => {
-                        setPageSize(Number(e.target.value))
-                        setCurrentPage(1)
-                      }}
-                    >
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                      <option value={150}>150</option>
-                    </Form.Select>
-                  </div>
+                  <Form.Select
+                    style={{ width: '120px' }}
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value))
+                      setCurrentPage(1)
+                    }}
+                  >
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                    <option value={150}>150</option>
+                  </Form.Select>
                 </div>
-                <table className="table table-bordered table-striped bg-white shadow-sm align-middle table-sm w-auto mb-0">
+              </div>
+              <div
+                className="table-responsive"
+                style={{ overflowX: 'auto', minHeight: '200px' }}
+              >
+                <table className="table table-bordered table-striped bg-white shadow-sm align-middle table-sm w-100 mb-0">
                   <thead className="table text-center">
                     <tr>
-                      <th width="50" className="text-center">
-                        ID
-                      </th>
-                      <th width="200">Name</th>
-                      <th width="70" className="text-center">
-                        Image
-                      </th>
-                      <th width="90" className="text-center">
-                        Action
-                      </th>
+                      <th className="text-center">ID</th>
+                      <th>Name</th>
+                      <th className="text-center">Image</th>
+                      <th className="text-center">Action</th>
                     </tr>
                   </thead>
                   <tbody className="text-center">
@@ -449,9 +453,7 @@ export default function PrimaryCategories() {
                                 >
                                   <BsThreeDotsVertical />
                                 </Dropdown.Toggle>
-                                <Dropdown.Menu
-                                  popperConfig={{ strategy: 'fixed' }}
-                                >
+                                <Dropdown.Menu>
                                   <Dropdown.Item
                                     onClick={() => handleEdit(item)}
                                   >
@@ -482,40 +484,34 @@ export default function PrimaryCategories() {
 
             {/* DELETED TAB */}
             <Tab eventKey="deleted" title="Deleted">
-              <div className="table-responsive" style={{ overflowX: 'auto' }}>
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <h5 className="mb-0">Primary Category List</h5>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <h5 className="mb-0">Primary Category List</h5>
 
-                  <div className="d-flex align-items-center gap-2">
-                    <span>Show:</span>
+                <div className="d-flex align-items-center gap-2">
+                  <span>Show:</span>
 
-                    <Form.Select
-                      style={{ width: '120px' }}
-                      value={pageSize}
-                      onChange={(e) => {
-                        setPageSize(Number(e.target.value))
-                        setCurrentPage(1)
-                      }}
-                    >
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                      <option value={150}>150</option>
-                    </Form.Select>
-                  </div>
+                  <Form.Select
+                    style={{ width: '120px' }}
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value))
+                      setCurrentPage(1)
+                    }}
+                  >
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                    <option value={150}>150</option>
+                  </Form.Select>
                 </div>
-                <table className="table table-bordered table-striped bg-white shadow-sm align-middle table-sm w-auto mb-0">
+              </div>
+              <div className="table-responsive" style={{ overflowX: 'auto' }}>
+                <table className="table table-bordered table-striped bg-white shadow-sm align-middle table-sm w-100 mb-0">
                   <thead className="table-dark text-center">
                     <tr>
-                      <th width="50" className="text-center">
-                        ID
-                      </th>
-                      <th width="200">Name</th>
-                      <th width="70" className="text-center">
-                        Image
-                      </th>
-                      <th width="90" className="text-center">
-                        Action
-                      </th>
+                      <th className="text-center">ID</th>
+                      <th>Name</th>
+                      <th className="text-center">Image</th>
+                      <th className="text-center">Action</th>
                     </tr>
                   </thead>
                   <tbody className="text-center">
@@ -576,8 +572,9 @@ export default function PrimaryCategories() {
               </div>
             </Tab>
           </Tabs>
-        </>
+          </Card.Body>
+        </Card>
       )}
-    </div>
+    </Container>
   )
 }

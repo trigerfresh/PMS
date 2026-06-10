@@ -84,14 +84,21 @@ const Sidebar = () => {
       )}
 
       {/* SIDEBAR */}
-      <button className="sidebar-toggle-btn" onClick={() => setCollapsed(!collapsed)} style={{ position: 'fixed', top: '15px', left: '150px', zIndex: 1100, background: 'transparent', border: 'none', color: '#fff', fontSize: '1.5rem', color: 'blue' }}>
+      <button
+        className={`sidebar-toggle-btn ${collapsed ? 'collapsed' : ''}`}
+        onClick={() => setCollapsed(!collapsed)}
+      >
         {collapsed ? <FaAngleRight /> : <FaAngleLeft />}
       </button>
       <div
         className={`page-sidebar ${sidebarOpen ? 'show-sidebar' : ''} ${collapsed ? 'collapsed' : ''}`}
       >
         <div className="sidebar custom-scrollbar">
-          <div className="collapse-btn" onClick={() => setCollapsed(!collapsed)} style={{ cursor: 'pointer', padding: '5px', textAlign: 'right' }}>
+          <div
+            className="collapse-btn"
+            onClick={() => setCollapsed(!collapsed)}
+            style={{ cursor: 'pointer', padding: '5px', textAlign: 'right' }}
+          >
             {collapsed ? <FaAngleRight /> : <FaAngleLeft />}
           </div>
           {/* MOBILE CLOSE */}
@@ -107,10 +114,8 @@ const Sidebar = () => {
           </div> */}
 
           {/* USER */}
-          <div className="sidebar-user text-center">
-            {/* <div className="user-avatar">{user?.name?.charAt(0) || 'G'}</div> */}
-
-            <h6 className="mt-3">{user?.name || 'Guest'}</h6>
+          <div className="sidebar-user text-center pt-4 pb-3 mb-3 border-bottom border-secondary border-opacity-25">
+            <h6 className="m-0 fw-bold text-white tracking-wide" style={{ letterSpacing: '0.5px' }}>{user?.name || 'Guest'}</h6>
           </div>
 
           <ul className="sidebar-menu">

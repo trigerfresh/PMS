@@ -9,6 +9,7 @@ import {
   Row,
   Col,
   Button,
+  Container,
 } from 'react-bootstrap'
 import SearchPanel from '../../utils/filterPanel'
 import Pagination from '../../utils/Pagination'
@@ -225,7 +226,11 @@ export default function Categories() {
   }
 
   return (
-    <div className="page-container">
+    <Container fluid className="page-container" style={{
+      background: 'linear-gradient(135deg, #f6f8fc 0%, #e9edf5 100%)',
+      minHeight: '100vh',
+      transition: 'background-color 0.5s ease',
+    }}>
       {/* HEADER SECTION */}
       <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <h1
@@ -304,12 +309,13 @@ export default function Categories() {
 
       {/* VIEW 1: PROPER PRO FORM (Jab showForm true hoga tabhi dikhega) */}
       {showForm ? (
-        <Card className="company-card">
-          <h2 className="card-header mb-4">
-            {editId ? <span>Edit Category - {name}</span> : ''}
-          </h2>
+        <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4" style={{ transition: 'all 0.3s ease' }}>
+          <Card.Body className="p-4">
+            <h2 className="mb-4 fw-bold text-secondary" style={{ fontSize: '1.5rem' }}>
+              {editId ? <span>Edit Category - {name}</span> : 'Category Details'}
+            </h2>
 
-          <div className="company-form-wrapper">
+            <div className="company-form-wrapper">
             <Form className="company-form" onSubmit={handleSubmit}>
               <Row>
                 {/* PRIMARY CATEGORY SELECT */}
@@ -397,10 +403,12 @@ export default function Categories() {
               </div>
             </Form>
           </div>
+          </Card.Body>
         </Card>
       ) : (
         /* VIEW 2: SEARCH PANEL AND TABS TABLE (Jab form band hoga) */
-        <>
+        <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+          <Card.Body className="p-4">
           {showSearch && (
             <SearchPanel
               searchFields={searchFields}
@@ -446,20 +454,15 @@ export default function Categories() {
                     </Form.Select>
                   </div>
                 </div>
-                <table className="table table-bordered table-striped mt-3 bg-white shadow-sm align-middle table-sm w-auto">
+              <div className="table-responsive" style={{ overflowX: 'auto', minHeight: '200px' }}>
+                <table className="table table-bordered table-striped mt-3 bg-white shadow-sm align-middle table-sm w-100">
                   <thead className="table text-center">
                     <tr>
-                      <th width="50" className="text-center">
-                        ID
-                      </th>
-                      <th width="70" className="text-center">
-                        Image
-                      </th>
-                      <th width="150">Primary Category</th>
-                      <th width="200">Category</th>
-                      <th width="90" className="text-center">
-                        Action
-                      </th>
+                      <th className="text-center">ID</th>
+                      <th className="text-center">Image</th>
+                      <th>Primary Category</th>
+                      <th>Category</th>
+                      <th className="text-center">Action</th>
                     </tr>
                   </thead>
                   <tbody className="text-center">
@@ -510,9 +513,7 @@ export default function Categories() {
                                 >
                                   <BsThreeDotsVertical />
                                 </Dropdown.Toggle>
-                                <Dropdown.Menu
-                                  popperConfig={{ strategy: 'fixed' }}
-                                >
+                                <Dropdown.Menu>
                                   <Dropdown.Item
                                     onClick={() => handleEdit(item)}
                                   >
@@ -538,6 +539,7 @@ export default function Categories() {
                   currentPage={currentPage}
                   onPageChange={setCurrentPage}
                 />
+              </div>
               </>
             </Tab>
 
@@ -564,20 +566,15 @@ export default function Categories() {
                     </Form.Select>
                   </div>
                 </div>
-                <table className="table table-bordered table-striped mt-3 bg-white shadow-sm align-middle table-sm w-auto">
+              <div className="table-responsive" style={{ overflowX: 'auto' }}>
+                <table className="table table-bordered table-striped mt-3 bg-white shadow-sm align-middle table-sm w-100">
                   <thead className="table">
                     <tr>
-                      <th width="50" className="text-center">
-                        ID
-                      </th>
-                      <th width="70" className="text-center">
-                        Image
-                      </th>
-                      <th width="150">Primary Category</th>
-                      <th width="200">Category</th>
-                      <th width="90" className="text-center">
-                        Action
-                      </th>
+                      <th className="text-center">ID</th>
+                      <th className="text-center">Image</th>
+                      <th>Primary Category</th>
+                      <th>Category</th>
+                      <th className="text-center">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -636,11 +633,13 @@ export default function Categories() {
                   currentPage={currentPage}
                   onPageChange={setCurrentPage}
                 />
+              </div>
               </>
             </Tab>
           </Tabs>
-        </>
+          </Card.Body>
+        </Card>
       )}
-    </div>
+    </Container>
   )
 }

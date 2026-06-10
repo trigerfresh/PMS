@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
-import { Tabs, Tab, Dropdown, Modal, Table } from 'react-bootstrap'
+import { Tabs, Tab, Dropdown, Modal, Table, Container } from 'react-bootstrap'
 import SearchPanel from '../utils/filterPanel_1'
 import Pagination from '../utils/Pagination'
 import {
@@ -526,8 +526,17 @@ export default function ProductPage() {
     }
   }
 
+  // ==========================================
   return (
-    <div className="page-container">
+    <Container
+      fluid
+      className="page-container"
+      style={{
+        background: 'linear-gradient(135deg, #f6f8fc 0%, #e9edf5 100%)',
+        minHeight: '100vh',
+        transition: 'background-color 0.5s ease',
+      }}
+    >
       {/* UNIFIED HEADER */}
       <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <h1 className="page-title mb-0" style={{ fontSize: '25px' }}>
@@ -643,543 +652,580 @@ export default function ProductPage() {
 
       {/* ================= CONDITIONAL RENDERING: FORM VIEW ================= */}
       {showForm ? (
-        <form
-          onSubmit={handleSubmit}
-          className="card p-4 shadow-sm border-0 rounded-3 mb-4"
+        <div
+          className="card dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4"
+          style={{ transition: 'all 0.3s ease' }}
         >
-          <h5 className="mb-3">Product Details</h5>
-          <div className="row g-3">
-            <div className="col-md-4">
-              <label className="form-label fw-bold small">Hotel</label>
-
-              <select
-                className="form-control"
-                value={hotelId}
-                onChange={handleHotelChange}
-                required
+          <div className="card-body p-4">
+            <form onSubmit={handleSubmit}>
+              <h5
+                className="mb-3 fw-bold text-secondary"
+                style={{ fontSize: '1.5rem' }}
               >
-                <option value="">Select Hotel</option>
+                {editId ? 'Edit Product Details' : 'Add New Product'}
+              </h5>
+              <div className="row g-3">
+                <div className="col-md-4">
+                  <label className="form-label fw-bold small">Hotel</label>
 
-                {hotelList.map((h) => (
-                  <option key={h.id} value={h.id}>
-                    {h.hotel_name}
-                  </option>
-                ))}
-              </select>
-            </div>
+                  <select
+                    className="form-control"
+                    value={hotelId}
+                    onChange={handleHotelChange}
+                    required
+                  >
+                    <option value="">Select Hotel</option>
 
-            <div className="col-md-4">
-              <label className="form-label fw-bold small">Branch</label>
+                    {hotelList.map((h) => (
+                      <option key={h.id} value={h.id}>
+                        {h.hotel_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              <select
-                className="form-control"
-                value={branchId}
-                onChange={handleBranchChange}
-                required
-              >
-                <option value="">Select Branch</option>
+                <div className="col-md-4">
+                  <label className="form-label fw-bold small">Branch</label>
 
-                {branchList.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.branch_name}
-                  </option>
-                ))}
-              </select>
-            </div>
+                  <select
+                    className="form-control"
+                    value={branchId}
+                    onChange={handleBranchChange}
+                    required
+                  >
+                    <option value="">Select Branch</option>
 
-            <div className="col-md-4">
-              <label className="form-label fw-bold small">Food Type</label>
-              <select
-                className="form-control"
-                value={pcatId}
-                onChange={(e) => setPcatId(e.target.value)}
-                required
-              >
-                <option value="">Select Primary</option>
-                {primaryList.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.primary_categories_name}
-                  </option>
-                ))}
-              </select>
-            </div>
+                    {branchList.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.branch_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            <div className="col-md-4">
-              <label className="form-label fw-bold small">Sub Food Type</label>
-              <select
-                className="form-control"
-                value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-                required
-              >
-                <option value="">Select Category</option>
-                {categoryList
-                  .filter((x) => x.pcat_id == pcatId)
-                  .map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.category_name}
-                    </option>
-                  ))}
-              </select>
-            </div>
+                <div className="col-md-4">
+                  <label className="form-label fw-bold small">Food Type</label>
+                  <select
+                    className="form-control"
+                    value={pcatId}
+                    onChange={(e) => setPcatId(e.target.value)}
+                    required
+                  >
+                    <option value="">Select Primary</option>
+                    {primaryList.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.primary_categories_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            <div className="col-md-4">
-              <label className="form-label fw-bold small">
-                Sub Product Name
-              </label>
-              <select
-                className="form-control"
-                value={subcategoryId}
-                onChange={(e) => setSubcategoryId(e.target.value)}
-                required
-              >
-                <option value="">Select Subcategory</option>
-                {subcategoryList
-                  .filter((x) => x.category_id == categoryId)
-                  .map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.subcategory_name}
-                    </option>
-                  ))}
-              </select>
-            </div>
+                <div className="col-md-4">
+                  <label className="form-label fw-bold small">
+                    Sub Food Type
+                  </label>
+                  <select
+                    className="form-control"
+                    value={categoryId}
+                    onChange={(e) => setCategoryId(e.target.value)}
+                    required
+                  >
+                    <option value="">Select Category</option>
+                    {categoryList
+                      .filter((x) => x.pcat_id == pcatId)
+                      .map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.category_name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
 
-            <div className="col-md-4">
-              <label className="form-label fw-bold small">Product Name</label>
-              <input
-                className="form-control"
-                placeholder="Enter Product Name"
-                value={productName}
-                onChange={(e) => setProductName(e.target.value)}
-                required
-              />
-            </div>
+                <div className="col-md-4">
+                  <label className="form-label fw-bold small">
+                    Sub Product Name
+                  </label>
+                  <select
+                    className="form-control"
+                    value={subcategoryId}
+                    onChange={(e) => setSubcategoryId(e.target.value)}
+                    required
+                  >
+                    <option value="">Select Subcategory</option>
+                    {subcategoryList
+                      .filter((x) => x.category_id == categoryId)
+                      .map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.subcategory_name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
 
-            <div className="col-md-2">
-              <label className="form-label fw-bold small">GST (%)</label>
-              <input
-                className="form-control"
-                placeholder="GST"
-                value={gst}
-                onChange={(e) => setGst(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="col-md-2">
-              <label className="form-label fw-bold small">Price (₹)</label>
-              <input
-                className="form-control"
-                placeholder="Price"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="col-md-4">
-              <label className="form-label fw-bold small">
-                Total Price (Inc. GST)
-              </label>
-              <input
-                className="form-control"
-                value={totalPrice.toFixed(2)}
-                readOnly
-              />
-            </div>
-
-            <div className="col-md-12">
-              <label className="form-label fw-bold small">Description</label>
-              <textarea
-                className="form-control"
-                placeholder="Enter Product Description"
-                rows="3"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </div>
-
-            <h5 className="mt-4">Product Images</h5>
-            <div className="row g-3">
-              <div className="col-md-3">
-                <input
-                  type="file"
-                  className="form-control"
-                  onChange={(e) => setImage1(e.target.files[0])}
-                />
-
-                {existingImages.image1 && !image1 && (
-                  <img
-                    src={`http://localhost:5000/uploads/${existingImages.image1}`}
-                    width="60"
-                    className="mt-2"
+                <div className="col-md-4">
+                  <label className="form-label fw-bold small">
+                    Product Name
+                  </label>
+                  <input
+                    className="form-control"
+                    placeholder="Enter Product Name"
+                    value={productName}
+                    onChange={(e) => setProductName(e.target.value)}
+                    required
                   />
-                )}
-              </div>
-              <div className="col-md-3">
-                <input
-                  type="file"
-                  className="form-control"
-                  onChange={(e) => setImage2(e.target.files[0])}
-                />
-                {existingImages.image2 && !image2 && (
-                  <img
-                    src={`http://localhost:5000/uploads/${existingImages.image2}`}
-                    width="60"
-                    className="mt-2"
+                </div>
+
+                <div className="col-md-2">
+                  <label className="form-label fw-bold small">GST (%)</label>
+                  <input
+                    className="form-control"
+                    placeholder="GST"
+                    value={gst}
+                    onChange={(e) => setGst(e.target.value)}
+                    required
                   />
-                )}
-              </div>
-              <div className="col-md-3">
-                <input
-                  type="file"
-                  className="form-control"
-                  onChange={(e) => setImage3(e.target.files[0])}
-                />
-                {existingImages.image3 && !image3 && (
-                  <img
-                    src={`http://localhost:5000/uploads/${existingImages.image3}`}
-                    width="60"
-                    className="mt-2"
+                </div>
+
+                <div className="col-md-2">
+                  <label className="form-label fw-bold small">Price (₹)</label>
+                  <input
+                    className="form-control"
+                    placeholder="Price"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    required
                   />
-                )}
-              </div>
-              <div className="col-md-3">
-                <input
-                  type="file"
-                  className="form-control"
-                  onChange={(e) => setImage4(e.target.files[0])}
-                />
-                {existingImages.image4 && !image4 && (
-                  <img
-                    src={`http://localhost:5000/uploads/${existingImages.image4}`}
-                    width="60"
-                    className="mt-2"
+                </div>
+
+                <div className="col-md-4">
+                  <label className="form-label fw-bold small">
+                    Total Price (Inc. GST)
+                  </label>
+                  <input
+                    className="form-control"
+                    value={totalPrice.toFixed(2)}
+                    readOnly
                   />
-                )}
-              </div>
-            </div>
+                </div>
 
-            <div className="col-md-12">
-              <label className="form-label fw-bold">Product Availability</label>
+                <div className="col-md-12">
+                  <label className="form-label fw-bold small">
+                    Description
+                  </label>
+                  <textarea
+                    className="form-control"
+                    placeholder="Enter Product Description"
+                    rows="3"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
+                </div>
 
-              {availability.map((item, index) => (
-                <div key={index} className="row mb-2 align-items-end">
-                  <div className="col-md-3">
-                    <select
-                      className="form-control"
-                      value={item.available_day}
-                      onChange={(e) =>
-                        handleAvailabilityChange(
-                          index,
-                          'available_day',
-                          e.target.value,
-                        )
-                      }
-                    >
-                      <option value="">Select Day</option>
-
-                      <option value="Monday">Monday</option>
-                      <option value="Tuesday">Tuesday</option>
-                      <option value="Wednesday">Wednesday</option>
-                      <option value="Thursday">Thursday</option>
-                      <option value="Friday">Friday</option>
-                      <option value="Saturday">Saturday</option>
-                      <option value="Sunday">Sunday</option>
-                    </select>
-                  </div>
-
+                <h5 className="mt-4">Product Images</h5>
+                <div className="row g-3">
                   <div className="col-md-3">
                     <input
-                      type="time"
+                      type="file"
                       className="form-control"
-                      value={item.start_time}
-                      onChange={(e) =>
-                        handleAvailabilityChange(
-                          index,
-                          'start_time',
-                          e.target.value,
-                        )
-                      }
+                      onChange={(e) => setImage1(e.target.files[0])}
                     />
-                  </div>
 
+                    {existingImages.image1 && !image1 && (
+                      <img
+                        src={`http://localhost:5000/uploads/${existingImages.image1}`}
+                        width="60"
+                        className="mt-2"
+                      />
+                    )}
+                  </div>
                   <div className="col-md-3">
                     <input
-                      type="time"
+                      type="file"
                       className="form-control"
-                      value={item.end_time}
-                      onChange={(e) =>
-                        handleAvailabilityChange(
-                          index,
-                          'end_time',
-                          e.target.value,
-                        )
-                      }
+                      onChange={(e) => setImage2(e.target.files[0])}
                     />
+                    {existingImages.image2 && !image2 && (
+                      <img
+                        src={`http://localhost:5000/uploads/${existingImages.image2}`}
+                        width="60"
+                        className="mt-2"
+                      />
+                    )}
                   </div>
-
                   <div className="col-md-3">
-                    <button
-                      type="button"
-                      className="btn btn-danger"
-                      onClick={() => removeAvailabilityRow(index)}
-                    >
-                      Remove
-                    </button>
+                    <input
+                      type="file"
+                      className="form-control"
+                      onChange={(e) => setImage3(e.target.files[0])}
+                    />
+                    {existingImages.image3 && !image3 && (
+                      <img
+                        src={`http://localhost:5000/uploads/${existingImages.image3}`}
+                        width="60"
+                        className="mt-2"
+                      />
+                    )}
+                  </div>
+                  <div className="col-md-3">
+                    <input
+                      type="file"
+                      className="form-control"
+                      onChange={(e) => setImage4(e.target.files[0])}
+                    />
+                    {existingImages.image4 && !image4 && (
+                      <img
+                        src={`http://localhost:5000/uploads/${existingImages.image4}`}
+                        width="60"
+                        className="mt-2"
+                      />
+                    )}
                   </div>
                 </div>
-              ))}
 
-              <button
-                type="button"
-                className="btn btn-primary mt-2"
-                onClick={addAvailabilityRow}
-              >
-                + Add Time Slot
-              </button>
-            </div>
-          </div>
+                <div className="col-md-12">
+                  <label className="form-label fw-bold">
+                    Product Availability
+                  </label>
 
-          <div className="d-flex gap-2 justify-content-end mt-4">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => {
-                resetForm()
-                setShowForm(false)
-              }}
-            >
-              Back
-            </button>
-            <button type="submit" className="btn btn-success px-4">
-              {editId ? 'Update Product' : 'Save Product'}
-            </button>
+                  {availability.map((item, index) => (
+                    <div key={index} className="row mb-2 align-items-end">
+                      <div className="col-md-3">
+                        <select
+                          className="form-control"
+                          value={item.available_day}
+                          onChange={(e) =>
+                            handleAvailabilityChange(
+                              index,
+                              'available_day',
+                              e.target.value,
+                            )
+                          }
+                        >
+                          <option value="">Select Day</option>
+
+                          <option value="Monday">Monday</option>
+                          <option value="Tuesday">Tuesday</option>
+                          <option value="Wednesday">Wednesday</option>
+                          <option value="Thursday">Thursday</option>
+                          <option value="Friday">Friday</option>
+                          <option value="Saturday">Saturday</option>
+                          <option value="Sunday">Sunday</option>
+                        </select>
+                      </div>
+
+                      <div className="col-md-3">
+                        <input
+                          type="time"
+                          className="form-control"
+                          value={item.start_time}
+                          onChange={(e) =>
+                            handleAvailabilityChange(
+                              index,
+                              'start_time',
+                              e.target.value,
+                            )
+                          }
+                        />
+                      </div>
+
+                      <div className="col-md-3">
+                        <input
+                          type="time"
+                          className="form-control"
+                          value={item.end_time}
+                          onChange={(e) =>
+                            handleAvailabilityChange(
+                              index,
+                              'end_time',
+                              e.target.value,
+                            )
+                          }
+                        />
+                      </div>
+
+                      <div className="col-md-3">
+                        <button
+                          type="button"
+                          className="btn btn-danger"
+                          onClick={() => removeAvailabilityRow(index)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  <button
+                    type="button"
+                    className="btn btn-primary mt-2"
+                    onClick={addAvailabilityRow}
+                  >
+                    + Add Time Slot
+                  </button>
+                </div>
+              </div>
+
+              <div className="d-flex gap-2 justify-content-end mt-4">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    resetForm()
+                    setShowForm(false)
+                  }}
+                >
+                  Back
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-success px-4 shadow-sm"
+                  style={{ fontWeight: '500' }}
+                >
+                  {editId ? 'Update Product' : 'Save Product'}
+                </button>
+              </div>
+            </form>
           </div>
-        </form>
+        </div>
       ) : (
         /* ================= CONDITIONAL RENDERING: TABLE LIST VIEW ================= */
-        <div className="card branch-card">
-          <Tabs
-            activeKey={tab}
-            onSelect={(k) => {
-              setTab(k)
-              setCurrentPage(1)
-            }}
-            className="mb-3 custom-bootstrap-tabs"
-            style={{ overflow: 'visible', flexWrap: 'wrap' }}
-          >
-            <Tab eventKey="active" title={`Active (${activeList.length})`}>
-              <div className="table-responsive">
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <h4 className="m-1">Product List</h4>
-                  <div className="d-flex align-items-center">
-                    <span className="me-2 fw-bold text-muted small">Show:</span>
-                    <select
-                      className="form-select form-select-sm shadow-sm"
-                      style={{ width: '80px', borderRadius: '8px' }}
-                      value={itemsPerPage}
-                      onChange={(e) => {
-                        setItemsPerPage(Number(e.target.value))
-                        setCurrentPage(1)
-                      }}
-                    >
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                      <option value={150}>150</option>
-                    </select>
+        <div className="card dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+          <div className="card-body p-4">
+            <Tabs
+              activeKey={tab}
+              onSelect={(k) => {
+                setTab(k)
+                setCurrentPage(1)
+              }}
+              className="mb-3 custom-bootstrap-tabs"
+              style={{ overflow: 'visible', flexWrap: 'wrap' }}
+            >
+              <Tab eventKey="active" title={`Active (${activeList.length})`}>
+                <div className="table-responsive">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <h4 className="m-1">Product List</h4>
+                    <div className="d-flex align-items-center">
+                      <span className="me-2 fw-bold text-muted small">
+                        Show:
+                      </span>
+                      <select
+                        className="form-select form-select-sm shadow-sm"
+                        style={{ width: '80px', borderRadius: '8px' }}
+                        value={itemsPerPage}
+                        onChange={(e) => {
+                          setItemsPerPage(Number(e.target.value))
+                          setCurrentPage(1)
+                        }}
+                      >
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                        <option value={150}>150</option>
+                      </select>
+                    </div>
                   </div>
-                </div>
-                <Table
-                  hover
-                  bordered
-                  responsive
-                  className="list-table align-middle mb-0"
-                >
-                  <thead className="table text-center">
-                    <tr>
-                      <th>ID</th>
-                      <th>Hotel Name</th>
-                      <th>Branch Name</th>
-                      <th>Food Type</th>
-                      <th>Sub Food Type</th>
-                      <th>Sub Product Name</th>
-                      <th>Product Name</th>
-                      <th>GST</th>
-                      <th>Price</th>
-                      <th>Total Price</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-center">
-                    {activeList
-                      .slice(
-                        (currentPage - 1) * itemsPerPage,
-                        currentPage * itemsPerPage,
-                      )
-                      .map((item) => (
-                        <tr key={item.id}>
-                          <td>{item.id}</td>
-                          <td>{item.hotel_name}</td>
-                          <td>{item.branch_name}</td>
-                          <td>{item.primary_categories_name}</td>
-                          <td>{item.category_name}</td>
-                          <td>{item.subcategory_name}</td>
-                          <td>{item.product_name}</td>
-                          <td>{item.gst}%</td>
-                          <td>₹{item.price}</td>
-                          <td className="fw-bold text-success">
-                            ₹
-                            {(
-                              Number(item.price) +
-                              (Number(item.price) * Number(item.gst)) / 100
-                            ).toFixed(2)}
-                          </td>
-                          <td className="text-center">
-                            <Dropdown>
-                              <Dropdown.Toggle
-                                variant="outline-secondary"
-                                size="sm"
-                                className="bg-secondary text-white shadow-sm border"
-                              >
-                                <BsThreeDotsVertical />
-                              </Dropdown.Toggle>
-                              <Dropdown.Menu
-                                popperConfig={{ strategy: 'fixed' }}
-                              >
-                                <Dropdown.Item onClick={() => handleView(item)}>
-                                  <FaEye className="me-2 text-info" />
-                                  View
-                                </Dropdown.Item>
-
-                                <Dropdown.Item onClick={() => handleEdit(item)}>
-                                  <FaPen className="me-2 text-primary" />
-                                  Edit
-                                </Dropdown.Item>
-
-                                <Dropdown.Item
-                                  className="text-danger"
-                                  onClick={() => handleDelete(item.id)}
+                  <Table
+                    hover
+                    bordered
+                    responsive
+                    className="list-table align-middle mb-0"
+                  >
+                    <thead className="table text-center">
+                      <tr>
+                        <th>ID</th>
+                        <th>Hotel Name</th>
+                        <th>Branch Name</th>
+                        <th>Food Type</th>
+                        <th>Sub Food Type</th>
+                        <th>Sub Product Name</th>
+                        <th>Product Name</th>
+                        <th>GST</th>
+                        <th>Price</th>
+                        <th>Total Price</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-center">
+                      {activeList
+                        .slice(
+                          (currentPage - 1) * itemsPerPage,
+                          currentPage * itemsPerPage,
+                        )
+                        .map((item) => (
+                          <tr key={item.id}>
+                            <td>{item.id}</td>
+                            <td>{item.hotel_name || 'NA'}</td>
+                            <td>{item.branch_name || 'NA'}</td>
+                            <td>{item.primary_categories_name}</td>
+                            <td>{item.category_name}</td>
+                            <td>{item.subcategory_name}</td>
+                            <td>{item.product_name}</td>
+                            <td>{item.gst}%</td>
+                            <td>₹{item.price}</td>
+                            <td className="fw-bold text-success">
+                              ₹
+                              {(
+                                Number(item.price) +
+                                (Number(item.price) * Number(item.gst)) / 100
+                              ).toFixed(2)}
+                            </td>
+                            <td className="text-center">
+                              <Dropdown>
+                                <Dropdown.Toggle
+                                  variant="outline-secondary"
+                                  size="sm"
+                                  className="bg-secondary text-white shadow-sm border"
                                 >
-                                  <FaTrashAlt className="me-2" />
-                                  Delete
-                                </Dropdown.Item>
-                              </Dropdown.Menu>
-                            </Dropdown>
+                                  <BsThreeDotsVertical />
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu
+                                  popperConfig={{ strategy: 'fixed' }}
+                                >
+                                  <Dropdown.Item
+                                    onClick={() => handleView(item)}
+                                  >
+                                    <FaEye className="me-2 text-info" />
+                                    View
+                                  </Dropdown.Item>
+
+                                  <Dropdown.Item
+                                    onClick={() => handleEdit(item)}
+                                  >
+                                    <FaPen className="me-2 text-primary" />
+                                    Edit
+                                  </Dropdown.Item>
+
+                                  <Dropdown.Item
+                                    className="text-danger"
+                                    onClick={() => handleDelete(item.id)}
+                                  >
+                                    <FaTrashAlt className="me-2" />
+                                    Delete
+                                  </Dropdown.Item>
+                                </Dropdown.Menu>
+                              </Dropdown>
+                            </td>
+                          </tr>
+                        ))}
+                      {activeList.length === 0 && (
+                        <tr>
+                          <td
+                            colSpan="9"
+                            className="text-center py-4 text-muted"
+                          >
+                            No active products found.
                           </td>
                         </tr>
-                      ))}
-                    {activeList.length === 0 && (
-                      <tr>
-                        <td colSpan="9" className="text-center py-4 text-muted">
-                          No active products found.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </Table>
-              </div>
-              <Pagination
-                totalItems={activeList.length}
-                itemsPerPage={itemsPerPage}
-                currentPage={currentPage}
-                onPageChange={setCurrentPage}
-              />
-            </Tab>
-
-            <Tab eventKey="deleted" title={`Deleted (${deletedList.length})`}>
-              <div className="table-responsive">
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <h4 className="m-1">Deleted List</h4>
-                  <div className="d-flex align-items-center">
-                    <span className="me-2 fw-bold text-muted small">Show:</span>
-                    <select
-                      className="form-select form-select-sm shadow-sm"
-                      style={{ width: '80px', borderRadius: '8px' }}
-                      value={itemsPerPage}
-                      onChange={(e) => {
-                        setItemsPerPage(Number(e.target.value))
-                        setCurrentPage(1)
-                      }}
-                    >
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                      <option value={150}>150</option>
-                    </select>
-                  </div>
+                      )}
+                    </tbody>
+                  </Table>
                 </div>
-                <Table
-                  hover
-                  bordered
-                  responsive
-                  className="list-table align-middle mb-0"
-                >
-                  <thead className="table text-center">
-                    <tr>
-                      <th>ID</th>
-                      <th>Hotel Name</th>
-                      <th>Branch Name</th>
-                      <th>Product Name</th>
-                      <th>GST</th>
-                      <th>Price</th>
+                <Pagination
+                  totalItems={activeList.length}
+                  itemsPerPage={itemsPerPage}
+                  currentPage={currentPage}
+                  onPageChange={setCurrentPage}
+                />
+              </Tab>
 
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-center">
-                    {deletedList
-                      .slice(
-                        (currentPage - 1) * itemsPerPage,
-                        currentPage * itemsPerPage,
-                      )
-                      .map((item) => (
-                        <tr key={item.id}>
-                          <td>{item.id}</td>
-                          <td>{item.hotel_name}</td>
-                          <td>{item.branch_name}</td>
-                          <td>{item.product_name}</td>
-                          <td>{item.gst}</td>
-                          <td>{item.price}</td>
-                          <td className="text-center">
-                            <Dropdown>
-                              <Dropdown.Toggle
-                                variant="outline-secondary"
-                                size="sm"
-                                className="bg-secondary text-white shadow-sm border"
-                              >
-                                <BsThreeDotsVertical />
-                              </Dropdown.Toggle>
-                              <Dropdown.Menu
-                                popperConfig={{ strategy: 'fixed' }}
-                              >
-                                <Dropdown.Item
-                                  onClick={() => handleRestore(item.id)}
+              <Tab eventKey="deleted" title={`Deleted (${deletedList.length})`}>
+                <div className="table-responsive">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <h4 className="m-1">Deleted List</h4>
+                    <div className="d-flex align-items-center">
+                      <span className="me-2 fw-bold text-muted small">
+                        Show:
+                      </span>
+                      <select
+                        className="form-select form-select-sm shadow-sm"
+                        style={{ width: '80px', borderRadius: '8px' }}
+                        value={itemsPerPage}
+                        onChange={(e) => {
+                          setItemsPerPage(Number(e.target.value))
+                          setCurrentPage(1)
+                        }}
+                      >
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                        <option value={150}>150</option>
+                      </select>
+                    </div>
+                  </div>
+                  <Table
+                    hover
+                    bordered
+                    responsive
+                    className="list-table align-middle mb-0"
+                  >
+                    <thead className="table text-center">
+                      <tr>
+                        <th>ID</th>
+                        <th>Hotel Name</th>
+                        <th>Branch Name</th>
+                        <th>Product Name</th>
+                        <th>GST</th>
+                        <th>Price</th>
+
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-center">
+                      {deletedList
+                        .slice(
+                          (currentPage - 1) * itemsPerPage,
+                          currentPage * itemsPerPage,
+                        )
+                        .map((item) => (
+                          <tr key={item.id}>
+                            <td>{item.id}</td>
+                            <td>{item.hotel_name || 'NA'}</td>
+                            <td>{item.branch_name || 'NA'}</td>
+                            <td>{item.product_name}</td>
+                            <td>{item.gst}</td>
+                            <td>{item.price}</td>
+                            <td className="text-center">
+                              <Dropdown>
+                                <Dropdown.Toggle
+                                  variant="outline-secondary"
+                                  size="sm"
+                                  className="bg-secondary text-white shadow-sm border"
                                 >
-                                  ♻️ Restore
-                                </Dropdown.Item>
-                              </Dropdown.Menu>
-                            </Dropdown>
+                                  <BsThreeDotsVertical />
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu
+                                  popperConfig={{ strategy: 'fixed' }}
+                                >
+                                  <Dropdown.Item
+                                    onClick={() => handleRestore(item.id)}
+                                  >
+                                    ♻️ Restore
+                                  </Dropdown.Item>
+                                </Dropdown.Menu>
+                              </Dropdown>
+                            </td>
+                          </tr>
+                        ))}
+                      {deletedList.length === 0 && (
+                        <tr>
+                          <td
+                            colSpan="3"
+                            className="text-center py-4 text-muted"
+                          >
+                            No deleted products found.
                           </td>
                         </tr>
-                      ))}
-                    {deletedList.length === 0 && (
-                      <tr>
-                        <td colSpan="3" className="text-center py-4 text-muted">
-                          No deleted products found.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </Table>
-              </div>
-              <Pagination
-                totalItems={deletedList.length}
-                itemsPerPage={itemsPerPage}
-                currentPage={currentPage}
-                onPageChange={setCurrentPage}
-              />
-            </Tab>
-          </Tabs>
+                      )}
+                    </tbody>
+                  </Table>
+                </div>
+                <Pagination
+                  totalItems={deletedList.length}
+                  itemsPerPage={itemsPerPage}
+                  currentPage={currentPage}
+                  onPageChange={setCurrentPage}
+                />
+              </Tab>
+            </Tabs>
+          </div>
         </div>
       )}
       <Modal
@@ -1197,10 +1243,10 @@ export default function ProductPage() {
             <div className="row">
               <div className="col-md-6">
                 <p>
-                  <b>Hotel:</b> {viewItem.hotel_name}
+                  <b>Hotel:</b> {viewItem.hotel_name || 'NA'}
                 </p>
                 <p>
-                  <b>Branch:</b> {viewItem.branch_name}
+                  <b>Branch:</b> {viewItem.branch_name || 'NA'}
                 </p>
                 <p>
                   <b>Food Type:</b> {viewItem.primary_categories_name}
@@ -1291,6 +1337,6 @@ export default function ProductPage() {
           )}
         </Modal.Body>
       </Modal>
-    </div>
+    </Container>
   )
 }

@@ -9,6 +9,7 @@ import {
   Row,
   Col,
   Button,
+  Container,
 } from 'react-bootstrap'
 import { FaSearch, FaPlus, FaTimes, FaArrowLeft } from 'react-icons/fa'
 import SearchPanel from '../../utils/filterPanel'
@@ -236,7 +237,11 @@ export default function SubCategories() {
   }
 
   return (
-    <div className="page-container">
+    <Container fluid className="page-container" style={{
+      background: 'linear-gradient(135deg, #f6f8fc 0%, #e9edf5 100%)',
+      minHeight: '100vh',
+      transition: 'background-color 0.5s ease',
+    }}>
       {/* HEADER SECTION */}
       <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <h1
@@ -279,9 +284,8 @@ export default function SubCategories() {
 
           <button
             type="button"
-            className={`btn shadow-sm rounded-3 text-white ${
-              showForm ? 'btn-danger' : 'btn-primary'
-            }`}
+            className={`btn shadow-sm rounded-3 text-white ${showForm ? 'btn-danger' : 'btn-primary'
+              }`}
             onClick={() => {
               if (showForm) {
                 resetForm()
@@ -315,12 +319,13 @@ export default function SubCategories() {
 
       {/* VIEW 1: ONLY SHOW FORM WHEN showForm IS TRUE */}
       {showForm ? (
-        <Card className="company-card">
-          <h2 className="card-header mb-4">
-            {editId ? <span>Edit Subcategory - {subcategoryName}</span> : ''}
-          </h2>
+        <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4" style={{ transition: 'all 0.3s ease' }}>
+          <Card.Body className="p-4">
+            <h2 className="mb-4 fw-bold text-secondary" style={{ fontSize: '1.5rem' }}>
+              {editId ? <span>Edit Subcategory - {subcategoryName}</span> : 'Subcategory Details'}
+            </h2>
 
-          <div className="company-form-wrapper">
+            <div className="company-form-wrapper">
             <Form className="company-form" onSubmit={handleSubmit}>
               <Row>
                 {/* PRIMARY CATEGORY */}
@@ -432,11 +437,13 @@ export default function SubCategories() {
               </div>
             </Form>
           </div>
+          </Card.Body>
         </Card>
       ) : (
         /* VIEW 2: SHOW SEARCH, TABS AND TABLES ONLY WHEN FORM IS NOT ACTIVE */
-        <>
-          {showSearch && (
+        <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+          <Card.Body className="p-4">
+            {showSearch && (
             <SearchPanel
               searchFields={searchFields}
               setSearchFields={setSearchFields}
@@ -481,98 +488,92 @@ export default function SubCategories() {
                     </Form.Select>
                   </div>
                 </div>
-                <table className="table table-bordered table-striped mt-3 shadow-sm bg-white table-sm w-auto">
-                  <thead className="table text-center">
-                    <tr>
-                      <th width="50" className="text-center">
-                        ID
-                      </th>
-                      <th width="70" className="text-center">
-                        Image
-                      </th>
-                      <th width="150">Primary Category</th>
-                      <th width="150">Category</th>
-                      <th width="200">Subcategory</th>
-                      <th width="90" className="text-center">
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-center">
-                    {activeList.length === 0 ? (
+                <div className="table-responsive" style={{ overflowX: 'auto', minHeight: '200px' }}>
+                  <table className="table table-bordered table-striped mt-3 shadow-sm bg-white table-sm w-100">
+                    <thead className="table text-center">
                       <tr>
-                        <td
-                          colSpan="6"
-                          className="text-center text-muted small py-3"
-                        >
-                          No active subcategories found.
-                        </td>
+                        <th className="text-center">ID</th>
+                        <th className="text-center">Image</th>
+                        <th>Primary Category</th>
+                        <th>Category</th>
+                        <th>Subcategory</th>
+                        <th className="text-center">Action</th>
                       </tr>
-                    ) : (
-                      activeList
-                        .slice(
-                          (currentPage - 1) * pageSize,
-                          currentPage * pageSize,
-                        )
-                        .map((item) => (
-                          <tr key={item.id} className="align-middle">
-                            <td className="text-center">{item.id}</td>
-                            <td className="text-center">
-                              {item.image ? (
-                                <img
-                                  src={`http://localhost:5000/uploads/${item.image}`}
-                                  alt={item.subcategory_name}
-                                  width="30"
-                                  height="30"
-                                  style={{
-                                    objectFit: 'cover',
-                                    borderRadius: '4px',
-                                  }}
-                                />
-                              ) : (
-                                <span className="text-muted small">—</span>
-                              )}
-                            </td>
-                            <td>{item.primary_categories_name}</td>
-                            <td>{item.category_name}</td>
-                            <td>{item.subcategory_name}</td>
-                            <td className="text-center">
-                              <Dropdown>
-                                <Dropdown.Toggle
-                                  size="sm"
-                                  variant="outline-secondary"
-                                  className="bg-secondary text-white"
-                                >
-                                  <BsThreeDotsVertical />
-                                </Dropdown.Toggle>
-                                <Dropdown.Menu
-                                  popperConfig={{ strategy: 'fixed' }}
-                                >
-                                  <Dropdown.Item
-                                    onClick={() => handleEdit(item)}
+                    </thead>
+                    <tbody className="text-center">
+                      {activeList.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan="6"
+                            className="text-center text-muted small py-3"
+                          >
+                            No active subcategories found.
+                          </td>
+                        </tr>
+                      ) : (
+                        activeList
+                          .slice(
+                            (currentPage - 1) * pageSize,
+                            currentPage * pageSize,
+                          )
+                          .map((item) => (
+                            <tr key={item.id} className="align-middle">
+                              <td className="text-center">{item.id}</td>
+                              <td className="text-center">
+                                {item.image ? (
+                                  <img
+                                    src={`http://localhost:5000/uploads/${item.image}`}
+                                    alt={item.subcategory_name}
+                                    width="30"
+                                    height="30"
+                                    style={{
+                                      objectFit: 'cover',
+                                      borderRadius: '4px',
+                                    }}
+                                  />
+                                ) : (
+                                  <span className="text-muted small">—</span>
+                                )}
+                              </td>
+                              <td>{item.primary_categories_name}</td>
+                              <td>{item.category_name}</td>
+                              <td>{item.subcategory_name}</td>
+                              <td className="text-center">
+                                <Dropdown>
+                                  <Dropdown.Toggle
+                                    size="sm"
+                                    variant="outline-secondary"
+                                    className="bg-secondary text-white"
                                   >
-                                    Edit
-                                  </Dropdown.Item>
-                                  <Dropdown.Item
-                                    className="text-danger"
-                                    onClick={() => handleDelete(item.id)}
-                                  >
-                                    Delete
-                                  </Dropdown.Item>
-                                </Dropdown.Menu>
-                              </Dropdown>
-                            </td>
-                          </tr>
-                        ))
-                    )}
-                  </tbody>
-                </table>
-                <Pagination
-                  totalItems={activeList.length}
-                  itemsPerPage={pageSize}
-                  currentPage={currentPage}
-                  onPageChange={setCurrentPage}
-                />
+                                    <BsThreeDotsVertical />
+                                  </Dropdown.Toggle>
+                                  <Dropdown.Menu>
+                                    <Dropdown.Item
+                                      onClick={() => handleEdit(item)}
+                                    >
+                                      Edit
+                                    </Dropdown.Item>
+                                    <Dropdown.Item
+                                      className="text-danger"
+                                      onClick={() => handleDelete(item.id)}
+                                    >
+                                      Delete
+                                    </Dropdown.Item>
+                                  </Dropdown.Menu>
+                                </Dropdown>
+                              </td>
+                            </tr>
+                          ))
+                      )}
+                    </tbody>
+                  </table>
+                  <Pagination
+                    totalItems={activeList.length}
+                    itemsPerPage={pageSize}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                  />
+                </div>
               </>
             </Tab>
 
@@ -599,85 +600,82 @@ export default function SubCategories() {
                     </Form.Select>
                   </div>
                 </div>
-                <table className="table table-bordered table-striped mt-3 shadow-sm bg-white table-sm w-auto">
-                  <thead className="table-dark text-center">
-                    <tr>
-                      <th width="50" className="text-center">
-                        ID
-                      </th>
-                      <th width="70" className="text-center">
-                        Image
-                      </th>
-                      <th width="150">Primary Category</th>
-                      <th width="150">Category</th>
-                      <th width="200">Subcategory</th>
-                      <th width="90" className="text-center">
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-center">
-                    {deletedList.length === 0 ? (
+                <div className="table-responsive" style={{ overflowX: 'auto' }}>
+                  <table className="table table-bordered table-striped mt-3 shadow-sm bg-white table-sm w-100">
+                    <thead className="table-dark text-center">
                       <tr>
-                        <td
-                          colSpan="6"
-                          className="text-center text-muted small py-3"
-                        >
-                          No deleted items to restore.
-                        </td>
+                        <th className="text-center">ID</th>
+                        <th className="text-center">Image</th>
+                        <th>Primary Category</th>
+                        <th>Category</th>
+                        <th>Subcategory</th>
+                        <th className="text-center">Action</th>
                       </tr>
-                    ) : (
-                      deletedList
-                        .slice(
-                          (currentPage - 1) * pageSize,
-                          currentPage * pageSize,
-                        )
-                        .map((item) => (
-                          <tr key={item.id} className="align-middle">
-                            <td className="text-center">{item.id}</td>
-                            <td className="text-center">
-                              {item.image ? (
-                                <img
-                                  src={`http://localhost:5000/uploads/${item.image}`}
-                                  alt={item.subcategory_name}
-                                  width="30"
-                                  height="30"
-                                  style={{
-                                    objectFit: 'cover',
-                                    borderRadius: '4px',
-                                  }}
-                                />
-                              ) : (
-                                <span className="text-muted small">—</span>
-                              )}
-                            </td>
-                            <td>{item.primary_categories_name}</td>
-                            <td>{item.category_name}</td>
-                            <td>{item.subcategory_name}</td>
-                            <td className="text-center">
-                              <button
-                                className="btn btn-success btn-sm px-3"
-                                onClick={() => handleRestore(item.id)}
-                              >
-                                Restore
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                    )}
-                  </tbody>
-                </table>
-                <Pagination
-                  totalItems={deletedList.length}
-                  itemsPerPage={pageSize}
-                  currentPage={currentPage}
-                  onPageChange={setCurrentPage}
-                />
+                    </thead>
+                    <tbody className="text-center">
+                      {deletedList.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan="6"
+                            className="text-center text-muted small py-3"
+                          >
+                            No deleted items to restore.
+                          </td>
+                        </tr>
+                      ) : (
+                        deletedList
+                          .slice(
+                            (currentPage - 1) * pageSize,
+                            currentPage * pageSize,
+                          )
+                          .map((item) => (
+                            <tr key={item.id} className="align-middle">
+                              <td className="text-center">{item.id}</td>
+                              <td className="text-center">
+                                {item.image ? (
+                                  <img
+                                    src={`http://localhost:5000/uploads/${item.image}`}
+                                    alt={item.subcategory_name}
+                                    width="30"
+                                    height="30"
+                                    style={{
+                                      objectFit: 'cover',
+                                      borderRadius: '4px',
+                                    }}
+                                  />
+                                ) : (
+                                  <span className="text-muted small">—</span>
+                                )}
+                              </td>
+                              <td>{item.primary_categories_name}</td>
+                              <td>{item.category_name}</td>
+                              <td>{item.subcategory_name}</td>
+                              <td className="text-center">
+                                <button
+                                  className="btn btn-success btn-sm px-3"
+                                  onClick={() => handleRestore(item.id)}
+                                >
+                                  Restore
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                      )}
+                    </tbody>
+                  </table>
+                  <Pagination
+                    totalItems={deletedList.length}
+                    itemsPerPage={pageSize}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                  />
+                </div>
               </>
             </Tab>
           </Tabs>
-        </>
+          </Card.Body>
+        </Card>
       )}
-    </div>
+    </Container>
   )
 }

@@ -14,6 +14,7 @@ const API_URL = 'http://localhost:5000'
 
 const MainHeader = () => {
   const [user, setUser] = useState(null)
+  const [profileImage, setProfileImage] = useState(null)
 
   const [overdueCount, setOverdueCount] = useState(0)
   const [soonCount, setSoonCount] = useState(0)
@@ -34,6 +35,21 @@ const MainHeader = () => {
     const interval = setInterval(fetchCounts, 15000)
     return () => clearInterval(interval)
   }, [])
+
+  useEffect(() => {
+    if (user?.id) {
+      axios
+        .get(`${API_URL}/api/users/profile/${user.id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        })
+        .then((res) => {
+          if (res.data && res.data.data && res.data.data.profile_image) {
+            setProfileImage(res.data.data.profile_image)
+          }
+        })
+        .catch((err) => console.error('Failed to fetch profile image for header', err))
+    }
+  }, [user?.id])
 
   const fetchCounts = async () => {
     try {
@@ -189,7 +205,11 @@ const MainHeader = () => {
           >
             <div className="d-flex align-items-center gap-2 py-2">
               <img
-                src={user?.profileImage || defaultImg}
+                src={
+                  profileImage
+                    ? `${API_URL}/uploads/${profileImage}`
+                    : defaultImg
+                }
                 alt="user"
                 style={{
                   width: 38,
@@ -197,6 +217,10 @@ const MainHeader = () => {
                   borderRadius: '50%',
                   border: '2px solid #eef1f5',
                   objectFit: 'cover',
+                }}
+                onError={(e) => {
+                  e.target.onerror = null
+                  e.target.src = defaultImg
                 }}
               />
             </div>

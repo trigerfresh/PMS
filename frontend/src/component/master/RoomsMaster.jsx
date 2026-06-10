@@ -17,6 +17,7 @@ import {
   Modal,
   Tab,
   Tabs,
+  Container,
 } from 'react-bootstrap'
 import SearchPanel from '../../utils/FilterPanel'
 import { useEffect, useState } from 'react'
@@ -512,7 +513,11 @@ const RoomsMaster = () => {
   }
 
   return (
-    <div className="page-container">
+    <Container fluid className="page-container" style={{
+      background: 'linear-gradient(135deg, #f6f8fc 0%, #e9edf5 100%)',
+      minHeight: '100vh',
+      transition: 'background-color 0.5s ease',
+    }}>
       {/* UNIFIED HEADER */}
       <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <h1 className="page-title mb-0" style={{ fontSize: '25px' }}>
@@ -587,7 +592,11 @@ const RoomsMaster = () => {
 
       {showForm ? (
         <div>
-          <Card className="p-4 shadow-sm">
+        <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4" style={{ transition: 'all 0.3s ease' }}>
+          <Card.Body className="p-4">
+            <h2 className="mb-4 fw-bold text-secondary" style={{ fontSize: '1.5rem' }}>
+              {isEditing ? 'Edit Room Details' : 'Add New Room'}
+            </h2>
             <Form onSubmit={handleSaveAndNext}>
               <Row className="g-3">
                 <Col md={4}>
@@ -695,10 +704,11 @@ const RoomsMaster = () => {
                 </Button>
               </div>
             </Form>
-          </Card>
+          </Card.Body>
+        </Card>
 
-          {/* ROOM SETTINGS MODAL (Triggered via Save & Next) */}
-          <Modal
+        {/* ROOM SETTINGS MODAL (Triggered via Save & Next) */}
+        <Modal
             show={showSettingsModal}
             onHide={() => setShowSettingsModal(false)}
             size="lg"
@@ -851,7 +861,8 @@ const RoomsMaster = () => {
         </div>
       ) : (
         /* TABLE LIST SCREEN */
-        <div>
+        <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+          <Card.Body className="p-4">
           {showSearch && (
             <SearchPanel
               searchFields={searchFields}
@@ -893,8 +904,8 @@ const RoomsMaster = () => {
             />
           </Tabs>
 
-          <Card className="branch-card">
-            <div className="d-flex justify-content-between align-items-center mb-2">
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-3">
               <h5 className="mb-0">Room List</h5>
 
               <div className="d-flex align-items-center gap-2">
@@ -914,6 +925,7 @@ const RoomsMaster = () => {
                 </Form.Select>
               </div>
             </div>
+            <div className="table-responsive" style={{ overflowX: 'auto', minHeight: '200px' }}>
             <Table
               bordered
               hover
@@ -997,8 +1009,10 @@ const RoomsMaster = () => {
               currentPage={currentPage}
               onPageChange={setCurrentPage}
             />
-          </Card>
-        </div>
+            </div>
+          </div>
+          </Card.Body>
+        </Card>
       )}
 
       {/* VIEW DETAILS MODAL */}
@@ -1093,7 +1107,7 @@ const RoomsMaster = () => {
           </Button>
         </Modal.Footer>
       </Modal>
-    </div>
+    </Container>
   )
 }
 

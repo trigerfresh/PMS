@@ -14,6 +14,7 @@ import Modal from 'react-bootstrap/Modal'
 import Tabs from 'react-bootstrap/Tabs'
 import Tab from 'react-bootstrap/Tab'
 import Table from 'react-bootstrap/Table'
+import Container from 'react-bootstrap/Container'
 import axios from 'axios'
 import { BsThreeDotsVertical } from 'react-icons/bs'
 import Pagination from '../../utils/Pagination'
@@ -173,7 +174,11 @@ export default function FloorPage() {
   }
 
   return (
-    <div className="page-container">
+    <Container fluid className="page-container" style={{
+      background: 'linear-gradient(135deg, #f6f8fc 0%, #e9edf5 100%)',
+      minHeight: '100vh',
+      transition: 'background-color 0.5s ease',
+    }}>
       <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <h1
           className="page-title mb-0"
@@ -223,80 +228,68 @@ export default function FloorPage() {
         </div>
       </div>
 
-      {showSearch && (
-        <SearchPanel
-          searchFields={searchFields}
-          setSearchFields={setSearchFields}
-          dateFilter={dateFilter}
-          setDateFilter={setDateFilter}
-          onSearch={handleSearch}
-          onReset={resetSearch}
-          onDownloadExcel={handleDownloadExcel}
-          searchOptions={branchSearchOptions}
-        />
-      )}
-
-      {/* FORM */}
-      {/* {hotelId && (
-        <form onSubmit={handleSubmit} className="card p-3 mb-3">
-          <input
-            className="form-control mb-2"
-            placeholder="Floor Name"
-            value={floorName}
-            onChange={(e) => setFloorName(e.target.value)}
-          />
-
-          <input
-            className="form-control mb-2"
-            placeholder="Floor Number"
-            value={floorNumber}
-            onChange={(e) => setFloorNumber(e.target.value)}
-          />
-
-          <button className="btn btn-primary">
-            {editId ? 'Update Floor' : 'Add Floor'}
-          </button>
-        </form>
-      )} */}
-
       {/* FORM */}
       {hotelId && (
-        <form onSubmit={handleSubmit} className="card p-3 mb-3">
-          <div className="d-flex gap-2 align-items-center">
-            <input
-              className="form-control"
-              placeholder="Floor Name"
-              value={floorName}
-              onChange={(e) => setFloorName(e.target.value)}
-            />
-
-            <input
-              className="form-control"
-              placeholder="Floor Number"
-              value={floorNumber}
-              onChange={(e) => setFloorNumber(e.target.value)}
-            />
-
-            <button className="btn btn-primary text-nowrap">
-              {editId ? 'Update Floor' : 'Add Floor'}
-            </button>
+        <div className="card dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4" style={{ transition: 'all 0.3s ease' }}>
+          <div className="card-body p-4">
+            <form onSubmit={handleSubmit}>
+              <div className="d-flex gap-3 flex-wrap align-items-end">
+                <div className="flex-grow-1">
+                  <label className="form-label text-muted fw-semibold mb-1">Floor Name</label>
+                  <input
+                    className="form-control shadow-sm"
+                    placeholder="Enter Floor Name"
+                    value={floorName}
+                    onChange={(e) => setFloorName(e.target.value)}
+                  />
+                </div>
+                <div className="flex-grow-1">
+                  <label className="form-label text-muted fw-semibold mb-1">Floor Number</label>
+                  <input
+                    className="form-control shadow-sm"
+                    placeholder="Enter Floor Number"
+                    value={floorNumber}
+                    onChange={(e) => setFloorNumber(e.target.value)}
+                  />
+                </div>
+                <button className="btn btn-primary text-nowrap px-4 shadow-sm" style={{ height: '38px', fontWeight: '500' }}>
+                  {editId ? 'Update Floor' : 'Add Floor'}
+                </button>
+              </div>
+            </form>
           </div>
-        </form>
+        </div>
       )}
 
-      <Tabs
-        activeKey={floorStatus}
-        onSelect={(k) => setFloorStatus(k)}
-        className="mb-3 custom-bootstrap-tabs"
-        style={{ overflow: 'visible', flexWrap: 'wrap' }}
-      >
-        <Tab eventKey="0" title="Active Floors" />
-        <Tab eventKey="1" title="Deleted Floors" />
-      </Tabs>
+      {/* LIST SECTION */}
+      <div className="card dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+        <div className="card-body p-4">
+          {showSearch && (
+            <SearchPanel
+              searchFields={searchFields}
+              setSearchFields={setSearchFields}
+              dateFilter={dateFilter}
+              setDateFilter={setDateFilter}
+              onSearch={handleSearch}
+              onReset={resetSearch}
+              onDownloadExcel={handleDownloadExcel}
+              searchOptions={branchSearchOptions}
+            />
+          )}
 
-      {/* TABLE */}
-      <div className="card branch-card">
-        <div className="d-flex justify-content-between align-items-center p-2">
+          <Tabs
+            activeKey={floorStatus}
+            onSelect={(k) => setFloorStatus(k)}
+            className="mb-3 custom-bootstrap-tabs"
+            style={{ overflow: 'visible', flexWrap: 'wrap' }}
+          >
+            <Tab eventKey="0" title="Active Floors" />
+            <Tab eventKey="1" title="Deleted Floors" />
+          </Tabs>
+
+          {/* TABLE */}
+          {/* TABLE */}
+        <div className="d-flex justify-content-between align-items-center mb-3">
           <h5 className="mb-0">Floor List</h5>
 
           <div className="d-flex align-items-center gap-2">
@@ -318,7 +311,7 @@ export default function FloorPage() {
             </select>
           </div>
         </div>
-        <div className="card-body p-0">
+        <div className="table-responsive" style={{ overflowX: 'auto', minHeight: '200px' }}>
           <Table
             hover
             bordered
@@ -401,6 +394,7 @@ export default function FloorPage() {
             onPageChange={setCurrentPage}
           />
         </div>
+        </div>
       </div>
 
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
@@ -442,6 +436,6 @@ export default function FloorPage() {
           </button>
         </Modal.Footer>
       </Modal>
-    </div>
+    </Container>
   )
 }

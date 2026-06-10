@@ -9,11 +9,15 @@ import {
   Row,
   Col,
   Table,
+  Container,
 } from 'react-bootstrap'
+import { useNavigate } from 'react-router-dom'
+import { FaArrowLeft } from 'react-icons/fa'
 
 const API_URL = 'http://localhost:5000'
 
 const Reserved = () => {
+  const navigate = useNavigate()
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -121,13 +125,35 @@ const Reserved = () => {
   const grouped = groupData()
 
   return (
-    <div className="p-3">
-      {/* HEADER */}
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4 className="text-primary fw-bold">Reserved Bookings</h4>
-
-        <Badge bg="primary">Total: {bookings.length}</Badge>
-      </div>
+    <Container fluid className="page-container" style={{ 
+      background: 'linear-gradient(135deg, #f6f8fc 0%, #e9edf5 100%)',
+      minHeight: '100vh',
+      transition: 'background-color 0.5s ease',
+    }}>
+      {/* Header */}
+      <Row className="align-items-center mb-4 pb-3 border-bottom" style={{ borderColor: 'rgba(0,0,0,0.05) !important' }}>
+        <Col className="d-flex align-items-center">
+          <Button
+            variant="light"
+            className="shadow-sm rounded-circle d-flex align-items-center justify-content-center me-3"
+            onClick={() => navigate(-1)}
+            style={{ width: '45px', height: '45px', border: '1px solid #e2e8f0', transition: 'all 0.2s' }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+          >
+            <span style={{ fontSize: '1.2rem', color: '#64748b' }}>←</span>
+          </Button>
+          <div>
+            <h2 className="fw-bold mb-0 text-capitalize d-flex align-items-center gap-3" style={{ color: '#2c3e50', letterSpacing: '-0.5px' }}>
+              Reserved Bookings
+              <span className="badge bg-primary text-white rounded-pill fs-6 px-3">{bookings.length}</span>
+            </h2>
+            <small className="text-muted fw-bold" style={{ letterSpacing: '0.5px', textTransform: 'uppercase', fontSize: '0.75rem' }}>
+              Floor & Hotel Wise Details
+            </small>
+          </div>
+        </Col>
+      </Row>
 
       {/* LOADING */}
       {loading ? (
@@ -137,38 +163,29 @@ const Reserved = () => {
       ) : (
         Object.values(grouped).map((g, i) => (
           <div key={i} className="mb-4">
-            {/* HOTEL */}
-            <h5 className="text-primary fw-bold">{g.hotel}</h5>
+            <h5 className="text-secondary fw-bold mb-2 border-bottom pb-1">{g.hotel} - {g.floor}</h5>
 
-            {/* FLOOR */}
-            <h6 className="text-secondary border-bottom pb-1">{g.floor}</h6>
-
-            {/* CARDS */}
-            <Row className="g-2">
+            <Row className="g-2 row-cols-auto">
               {g.items.map((item) => (
-                <Col md={4} key={item.id || item.booking_id}>
+                <Col key={item.id || item.booking_id}>
                   <Card
                     onClick={() => handleClick(item)}
                     className="border-primary shadow-sm"
-                    style={{ cursor: 'pointer' }}
+                    style={{ cursor: 'pointer', minWidth: '150px', transition: 'all 0.3s ease' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.classList.add('shadow'); }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.classList.remove('shadow'); }}
                   >
-                    <Card.Body>
-                      <div className="d-flex justify-content-between">
-                        <strong>Room {item.room_no}</strong>
-
-                        <Badge bg="primary">Reserved</Badge>
+                    <Card.Body className="p-2 d-flex flex-column align-items-center justify-content-center">
+                      <div className="fw-bold px-1 text-truncate" style={{ fontSize: '1rem', lineHeight: '1.2', maxWidth: '100%' }}>
+                        Room {item.room_no || item.guest_name || 'N/A'}
                       </div>
-
-                      <div className="small text-muted mt-1">
+                      <Badge bg="primary" className="mt-1">Reserved</Badge>
+                      <div className="small text-muted text-truncate w-100 text-center mt-1">
                         {item.guest_name}
                       </div>
-
-                      <div className="small mt-2">
-                        Check-In: {item.check_in_date?.split('T')[0]}
-                      </div>
-
-                      <div className="small">
-                        Check-Out: {item.check_out_date?.split('T')[0]}
+                      <div className="small mt-1 text-center" style={{ fontSize: '0.75rem' }}>
+                        In: {item.check_in_date?.split('T')[0]}<br/>
+                        Out: {item.check_out_date?.split('T')[0]}
                       </div>
                     </Card.Body>
                   </Card>
@@ -182,79 +199,66 @@ const Reserved = () => {
       {/* =========================
           MODAL FULL DETAILS
       ========================= */}
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Reserved Booking Details</Modal.Title>
+      <Modal show={showModal} onHide={() => setShowModal(false)} size="md" centered contentClassName="border-0 shadow-lg">
+        <Modal.Header closeButton className="bg-primary border-0 py-3">
+          <Modal.Title className="fw-bold fs-5 text-white d-flex align-items-center gap-2">
+            <span className="bg-white text-primary px-2 py-1 rounded-3 fs-6 border shadow-sm">Room {selected?.room_no || 'N/A'}</span>
+            Reserved Details
+          </Modal.Title>
         </Modal.Header>
 
-        <Modal.Body>
+        <Modal.Body className="p-3">
           {selected && (
-            <Table bordered size="sm">
-              <tbody>
-                <tr>
-                  <td>Guest</td>
-                  <td>{selected.guest_name}</td>
-                </tr>
-
-                <tr>
-                  <td>Phone</td>
-                  <td>{selected.phone || 'N/A'}</td>
-                </tr>
-
-                <tr>
-                  <td>Hotel</td>
-                  <td>{selected.hotel_name}</td>
-                </tr>
-
-                <tr>
-                  <td>Floor</td>
-                  <td>{selected.floor_name}</td>
-                </tr>
-
-                <tr>
-                  <td>Room</td>
-                  <td>{selected.room_no}</td>
-                </tr>
-
-                <tr>
-                  <td>Check In</td>
-                  <td>{selected.check_in_date?.split('T')[0]}</td>
-                </tr>
-
-                <tr>
-                  <td>Check Out</td>
-                  <td>{selected.check_out_date?.split('T')[0]}</td>
-                </tr>
-
-                <tr>
-                  <td>Total Amount</td>
-                  <td>₹ {selected.total_amount || 0}</td>
-                </tr>
-
-                <tr>
-                  <td>Status</td>
-                  <td className="text-primary fw-bold">{selected.status}</td>
-                </tr>
-              </tbody>
-            </Table>
+            <div className="bg-white">
+              <Table borderless hover size="sm" className="mb-0" style={{ fontSize: '0.85rem' }}>
+                <tbody>
+                  <tr className="border-bottom">
+                    <td className="text-secondary fw-semibold py-2" style={{ letterSpacing: '0.3px' }}>Guest Name</td>
+                    <td className="fw-bold text-dark py-2 text-end">{selected.guest_name}</td>
+                  </tr>
+                  <tr className="border-bottom">
+                    <td className="text-secondary fw-semibold py-2" style={{ letterSpacing: '0.3px' }}>Contact</td>
+                    <td className="fw-medium text-dark py-2 text-end">{selected.phone || 'N/A'}</td>
+                  </tr>
+                  <tr className="border-bottom">
+                    <td className="text-secondary fw-semibold py-2" style={{ letterSpacing: '0.3px' }}>Location</td>
+                    <td className="fw-medium text-dark py-2 text-end">{selected.hotel_name} - Floor {selected.floor_name}</td>
+                  </tr>
+                  <tr className="border-bottom">
+                    <td className="text-secondary fw-semibold py-2" style={{ letterSpacing: '0.3px' }}>Check-in</td>
+                    <td className="fw-medium text-dark py-2 text-end">{selected.check_in_date?.split('T')[0]}</td>
+                  </tr>
+                  <tr className="border-bottom">
+                    <td className="text-secondary fw-semibold py-2" style={{ letterSpacing: '0.3px' }}>Check-out</td>
+                    <td className="fw-medium text-dark py-2 text-end">{selected.check_out_date?.split('T')[0]}</td>
+                  </tr>
+                  <tr>
+                    <td className="text-secondary fw-semibold py-2 align-middle" style={{ letterSpacing: '0.3px' }}>Status</td>
+                    <td className="py-2 text-end">
+                      <Badge bg="primary" className="fw-normal px-2 py-1 rounded-pill text-capitalize">{selected.status}</Badge>
+                    </td>
+                  </tr>
+                </tbody>
+              </Table>
+              <div className="mt-2 pt-3 border-top d-flex justify-content-between align-items-center rounded-3 bg-light px-3 py-2 border">
+                <span className="text-dark fw-bold" style={{ fontSize: '0.9rem', letterSpacing: '0.5px' }}>TOTAL AMOUNT</span>
+                <span className="text-primary fw-bold text-end" style={{ fontSize: '1.15rem' }}>₹ {selected.total_amount || 0}</span>
+              </div>
+            </div>
           )}
         </Modal.Body>
 
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
+        <Modal.Footer className="bg-light border-0 py-3">
+          <Button 
+            variant="outline-secondary" 
+            onClick={() => setShowModal(false)}
+            className="rounded-pill px-4"
+          >
             Close
           </Button>
-
-          {/* <Button
-            variant="primary"
-            onClick={handleCheckout}
-            disabled={checkoutLoading}
-          >
-            {checkoutLoading ? 'Processing...' : 'Convert to Active'}
-          </Button> */}
         </Modal.Footer>
       </Modal>
-    </div>
+    </Container>
   )
 }
 
