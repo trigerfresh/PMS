@@ -11,6 +11,7 @@ import {
   Modal,
   Tabs,
   Tab,
+  Container,
 } from 'react-bootstrap'
 import {
   FaPen,
@@ -26,6 +27,7 @@ import Pagination from '../../utils/Pagination'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { BsThreeDotsVertical } from 'react-icons/bs'
+import './Company.css'
 
 const BookingMaster = () => {
   const [hotels, setHotels] = useState([])
@@ -170,18 +172,19 @@ const BookingMaster = () => {
   }
 
   useEffect(() => {
-    const count = rooms.filter((r) => {
+    const available = rooms.filter((r) => {
       const status = r.status?.toLowerCase()?.trim()
 
       return (
         status === 'vacant' || status === 'available' || status === 'checkedout'
       )
-    }).length
+    })
 
-    setAvailableRoomsCount(count)
+    setAvailableRoomsCount(available.length)
+    setAvailableRooms(available)
 
     console.log('Rooms =>', rooms)
-    console.log('Available Count =>', count)
+    console.log('Available Count =>', available.length)
   }, [rooms])
 
   const handleRoomBookingChange = (index, e) => {
@@ -263,6 +266,17 @@ const BookingMaster = () => {
     return null
   }
 
+  const isTodayCheckIn = (checkInDate) => {
+    if (!checkInDate) return false
+    const today = new Date()
+    const checkIn = new Date(checkInDate)
+    return (
+      today.getFullYear() === checkIn.getFullYear() &&
+      today.getMonth() === checkIn.getMonth() &&
+      today.getDate() === checkIn.getDate()
+    )
+  }
+
   const filteredBookings = bookings.filter((b) => {
     // HOTEL FILTER
     if (filterHotelId && String(b.hotel_id) !== String(filterHotelId)) {
@@ -272,25 +286,15 @@ const BookingMaster = () => {
     // TOTAL BOOKINGS
     if (filterType === 'all') return true
 
-    if (
-      filterType === 'current' &&
-      b.status?.toLowerCase() === 'booked' &&
-      getCheckoutStatus(b.check_out_date, b.status) !== 'overdue'
-    ) {
+    if (filterType === 'current' && isTodayCheckIn(b.check_in_date)) {
       return true
     }
 
-    if (
-      filterType === 'reserved' &&
-      b.status?.toLowerCase() === 'reserved'
-    ) {
+    if (filterType === 'reserved' && b.status?.toLowerCase() === 'reserved') {
       return true
     }
 
-    if (
-      filterType === 'cancelled' &&
-      b.status?.toLowerCase() === 'cancelled'
-    ) {
+    if (filterType === 'cancelled' && b.status?.toLowerCase() === 'cancelled') {
       return true
     }
 
@@ -326,10 +330,8 @@ const BookingMaster = () => {
         (b) => b.status?.toLowerCase().trim() === 'cancelled',
       ).length,
 
-      current_bookings: activeData.filter(
-        (b) =>
-          b.status?.toLowerCase().trim() === 'booked' &&
-          getCheckoutStatus(b.check_out_date, b.status) !== 'overdue',
+      current_bookings: activeData.filter((b) =>
+        isTodayCheckIn(b.check_in_date),
       ).length,
 
       reserved_bookings: activeData.filter(
@@ -774,14 +776,16 @@ const BookingMaster = () => {
         payment_status: room.payment_status,
         status: room.status,
 
-        otherGuests: room.otherGuests ? room.otherGuests.map((g) => ({
-          guest_name: g.guest_name,
-          guest_phone: g.guest_phone,
-          guest_email: g.guest_email,
-          old_user_profile_pic: g.old_profile_pic || '',
-          old_adhar_card_pic: g.old_adhar_card_pic || '',
-          old_pan_card_pic: g.old_pan_card_pic || '',
-        })) : [],
+        otherGuests: room.otherGuests
+          ? room.otherGuests.map((g) => ({
+              guest_name: g.guest_name,
+              guest_phone: g.guest_phone,
+              guest_email: g.guest_email,
+              old_user_profile_pic: g.old_profile_pic || '',
+              old_adhar_card_pic: g.old_adhar_card_pic || '',
+              old_pan_card_pic: g.old_pan_card_pic || '',
+            }))
+          : [],
       }))
 
       form.append('roomBookings', JSON.stringify(bookingData))
@@ -1049,11 +1053,19 @@ const BookingMaster = () => {
 
   // ================= UI RENDERING =================
   return (
-    <div className="page-container">
+    <Container
+      fluid
+      className="page-container"
+      style={{
+        background: 'linear-gradient(135deg, #f6f8fc 0%, #e9edf5 100%)',
+        minHeight: '100vh',
+        transition: 'background-color 0.5s ease',
+      }}
+    >
       <ToastContainer position="top-right" />
 
       {/* UNIFIED HEADER */}
-      <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+      <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 pb-2 border-bottom gap-3">
         <h1 className="page-title mb-0" style={{ fontSize: '25px' }}>
           {showForm
             ? isEdit
@@ -1065,13 +1077,13 @@ const BookingMaster = () => {
           )}
         </h1>
 
-        <div className="page-actions d-flex gap-3 align-items-center">
+        <div className="page-actions d-flex flex-wrap gap-2 align-items-center mt-3 mt-md-0">
           {!showForm && (
             <Form.Select
               value={filterHotelId}
               onChange={(e) => setFilterHotelId(e.target.value)}
               className="shadow-sm rounded-3"
-              style={{ width: '200px' }}
+              style={{ minWidth: '150px', width: 'auto' }}
             >
               <option value="">All Hotels</option>
               {hotels.map((h) => (
@@ -1139,8 +1151,17 @@ const BookingMaster = () => {
 
       {showForm ? (
         /* ================= 1. FORM VIEW (Full Screen) ================= */
-        <div>
-          <Card className="p-4 shadow-sm">
+        <Card
+          className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4"
+          style={{ transition: 'all 0.3s ease' }}
+        >
+          <Card.Body className="p-4">
+            <h2
+              className="mb-4 fw-bold text-secondary"
+              style={{ fontSize: '1.5rem' }}
+            >
+              {isEdit ? 'Update Booking Details' : 'Add New Booking'}
+            </h2>
             <Form onSubmit={handleSubmit}>
               <Row className="g-3">
                 {/* HOTEL */}
@@ -1379,97 +1400,145 @@ const BookingMaster = () => {
                     </Row>
 
                     <div className="mt-3 border-top pt-3">
-                      <h6 className="text-secondary mb-3">Other Guests in this Room (Optional)</h6>
-                      {room.otherGuests && room.otherGuests.map((guest, guestIndex) => (
-                        <div key={guestIndex} className="bg-light p-3 rounded mb-3 position-relative border border-info">
-                          <Button
-                            variant="outline-danger"
-                            size="sm"
-                            className="position-absolute top-0 end-0 m-2"
-                            onClick={() => removeRoomGuest(index, guestIndex)}
+                      <h6 className="text-secondary mb-3">
+                        Other Guests in this Room (Optional)
+                      </h6>
+                      {room.otherGuests &&
+                        room.otherGuests.map((guest, guestIndex) => (
+                          <div
+                            key={guestIndex}
+                            className="bg-light p-3 rounded mb-3 position-relative border border-info"
                           >
-                            Remove Guest
-                          </Button>
-                          <Row>
-                            <Col md={4} className="mb-2">
-                              <Form.Label>Guest Name</Form.Label>
-                              <Form.Control
-                                size="sm"
-                                placeholder="Name"
-                                value={guest.guest_name}
-                                onChange={(e) => handleRoomGuestChange(index, guestIndex, 'guest_name', e.target.value)}
-                              />
-                            </Col>
-                            <Col md={4} className="mb-2">
-                              <Form.Label>Phone</Form.Label>
-                              <Form.Control
-                                size="sm"
-                                placeholder="Phone"
-                                value={guest.guest_phone}
-                                onChange={(e) => handleRoomGuestChange(index, guestIndex, 'guest_phone', e.target.value)}
-                              />
-                            </Col>
-                            <Col md={4} className="mb-2">
-                              <Form.Label>Email</Form.Label>
-                              <Form.Control
-                                size="sm"
-                                placeholder="Email"
-                                type="email"
-                                value={guest.guest_email}
-                                onChange={(e) => handleRoomGuestChange(index, guestIndex, 'guest_email', e.target.value)}
-                              />
-                            </Col>
-                            <Col md={4} className="mb-2">
-                              <Form.Label>Profile Pic (Optional)</Form.Label>
-                              <Form.Control
-                                size="sm"
-                                type="file"
-                                onChange={(e) => handleRoomGuestFileChange(index, guestIndex, 'profile_pic', e.target.files[0])}
-                              />
-                              {guest.old_profile_pic && (
-                                <img
-                                  src={`http://localhost:5000/uploads/${guest.old_profile_pic}`}
-                                  width="50"
-                                  className="mt-2 border rounded"
-                                  alt="Old guest profile"
+                            <Button
+                              variant="outline-danger"
+                              size="sm"
+                              className="position-absolute top-0 end-0 m-2"
+                              onClick={() => removeRoomGuest(index, guestIndex)}
+                            >
+                              Remove Guest
+                            </Button>
+                            <Row>
+                              <Col md={4} className="mb-2">
+                                <Form.Label>Guest Name</Form.Label>
+                                <Form.Control
+                                  size="sm"
+                                  placeholder="Name"
+                                  value={guest.guest_name}
+                                  onChange={(e) =>
+                                    handleRoomGuestChange(
+                                      index,
+                                      guestIndex,
+                                      'guest_name',
+                                      e.target.value,
+                                    )
+                                  }
                                 />
-                              )}
-                            </Col>
-                            <Col md={4} className="mb-2">
-                              <Form.Label>Aadhar Card (Optional)</Form.Label>
-                              <Form.Control
-                                size="sm"
-                                type="file"
-                                onChange={(e) => handleRoomGuestFileChange(index, guestIndex, 'adhar_card_pic', e.target.files[0])}
-                              />
-                              {guest.old_adhar_card_pic && (
-                                <img
-                                  src={`http://localhost:5000/uploads/${guest.old_adhar_card_pic}`}
-                                  width="50"
-                                  className="mt-2 border rounded"
-                                  alt="Old Aadhar"
+                              </Col>
+                              <Col md={4} className="mb-2">
+                                <Form.Label>Phone</Form.Label>
+                                <Form.Control
+                                  size="sm"
+                                  placeholder="Phone"
+                                  value={guest.guest_phone}
+                                  onChange={(e) =>
+                                    handleRoomGuestChange(
+                                      index,
+                                      guestIndex,
+                                      'guest_phone',
+                                      e.target.value,
+                                    )
+                                  }
                                 />
-                              )}
-                            </Col>
-                            <Col md={4} className="mb-2">
-                              <Form.Label>PAN Card (Optional)</Form.Label>
-                              <Form.Control
-                                size="sm"
-                                type="file"
-                                onChange={(e) => handleRoomGuestFileChange(index, guestIndex, 'pan_card_pic', e.target.files[0])}
-                              />
-                              {guest.old_pan_card_pic && (
-                                <img
-                                  src={`http://localhost:5000/uploads/${guest.old_pan_card_pic}`}
-                                  width="50"
-                                  className="mt-2 border rounded"
-                                  alt="Old PAN"
+                              </Col>
+                              <Col md={4} className="mb-2">
+                                <Form.Label>Email</Form.Label>
+                                <Form.Control
+                                  size="sm"
+                                  placeholder="Email"
+                                  type="email"
+                                  value={guest.guest_email}
+                                  onChange={(e) =>
+                                    handleRoomGuestChange(
+                                      index,
+                                      guestIndex,
+                                      'guest_email',
+                                      e.target.value,
+                                    )
+                                  }
                                 />
-                              )}
-                            </Col>
-                          </Row>
-                        </div>
-                      ))}
+                              </Col>
+                              <Col md={4} className="mb-2">
+                                <Form.Label>Profile Pic (Optional)</Form.Label>
+                                <Form.Control
+                                  size="sm"
+                                  type="file"
+                                  onChange={(e) =>
+                                    handleRoomGuestFileChange(
+                                      index,
+                                      guestIndex,
+                                      'profile_pic',
+                                      e.target.files[0],
+                                    )
+                                  }
+                                />
+                                {guest.old_profile_pic && (
+                                  <img
+                                    src={`http://localhost:5000/uploads/${guest.old_profile_pic}`}
+                                    width="50"
+                                    className="mt-2 border rounded"
+                                    alt="Old guest profile"
+                                  />
+                                )}
+                              </Col>
+                              <Col md={4} className="mb-2">
+                                <Form.Label>Aadhar Card (Optional)</Form.Label>
+                                <Form.Control
+                                  size="sm"
+                                  type="file"
+                                  onChange={(e) =>
+                                    handleRoomGuestFileChange(
+                                      index,
+                                      guestIndex,
+                                      'adhar_card_pic',
+                                      e.target.files[0],
+                                    )
+                                  }
+                                />
+                                {guest.old_adhar_card_pic && (
+                                  <img
+                                    src={`http://localhost:5000/uploads/${guest.old_adhar_card_pic}`}
+                                    width="50"
+                                    className="mt-2 border rounded"
+                                    alt="Old Aadhar"
+                                  />
+                                )}
+                              </Col>
+                              <Col md={4} className="mb-2">
+                                <Form.Label>PAN Card (Optional)</Form.Label>
+                                <Form.Control
+                                  size="sm"
+                                  type="file"
+                                  onChange={(e) =>
+                                    handleRoomGuestFileChange(
+                                      index,
+                                      guestIndex,
+                                      'pan_card_pic',
+                                      e.target.files[0],
+                                    )
+                                  }
+                                />
+                                {guest.old_pan_card_pic && (
+                                  <img
+                                    src={`http://localhost:5000/uploads/${guest.old_pan_card_pic}`}
+                                    width="50"
+                                    className="mt-2 border rounded"
+                                    alt="Old PAN"
+                                  />
+                                )}
+                              </Col>
+                            </Row>
+                          </div>
+                        ))}
 
                       <Button
                         variant="outline-info"
@@ -1510,271 +1579,457 @@ const BookingMaster = () => {
                 </Button>
               </div>
             </Form>
-          </Card>
-        </div>
+          </Card.Body>
+        </Card>
       ) : (
         /* ================= 2. TABLE LIST VIEW (Full Screen) ================= */
-        <div>
-          {showSearch && (
-            <SearchPanel
-              searchFields={searchFields}
-              setSearchFields={setSearchFields}
-              dateFilter={dateFilter}
-              setDateFilter={setDateFilter}
-              onSearch={handleSearch}
-              onReset={resetSearch}
-              onDownloadExcel={handleDownloadExcel}
-              searchOptions={branchSearchOptions}
-            />
-          )}
+        <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+          <Card.Body className="p-4">
+            {showSearch && (
+              <SearchPanel
+                searchFields={searchFields}
+                setSearchFields={setSearchFields}
+                dateFilter={dateFilter}
+                setDateFilter={setDateFilter}
+                onSearch={handleSearch}
+                onReset={resetSearch}
+                onDownloadExcel={handleDownloadExcel}
+                searchOptions={branchSearchOptions}
+              />
+            )}
 
-          <Tabs
-            id="booking-filter-tabs"
-            activeKey={filterType}
-            onSelect={(k) => {
-              setFilterType(k)
-              setCurrentPage(1)
-            }}
-            className="mb-3 custom-bootstrap-tabs"
-          >
-            {/* TOTAL BOOKINGS */}
-            <Tab
-              eventKey="all"
-              title={`Total (${bookingCounts?.total_bookings || 0})`}
-            />
-
-            {/* CURRENT BOOKINGS */}
-            <Tab
-              eventKey="current"
-              title={`Current (${bookingCounts?.current_bookings || 0})`}
-            />
-
-            {/* CANCELLED BOOKINGS */}
-            <Tab
-              eventKey="cancelled"
-              title={`Cancelled (${bookingCounts?.cancelled_bookings || 0})`}
-            />
-
-            <Tab
-              eventKey="reserved"
-              title={`Reserved (${bookingCounts?.reserved_bookings || 0})`}
-            />
-
-            <Tab
-              eventKey="checkedout"
-              title={`Vacant (${bookingCounts?.checkedout_bookings || 0})`}
-            />
-
-            <Tab
-              eventKey="about_to_checkout"
-              title={`About to Checkout (${bookingCounts?.about_to_checkout_bookings || 0})`}
-            />
-
-            <Tab
-              eventKey="checkout_overdue"
-              title={`Checkout Overdue (${bookingCounts?.checkout_overdue_bookings || 0})`}
-            />
-
-            <Tab
-              eventKey="deleted"
-              title={`Deleted (${bookingCounts?.deleted_bookings || 0})`}
+            <style>
+              {`
+                .compact-booking-table th, .compact-booking-table td {
+                  padding: 0.1rem !important;
+                }
+                .ultra-compact-tabs .nav-link {
+                  padding: 0.5rem 0.75rem !important;
+                  font-size: 13px !important;
+                }
+              `}
+            </style>
+            <Tabs
+              id="booking-filter-tabs"
+              activeKey={filterType}
+              onSelect={(k) => {
+                setFilterType(k)
+                setCurrentPage(1)
+              }}
+              className="mb-3 custom-bootstrap-tabs ultra-compact-tabs flex-nowrap"
+              style={{
+                overflowX: 'auto',
+                overflowY: 'hidden',
+                whiteSpace: 'nowrap',
+              }}
             >
-              <Table>
-                <thead>
-                  <tr>
-                    <th>Room No</th>
-                    <th>Guest</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(filterHotelId
-                    ? deletedBookings.filter(
-                      (b) => String(b.hotel_id) === String(filterHotelId),
-                    )
-                    : deletedBookings
-                  ).map((b) => (
-                    <tr key={b.booking_id}>
-                      <td>{b.room_no}</td>
-                      <td>{b.guest_name}</td>
-                      <td>
-                        <Button
-                          variant="success"
-                          size="sm"
-                          onClick={() => handleRestore(b.booking_id)}
-                        >
-                          Restore
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </Tab>
-          </Tabs>
+              {/* TOTAL BOOKINGS */}
+              <Tab
+                eventKey="all"
+                title={`Total (${bookingCounts?.total_bookings || 0})`}
+              />
 
-          <Card className="branch-card">
-            <div className="p-3 mb-0 border-bottom d-flex justify-content-between align-items-center">
-              <h4 className="mb-0">Bookings List</h4>
+              {/* CURRENT BOOKINGS */}
+              <Tab
+                eventKey="current"
+                title={`Current (${bookingCounts?.current_bookings || 0})`}
+              />
 
-              <Card
-                className="mb-3 border-success"
-                style={{ cursor: 'pointer' }}
+              {/* CANCELLED BOOKINGS */}
+              <Tab
+                eventKey="cancelled"
+                title={`Cancelled (${bookingCounts?.cancelled_bookings || 0})`}
+              />
+
+              <Tab
+                eventKey="reserved"
+                title={`Reserved (${bookingCounts?.reserved_bookings || 0})`}
+              />
+
+              <Tab
+                eventKey="checkedout"
+                title={`Vacant (${bookingCounts?.checkedout_bookings || 0})`}
+              />
+
+              <Tab
+                eventKey="about_to_checkout"
+                title={`Checkout Soon (${bookingCounts?.about_to_checkout_bookings || 0})`}
+              />
+
+              <Tab
+                eventKey="checkout_overdue"
+                title={`Overdue (${bookingCounts?.checkout_overdue_bookings || 0})`}
+              />
+
+              <Tab
+                eventKey="available"
+                title={`Available (${availableRoomsCount})`}
               >
-                <Card.Body className="py-2">
+                <div className="table-responsive" style={{ overflowX: 'auto' }}>
+                  <Table
+                    bordered
+                    hover
+                    size="sm"
+                    className="list-table compact-booking-table align-middle mb-0 mt-3 shadow-sm"
+                    style={{ fontSize: '12px' }}
+                  >
+                    <thead className="table-light text-center text-secondary">
+                      <tr>
+                        <th
+                          className="text-center fw-semibold p-1"
+                          style={{ width: '10px' }}
+                        >
+                          Room No
+                        </th>
+                        <th
+                          className="text-center fw-semibold p-1"
+                          style={{ width: '120px' }}
+                        >
+                          Room Type
+                        </th>
+                        <th className="text-center fw-semibold p-1">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-center">
+                      {(filterHotelId
+                        ? availableRooms.filter(
+                            (r) => String(r.hotel_id) === String(filterHotelId),
+                          )
+                        : availableRooms
+                      ).map((r) => (
+                        <tr key={r.room_id}>
+                          <td>{r.room_no || 'N/A'}</td>
+                          <td>{r.room_type || r.type || 'N/A'}</td>
+                          <td>
+                            <span className="badge bg-success">Available</span>
+                          </td>
+                        </tr>
+                      ))}
+                      {availableRooms.length === 0 && (
+                        <tr>
+                          <td colSpan="3" className="text-center py-3">
+                            No available seats found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </Table>
+                </div>
+              </Tab>
+
+              <Tab
+                eventKey="deleted"
+                title={`Deleted (${bookingCounts?.deleted_bookings || 0})`}
+              >
+                <div className="table-responsive" style={{ overflowX: 'auto' }}>
+                  <Table
+                    bordered
+                    hover
+                    size="sm"
+                    className="list-table compact-booking-table align-middle mb-0 mt-3 shadow-sm"
+                    style={{ fontSize: '12px' }}
+                  >
+                    <thead className="table text-center text-secondary">
+                      <tr>
+                        <th
+                          className="text-center fw-semibold p-1"
+                          style={{ width: '10px' }}
+                        >
+                          Room No
+                        </th>
+                        <th className="fw-semibold p-1">Guest</th>
+                        <th
+                          className="text-center fw-semibold p-1"
+                          style={{ width: '10px' }}
+                        >
+                          Email
+                        </th>
+                        <th className="text-center fw-semibold p-1">Profile</th>
+                        <th
+                          className="text-center fw-semibold p-1"
+                          style={{ width: '120px' }}
+                        >
+                          Room Type
+                        </th>
+                        <th className="fw-semibold p-1">Check In</th>
+                        <th className="fw-semibold p-1">Check Out</th>
+                        <th className="fw-semibold p-1">Status</th>
+                        <th className="fw-semibold p-1">Payment</th>
+                        <th className="text-center fw-semibold p-1">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-center">
+                      {(filterHotelId
+                        ? deletedBookings.filter(
+                            (b) => String(b.hotel_id) === String(filterHotelId),
+                          )
+                        : deletedBookings
+                      ).map((b) => (
+                        <tr key={b.booking_id}>
+                          <td>{b.room_no || 'N/A'}</td>
+                          <td>{b.guest_name}</td>
+                          <td>{b.guest_email || 'N/A'}</td>
+                          <td>
+                            {b.user_profile_pic && (
+                              <img
+                                src={`http://localhost:5000/uploads/${b.user_profile_pic}`}
+                                alt=""
+                                width="50"
+                                height="50"
+                                style={{
+                                  objectFit: 'cover',
+                                  borderRadius: '4px',
+                                }}
+                              />
+                            )}
+                          </td>
+                          <td>{b.room_type || 'N/A'}</td>
+                          <td>{b.check_in_date?.split('T')[0]}</td>
+                          <td>{b.check_out_date?.split('T')[0]}</td>
+                          <td>
+                            <span className="badge bg-danger">Deleted</span>
+                          </td>
+                          <td>{b.payment_status || 'N/A'}</td>
+                          <td>
+                            <Button
+                              variant="success"
+                              size="sm"
+                              className="px-4 py-1 m-1 rounded-pill shadow-sm fw-medium"
+                              style={{ transition: 'all 0.2s' }}
+                              onClick={() => handleRestore(b.booking_id)}
+                            >
+                              Restore
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                      {deletedBookings.length === 0 && (
+                        <tr>
+                          <td colSpan="10" className="text-center py-3">
+                            No deleted bookings found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </Table>
+                </div>
+              </Tab>
+            </Tabs>
+
+            {filterType !== 'available' && filterType !== 'deleted' && (
+              <Card className="branch-card">
+                <div className="p-3 mb-0 border-bottom d-flex justify-content-between align-items-center">
+                  <h4 className="mb-0">Bookings List</h4>
+
+                  <Card
+                    className="mb-3 border-success"
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {/* <Card.Body className="py-2">
                   <h6 className="mb-0 text-success ">
                     Available Rooms: {availableRoomsCount}
                   </h6>
-                </Card.Body>
-              </Card>
+                </Card.Body> */}
+                  </Card>
 
-              <div className="d-flex align-items-center gap-2">
-                <span className="text-muted small">Show:</span>
-                <Form.Select
-                  size="sm"
-                  value={itemsPerPage}
-                  onChange={(e) => {
-                    setItemsPerPage(Number(e.target.value))
-                    setCurrentPage(1)
-                  }}
-                  style={{ width: '80px', display: 'inline-block' }}
+                  <div className="d-flex align-items-center gap-2">
+                    <span className="text-muted small">Show:</span>
+                    <Form.Select
+                      size="sm"
+                      value={itemsPerPage}
+                      onChange={(e) => {
+                        setItemsPerPage(Number(e.target.value))
+                        setCurrentPage(1)
+                      }}
+                      style={{ width: '80px', display: 'inline-block' }}
+                    >
+                      <option value={10}>10</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                      <option value={150}>150</option>
+                    </Form.Select>
+                  </div>
+                </div>
+                <div
+                  className="table-responsive"
+                  style={{ overflowX: 'auto', minHeight: '200px' }}
                 >
-                  <option value={10}>10</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                  <option value={150}>150</option>
-                </Form.Select>
-              </div>
-            </div>
-            <Table bordered hover className="list-table align-middle mb-0">
-              <thead className="table text-center">
-                <tr>
-                  <th style={{ width: '10px' }}>Room No</th>
-                  <th>Guest</th>
-                  <th style={{ width: '10px' }}>Email</th>
-                  <th>Profile</th>
-                  <th style={{ width: '120px' }}>Room Type</th>
-                  <th>Check In</th>
-                  <th>Check Out</th>
-                  <th>Status</th>
-                  <th>Payment</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-
-              <tbody className="text-center">
-                {filteredBookings.length > 0 ? (
-                  filteredBookings.slice(0, itemsPerPage).map((b) => (
-                    <tr key={b.booking_id}>
-                      <td>{b.room_no || 'N/A'}</td>
-                      <td>{b.guest_name}</td>
-                      <td>{b.guest_email || 'N/A'}</td>
-                      <td>
-                        {b.user_profile_pic && (
-                          <img
-                            src={`http://localhost:5000/uploads/${b.user_profile_pic}`}
-                            alt=""
-                            width="50"
-                            height="50"
-                            style={{ objectFit: 'cover', borderRadius: '4px' }}
-                          />
-                        )}
-                      </td>
-                      <td>{b.room_type || 'N/A'}</td>
-                      <td> {b.check_in_date?.split('T')[0]}</td>
-                      <td>
-                        {b.check_out_date?.split('T')[0]}
-
-                        {getCheckoutStatus(b.check_out_date, b.status) ===
-                          'overdue' && (
-                            <span className="badge bg-danger ms-2">
-                              Overdue ({getOverdueDays(b.check_out_date)} days)
-                            </span>
-                          )}
-
-                        {getCheckoutStatus(b.check_out_date, b.status) ===
-                          'soon' && (
-                            <span className="badge bg-warning ms-2">Soon</span>
-                          )}
-                      </td>{' '}
-                      <td>
-                        <span
-                          className={`badge ${b.status === 'Cancelled' ? 'bg-danger' : 'bg-success'}`}
+                  <Table
+                    bordered
+                    hover
+                    size="sm"
+                    className="list-table compact-booking-table align-middle mb-0 shadow-sm"
+                    style={{ fontSize: '12px' }}
+                  >
+                    <thead className="table-light text-center text-secondary">
+                      <tr>
+                        <th
+                          className="text-center fw-semibold p-1"
+                          style={{ width: '10px' }}
                         >
-                          {b.status}
-                        </span>
-                      </td>
-                      <td>
-                        <span
-                          className={`badge ${b.payment_status === 'Paid' ? 'bg-success' : 'bg-warning text-dark'}`}
+                          Room No
+                        </th>
+                        <th className="fw-semibold p-1">Guest</th>
+                        <th
+                          className="text-center fw-semibold p-1"
+                          style={{ width: '10px' }}
                         >
-                          {b.payment_status}
-                        </span>
-                      </td>
-                      <td className="text-center">
-                        <Dropdown drop="start">
-                          <Dropdown.Toggle
-                            variant="outline-secondary"
-                            size="sm"
-                            className="bg-secondary text-white shadow-sm border"
-                          >
-                            <BsThreeDotsVertical />
-                          </Dropdown.Toggle>
+                          Email
+                        </th>
+                        <th className="text-center fw-semibold p-1">Profile</th>
+                        <th
+                          className="text-center fw-semibold p-1"
+                          style={{ width: '120px' }}
+                        >
+                          Room Type
+                        </th>
+                        <th className="fw-semibold p-1">Check In</th>
+                        <th className="fw-semibold p-1">Check Out</th>
+                        <th className="fw-semibold p-1">Status</th>
+                        <th className="fw-semibold p-1">Payment</th>
+                        <th className="text-center fw-semibold p-1">Action</th>
+                      </tr>
+                    </thead>
 
-                          <Dropdown.Menu>
-                            {/* VIEW */}
-                            <Dropdown.Item onClick={() => handleView(b)}>
-                              <FaEye className="me-2 text-info" /> View
-                            </Dropdown.Item>
+                    <tbody className="text-center">
+                      {filteredBookings.length > 0 ? (
+                        filteredBookings.slice(0, itemsPerPage).map((b) => (
+                          <tr key={b.booking_id}>
+                            <td>{b.room_no || 'N/A'}</td>
+                            <td>{b.guest_name}</td>
+                            <td>{b.guest_email || 'N/A'}</td>
+                            <td>
+                              {b.user_profile_pic && (
+                                <img
+                                  src={`http://localhost:5000/uploads/${b.user_profile_pic}`}
+                                  alt=""
+                                  width="50"
+                                  height="50"
+                                  style={{
+                                    objectFit: 'cover',
+                                    borderRadius: '4px',
+                                  }}
+                                />
+                              )}
+                            </td>
+                            <td>{b.room_type || 'N/A'}</td>
+                            <td> {b.check_in_date?.split('T')[0]}</td>
+                            <td>
+                              {b.check_out_date?.split('T')[0]}
 
-                            {/* EDIT */}
-                            <Dropdown.Item onClick={() => handleEdit(b)}>
-                              <FaPen className="me-2 text-primary" /> Edit
-                            </Dropdown.Item>
+                              {getCheckoutStatus(b.check_out_date, b.status) ===
+                                'overdue' && (
+                                <div>
+                                  <span className="badge bg-danger mt-1 d-inline-block" style={{ fontSize: '10px', padding: '3px 6px' }}>
+                                    Overdue ({getOverdueDays(b.check_out_date)}{' '}
+                                    days)
+                                  </span>
+                                </div>
+                              )}
 
-                            <Dropdown.Item
-                              disabled={
-                                b.status?.toLowerCase() === 'checkedout' ||
-                                b.status?.toLowerCase() === 'cancelled'
-                              }
-                              onClick={() => handleCheckout(b.booking_id)}
-                            >
-                              Checkout
-                            </Dropdown.Item>
+                              {getCheckoutStatus(b.check_out_date, b.status) ===
+                                'soon' && (
+                                <div>
+                                  <span className="badge bg-warning mt-1 d-inline-block text-dark" style={{ fontSize: '10px', padding: '3px 6px' }}>
+                                    Soon
+                                  </span>
+                                </div>
+                              )}
+                            </td>{' '}
+                            <td>
+                              <span
+                                className={`badge ${b.status === 'Cancelled' ? 'bg-danger' : 'bg-success'}`}
+                              >
+                                {b.status}
+                              </span>
+                            </td>
+                            <td>
+                              <span
+                                className={`badge ${
+                                  b.payment_status === 'Paid'
+                                    ? 'bg-success'
+                                    : b.payment_status === 'Partial'
+                                      ? 'bg-warning text-dark'
+                                      : 'bg-danger'
+                                }`}
+                              >
+                                {b.payment_status}
+                              </span>
+                            </td>
+                            <td className="text-center">
+                              <Dropdown drop="start">
+                                <Dropdown.Toggle
+                                  variant="outline-secondary"
+                                  size="sm"
+                                  className="bg-secondary text-white shadow-sm border"
+                                >
+                                  <BsThreeDotsVertical />
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu
+                                  className="shadow-sm"
+                                  style={{ marginRight: '40px' }}
+                                >
+                                  <Dropdown.Item onClick={() => handleView(b)}>
+                                    <FaEye className="me-2 text-info" />
+                                    View
+                                  </Dropdown.Item>
 
-                            <Dropdown.Item
-                              disabled={
-                                b.status?.toLowerCase() === 'cancelled' ||
-                                b.status?.toLowerCase() === 'checkedout'
-                              }
-                              onClick={() => handleCancel(b.booking_id)}
-                            >
-                              Cancel Booking
-                            </Dropdown.Item>
+                                  {b.status !== 'Cancelled' && (
+                                    <>
+                                      <Dropdown.Item
+                                        onClick={() => handleEdit(b)}
+                                      >
+                                        <FaPen className="me-2 text-primary" />
+                                        Edit
+                                      </Dropdown.Item>
 
-                            {/* DELETE */}
-                            <Dropdown.Item
-                              className="text-danger"
-                              onClick={() => handleDelete(b.booking_id)}
-                            >
-                              <FaTrashAlt className="me-2" /> Delete
-                            </Dropdown.Item>
-                          </Dropdown.Menu>
-                        </Dropdown>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="10" className="text-center py-3">
-                      No bookings found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </Table>
-          </Card>
-        </div>
+                                      {b.status === 'Booked' && (
+                                        <Dropdown.Item
+                                          className="text-success"
+                                          onClick={() =>
+                                            handleCheckout(b.booking_id)
+                                          }
+                                        >
+                                          Checkout
+                                        </Dropdown.Item>
+                                      )}
+
+                                      <Dropdown.Item
+                                        className="text-warning"
+                                        onClick={() =>
+                                          handleCancel(b.booking_id)
+                                        }
+                                      >
+                                        Cancel Booking
+                                      </Dropdown.Item>
+                                    </>
+                                  )}
+
+                                  <Dropdown.Item
+                                    className="text-danger"
+                                    onClick={() => handleDelete(b.booking_id)}
+                                  >
+                                    Delete
+                                  </Dropdown.Item>
+                                </Dropdown.Menu>
+                              </Dropdown>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="10" className="text-center py-3">
+                            No bookings found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </Table>
+                </div>
+              </Card>
+            )}
+          </Card.Body>
+        </Card>
       )}
       <Modal show={showView} onHide={() => setShowView(false)} size="lg">
         <Modal.Header closeButton>
@@ -1783,70 +2038,175 @@ const BookingMaster = () => {
 
         <Modal.Body>
           {viewData && (
-            <div>
-              <p>
-                <b>Guest Name:</b> {viewData.guest_name}
-              </p>
-              <p>
-                <b>Email:</b> {viewData.guest_email}
-              </p>
-              <p>
-                <b>Phone:</b> {viewData.guest_phone}
-              </p>
-              <p>
-                <b>Hotel Name:</b> {viewData.hotel_name}
-              </p>
+            <div className="table-responsive">
+              <Table bordered hover className="align-middle">
+                <tbody>
+                  <tr>
+                    <th style={{ width: '30%', backgroundColor: '#f8f9fa' }}>
+                      Guest Name
+                    </th>
+                    <td>{viewData.guest_name}</td>
+                  </tr>
+                  <tr>
+                    <th style={{ backgroundColor: '#f8f9fa' }}>Email</th>
+                    <td>{viewData.guest_email || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <th style={{ backgroundColor: '#f8f9fa' }}>Phone</th>
+                    <td>{viewData.guest_phone || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <th style={{ backgroundColor: '#f8f9fa' }}>Hotel Name</th>
+                    <td>{viewData.hotel_name || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <th style={{ backgroundColor: '#f8f9fa' }}>Floor Name</th>
+                    <td>{viewData.floor_name || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <th style={{ backgroundColor: '#f8f9fa' }}>Room No</th>
+                    <td>{viewData.room_no || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <th style={{ backgroundColor: '#f8f9fa' }}>Room Type</th>
+                    <td>{viewData.room_type || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <th style={{ backgroundColor: '#f8f9fa' }}>Status</th>
+                    <td>
+                      <span
+                        className={`badge ${viewData.status === 'Cancelled' ? 'bg-danger' : 'bg-success'}`}
+                      >
+                        {viewData.status}
+                      </span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th style={{ backgroundColor: '#f8f9fa' }}>Payment</th>
+                    <td>
+                      <span
+                        className={`badge ${viewData.payment_status === 'Paid' ? 'bg-success' : 'bg-warning text-dark'}`}
+                      >
+                        {viewData.payment_status}
+                      </span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th style={{ backgroundColor: '#f8f9fa' }}>
+                      Check in date
+                    </th>
+                    <td>{viewData.check_in_date?.split('T')[0]}</td>
+                  </tr>
+                  <tr>
+                    <th style={{ backgroundColor: '#f8f9fa' }}>
+                      Check out date
+                    </th>
+                    <td>{viewData.check_out_date?.split('T')[0]}</td>
+                  </tr>
+                  <tr>
+                    <th style={{ backgroundColor: '#f8f9fa' }}>Total Days</th>
+                    <td>
+                      {Math.max(
+                        1,
+                        Math.ceil(
+                          (new Date(viewData.check_out_date) -
+                            new Date(viewData.check_in_date)) /
+                            (1000 * 60 * 60 * 24),
+                        ),
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <th style={{ backgroundColor: '#f8f9fa' }}>
+                      Price Per Night
+                    </th>
+                    <td>₹{viewData.price_per_day}</td>
+                  </tr>
+                  <tr>
+                    <th style={{ backgroundColor: '#f8f9fa' }}>Total Amount</th>
+                    <td>₹{viewData.total_amount}</td>
+                  </tr>
+                  {viewData.user_profile_pic && (
+                    <tr>
+                      <th style={{ backgroundColor: '#f8f9fa' }}>
+                        Profile Picture
+                      </th>
+                      <td>
+                        <img
+                          src={`http://localhost:5000/uploads/${viewData.user_profile_pic}`}
+                          width="120"
+                          alt="Profile"
+                          style={{ borderRadius: '4px', objectFit: 'cover' }}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </Table>
 
-              <p>
-                <b>Floor Name:</b> {viewData.floor_name}
-              </p>
-              <p>
-                <b>Room No:</b> {viewData.room_no}
-              </p>
-              <p>
-                <b>Room Type:</b> {viewData.room_type}
-              </p>
-              <p>
-                <b>Status:</b> {viewData.status}
-              </p>
-              <p>
-                <b>Payment:</b> {viewData.payment_status}
-              </p>
+              {/* OTHER GUESTS */}
+              {(() => {
+                let otherGuests = []
+                try {
+                  if (typeof viewData.other_guests === 'string') {
+                    otherGuests = JSON.parse(viewData.other_guests)
+                  } else if (Array.isArray(viewData.other_guests)) {
+                    otherGuests = viewData.other_guests
+                  }
+                } catch (e) {
+                  console.error('Error parsing other guests:', e)
+                }
 
-              <p>
-                <b>Check in date:</b>
-                {viewData.check_in_date?.split('T')[0]}
-              </p>
-              <p>
-                <b>Check out date:</b>
-                {viewData.check_out_date?.split('T')[0]}
-              </p>
-              <p>
-                <b>Total Days:</b>{' '}
-                {Math.max(
-                  1,
-                  Math.ceil(
-                    (new Date(viewData.check_out_date) -
-                      new Date(viewData.check_in_date)) /
-                    (1000 * 60 * 60 * 24),
-                  ),
-                )}
-              </p>
-
-              <p>
-                <b>Price Per Night:</b> ₹{viewData.price_per_day}
-              </p>
-
-              <p>
-                <b>Total Amount:</b> ₹{viewData.total_amount}
-              </p>
-
-              {viewData.user_profile_pic && (
-                <img
-                  src={`http://localhost:5000/uploads/${viewData.user_profile_pic}`}
-                  width="120"
-                />
-              )}
+                if (otherGuests && otherGuests.length > 0) {
+                  return (
+                    <div className="mt-4">
+                      <h5 className="fw-bold mb-3 border-bottom pb-2">
+                        Other Guests
+                      </h5>
+                      <Table
+                        bordered
+                        hover
+                        className="align-middle text-center"
+                      >
+                        <thead style={{ backgroundColor: '#f8f9fa' }}>
+                          <tr>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Profile</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {otherGuests.map((g, idx) => (
+                            <tr key={idx}>
+                              <td>{g.guest_name || 'N/A'}</td>
+                              <td>{g.guest_phone || 'N/A'}</td>
+                              <td>{g.guest_email || 'N/A'}</td>
+                              <td>
+                                {g.profile_pic ? (
+                                  <img
+                                    src={`http://localhost:5000/uploads/${g.profile_pic}`}
+                                    width="40"
+                                    height="40"
+                                    alt="Guest Profile"
+                                    style={{
+                                      objectFit: 'cover',
+                                      borderRadius: '4px',
+                                    }}
+                                  />
+                                ) : (
+                                  'N/A'
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    </div>
+                  )
+                }
+                return null
+              })()}
             </div>
           )}
         </Modal.Body>
@@ -1857,7 +2217,7 @@ const BookingMaster = () => {
           </Button>
         </Modal.Footer>
       </Modal>
-    </div>
+    </Container>
   )
 }
 

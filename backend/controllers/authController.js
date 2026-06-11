@@ -24,15 +24,29 @@ exports.login = async (req, res) => {
       })
     }
 
-    if (user.active === '1') {
+    if (String(user.active) === '1') {
       return res.status(403).json({
         success: false,
         message: 'Your account has been deactivated/deleted',
       })
     }
 
-    // TEMP password compare
-    if (password !== user.password) {
+    const isMatch = await bcrypt.compare(password, user.password)
+    let finalMatch = isMatch
+
+    // Fallback for legacy plain-text passwords
+    if (!isMatch && password === user.password) {
+      finalMatch = true
+      
+      // Auto-migrate to hashed password
+      const hashedPassword = await bcrypt.hash(password, 10)
+      await pool.request()
+        .input('id', sql.Int, user.id)
+        .input('password', sql.VarChar, hashedPassword)
+        .query('UPDATE users SET password = @password WHERE id = @id')
+    }
+
+    if (!finalMatch) {
       return res.status(400).json({
         success: false,
         message: 'Invalid password',

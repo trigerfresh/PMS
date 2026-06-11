@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import JoditEditor from 'jodit-react'
 import { Tabs, Tab, Dropdown, Modal, Table, Container } from 'react-bootstrap'
 import SearchPanel from '../utils/filterPanel_1'
 import Pagination from '../utils/Pagination'
@@ -12,7 +13,7 @@ import {
   FaEye,
 } from 'react-icons/fa'
 import { BsThreeDotsVertical } from 'react-icons/bs'
-
+import '../component/master/Company.css'
 const PRODUCT_URL = 'http://localhost:5000/api/product'
 const PRIMARY_URL = 'http://localhost:5000/api/primary-category'
 const CATEGORY_URL = 'http://localhost:5000/api/category'
@@ -480,9 +481,9 @@ export default function ProductPage() {
       image4: item.image4 || '',
     })
 
-    console.log('DB days:', item.available_for_days)
-    console.log('Parsed days:', item.available_for_days?.split(','))
-    console.log('State', availableForDays)
+    // console.log('DB days:', item.available_for_days)
+    // console.log('Parsed days:', item.available_for_days?.split(','))
+    // console.log('State', availableForDays)
     setShowForm(true)
   }
 
@@ -537,8 +538,8 @@ export default function ProductPage() {
         transition: 'background-color 0.5s ease',
       }}
     >
-      {/* UNIFIED HEADER */}
-      <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+      {/* ================= HEADER ================= */}
+      <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 pb-2 border-bottom gap-3">
         <h1 className="page-title mb-0" style={{ fontSize: '25px' }}>
           {showForm
             ? editId
@@ -812,12 +813,9 @@ export default function ProductPage() {
                   <label className="form-label fw-bold small">
                     Description
                   </label>
-                  <textarea
-                    className="form-control"
-                    placeholder="Enter Product Description"
-                    rows="3"
+                  <JoditEditor
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    onChange={(newContent) => setDescription(newContent)}
                   />
                 </div>
 
@@ -990,15 +988,23 @@ export default function ProductPage() {
       ) : (
         /* ================= CONDITIONAL RENDERING: TABLE LIST VIEW ================= */
         <div className="card dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
-          <div className="card-body p-4">
+          <div className="card-body">
+            <style>
+              {`
+                .compact-product-table th, .compact-product-table td {
+                  padding: 0.25rem !important;
+                }
+              `}
+            </style>
             <Tabs
+              id="product-tabs"
               activeKey={tab}
               onSelect={(k) => {
                 setTab(k)
                 setCurrentPage(1)
               }}
-              className="mb-3 custom-bootstrap-tabs"
-              style={{ overflow: 'visible', flexWrap: 'wrap' }}
+              className="mb-3 custom-bootstrap-tabs flex-nowrap flex-lg-wrap"
+              style={{ overflowX: 'auto', overflowY: 'hidden' }}
             >
               <Tab eventKey="active" title={`Active (${activeList.length})`}>
                 <div className="table-responsive">
@@ -1027,21 +1033,23 @@ export default function ProductPage() {
                     hover
                     bordered
                     responsive
-                    className="list-table align-middle mb-0"
+                    size="sm"
+                    className="list-table compact-product-table align-middle mb-0 shadow-sm"
+                    style={{ fontSize: '11px' }}
                   >
-                    <thead className="table text-center">
+                    <thead className="table-light text-center text-secondary">
                       <tr>
-                        <th>ID</th>
-                        <th>Hotel Name</th>
-                        <th>Branch Name</th>
-                        <th>Food Type</th>
-                        <th>Sub Food Type</th>
-                        <th>Sub Product Name</th>
-                        <th>Product Name</th>
-                        <th>GST</th>
-                        <th>Price</th>
-                        <th>Total Price</th>
-                        <th>Action</th>
+                        <th className="text-center fw-semibold p-1">ID</th>
+                        <th className="fw-semibold p-1">Hotel</th>
+                        <th className="fw-semibold p-1">Branch</th>
+                        <th className="fw-semibold p-1">Food</th>
+                        <th className="fw-semibold p-1">Sub Food</th>
+                        <th className="fw-semibold p-1">Sub Product</th>
+                        <th className="fw-semibold p-1">Product</th>
+                        <th className="fw-semibold p-1">GST</th>
+                        <th className="fw-semibold p-1">Price</th>
+                        <th className="fw-semibold p-1">Total</th>
+                        <th className="text-center fw-semibold p-1">Action</th>
                       </tr>
                     </thead>
                     <tbody className="text-center">
@@ -1055,12 +1063,12 @@ export default function ProductPage() {
                             <td>{item.id}</td>
                             <td>{item.hotel_name || 'NA'}</td>
                             <td>{item.branch_name || 'NA'}</td>
-                            <td>{item.primary_categories_name}</td>
+                            <td>{item.primary_categories_name || 'NA'}</td>
                             <td>{item.category_name}</td>
-                            <td>{item.subcategory_name}</td>
-                            <td>{item.product_name}</td>
-                            <td>{item.gst}%</td>
-                            <td>₹{item.price}</td>
+                            <td>{item.subcategory_name || 'NA'}</td>
+                            <td>{item.product_name || 'NA'}</td>
+                            <td>{item.gst || 'NA'}%</td>
+                            <td>₹{item.price || 'NA'}</td>
                             <td className="fw-bold text-success">
                               ₹
                               {(
@@ -1154,18 +1162,19 @@ export default function ProductPage() {
                     hover
                     bordered
                     responsive
-                    className="list-table align-middle mb-0"
+                    size="sm"
+                    className="list-table compact-product-table align-middle mb-0 shadow-sm"
+                    style={{ fontSize: '11px' }}
                   >
-                    <thead className="table text-center">
+                    <thead className="table text-center text-secondary">
                       <tr>
-                        <th>ID</th>
-                        <th>Hotel Name</th>
-                        <th>Branch Name</th>
-                        <th>Product Name</th>
-                        <th>GST</th>
-                        <th>Price</th>
-
-                        <th>Action</th>
+                        <th className="text-center fw-semibold p-1">ID</th>
+                        <th className="fw-semibold p-1">Hotel</th>
+                        <th className="fw-semibold p-1">Branch</th>
+                        <th className="fw-semibold p-1">Product</th>
+                        <th className="fw-semibold p-1">GST</th>
+                        <th className="fw-semibold p-1">Price</th>
+                        <th className="text-center fw-semibold p-1">Action</th>
                       </tr>
                     </thead>
                     <tbody className="text-center">
@@ -1179,9 +1188,9 @@ export default function ProductPage() {
                             <td>{item.id}</td>
                             <td>{item.hotel_name || 'NA'}</td>
                             <td>{item.branch_name || 'NA'}</td>
-                            <td>{item.product_name}</td>
-                            <td>{item.gst}</td>
-                            <td>{item.price}</td>
+                            <td>{item.product_name || 'NA'}</td>
+                            <td>{item.gst || 'NA'}</td>
+                            <td>{item.price || 'NA'}</td>
                             <td className="text-center">
                               <Dropdown>
                                 <Dropdown.Toggle
@@ -1249,28 +1258,36 @@ export default function ProductPage() {
                   <b>Branch:</b> {viewItem.branch_name || 'NA'}
                 </p>
                 <p>
-                  <b>Food Type:</b> {viewItem.primary_categories_name}
+                  <b>Food Type:</b> {viewItem.primary_categories_name || 'NA'}
                 </p>
                 <p>
-                  <b>Sub Food Type:</b> {viewItem.category_name}
+                  <b>Sub Food Type:</b> {viewItem.category_name || 'NA'}
                 </p>
                 <p>
-                  <b>Sub Food Name:</b> {viewItem.subcategory_name}
+                  <b>Sub Food Name:</b> {viewItem.subcategory_name || 'NA'}
                 </p>
 
                 <p>
-                  <b>Product Name:</b> {viewItem.product_name}
+                  <b>Product Name:</b> {viewItem.product_name || 'NA'}
                 </p>
 
                 <p>
-                  <b>GST:</b> {viewItem.gst}%
+                  <b>GST:</b> {viewItem.gst || 'NA'}%
                 </p>
                 <p>
-                  <b>Price:</b> ₹ {viewItem.price}
+                  <b>Price:</b> ₹ {viewItem.price || 'NA'}
                 </p>
-                <p>
-                  <b>Description:</b> {viewItem.description || 'N/A'}
-                </p>
+                <div>
+                  <b>Description:</b>
+                  {viewItem.description ? (
+                    <div
+                      className="mt-1 text-muted"
+                      dangerouslySetInnerHTML={{ __html: viewItem.description }}
+                    />
+                  ) : (
+                    ' N/A'
+                  )}
+                </div>
 
                 <div>
                   <b>Availability:</b>

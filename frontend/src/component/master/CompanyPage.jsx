@@ -658,13 +658,17 @@ const CompanyPage = () => {
   ]
 
   return (
-    <Container fluid className="page-container" style={{
-      background: 'linear-gradient(135deg, #f6f8fc 0%, #e9edf5 100%)',
-      minHeight: '100vh',
-      transition: 'background-color 0.5s ease',
-    }}>
+    <Container
+      fluid
+      className="page-container"
+      style={{
+        background: 'linear-gradient(135deg, #f6f8fc 0%, #e9edf5 100%)',
+        minHeight: '100vh',
+        transition: 'background-color 0.5s ease',
+      }}
+    >
       {/* Header */}
-      <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+      <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 pb-2 border-bottom gap-3">
         <h1
           className="page-title mb-0"
           style={{
@@ -742,273 +746,279 @@ const CompanyPage = () => {
 
       {/* Form */}
       {showForm ? (
-        <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4" style={{ transition: 'all 0.3s ease' }}>
+        <Card
+          className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4"
+          style={{ transition: 'all 0.3s ease' }}
+        >
           <Card.Body className="p-4">
-          <h2 className="mb-4 fw-bold text-secondary" style={{ fontSize: '1.5rem' }}>
-            {isEditing ? (
-              <span>Edit Company - {isEditing.company_name}</span>
-            ) : (
-              'Company Details'
+            <h2
+              className="mb-4 fw-bold text-secondary"
+              style={{ fontSize: '1.5rem' }}
+            >
+              {isEditing ? (
+                <span>Edit Company - {isEditing.company_name}</span>
+              ) : (
+                'Company Details'
+              )}
+            </h2>
+
+            {Object.keys(validationErrors).length > 0 && (
+              <Alert variant="danger">
+                Please fix the validation errors below.
+              </Alert>
             )}
-          </h2>
 
-          {Object.keys(validationErrors).length > 0 && (
-            <Alert variant="danger">
-              Please fix the validation errors below.
-            </Alert>
-          )}
-
-          <div className="company-form-wrapper">
-            <Form className="company-form" onSubmit={handleSubmit}>
-              <Tabs
-                activeKey={activeTab}
-                onSelect={(k) => setActiveTab(k)}
-                className="mb-3"
-              >
-                {/* Company Details Tab */}
-                <Tab eventKey="companyDetails" title="Company Details">
-                  <Row>
-                    <Col xs={12} sm={6} md={4} className="mb-3">
-                      <Form.Group controlId="companyName">
-                        <Form.Label>Company Name *</Form.Label>
-                        <Form.Control
-                          name="companyName"
-                          value={formData.companyName}
-                          onChange={handleInputChange}
-                          placeholder="Company Name"
-                          isInvalid={!!validationErrors.companyName}
-                          required
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {validationErrors.companyName}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={6} md={4} className="mb-3">
-                      <Form.Group controlId="contactPersonName">
-                        <Form.Label>Contact Person Name</Form.Label>
-                        <Form.Control
-                          name="contactPersonName"
-                          value={formData.contactPersonName}
-                          onChange={handleInputChange}
-                          placeholder="Contact Person Name"
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={6} md={4} className="mb-3">
-                      <Form.Group controlId="emailId">
-                        <Form.Label>Email ID *</Form.Label>
-                        <Form.Control
-                          name="emailId"
-                          value={formData.emailId}
-                          onChange={handleInputChange}
-                          placeholder="Email ID"
-                          type="email"
-                          isInvalid={!!validationErrors.emailId}
-                          required
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {validationErrors.emailId}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={6} md={4} className="mb-3">
-                      <Form.Group controlId="address">
-                        <Form.Label>Address</Form.Label>
-                        <Form.Control
-                          as={'textarea'}
-                          name="address"
-                          value={formData.address}
-                          onChange={handleInputChange}
-                          placeholder="Address"
-                          rows={3}
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={6} md={4} className="mb-3">
-                      <Form.Group controlId="country">
-                        <Form.Label>Country</Form.Label>
-                        <Form.Control
-                          name="country"
-                          value={formData.country}
-                          onChange={handleInputChange}
-                          placeholder="Country"
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={6} md={4} className="mb-3">
-                      <Form.Group controlId="regionState">
-                        <Form.Label>State</Form.Label>
-                        <Form.Control
-                          name="regionState"
-                          value={formData.regionState}
-                          onChange={handleInputChange}
-                          placeholder="State"
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={6} md={4} className="mb-3">
-                      <Form.Group controlId="city">
-                        <Form.Label>City</Form.Label>
-                        <Form.Control
-                          name="city"
-                          value={formData.city}
-                          onChange={handleInputChange}
-                          placeholder="City"
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={6} md={4} className="mb-3">
-                      <Form.Group controlId="pincode">
-                        <Form.Label>Pincode</Form.Label>
-                        <Form.Control
-                          name="pincode"
-                          value={formData.pincode}
-                          onChange={handleInputChange}
-                          placeholder="Pincode"
-                          isInvalid={!!validationErrors.pincode}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {validationErrors.pincode}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={6} md={4} className="mb-3">
-                      <Form.Group controlId="stateCode">
-                        <Form.Label>GST State Code</Form.Label>
-                        <Form.Control
-                          name="stateCode"
-                          value={formData.stateCode}
-                          onChange={handleInputChange}
-                          isInvalid={!!validationErrors.stateCode}
-                          placeholder="GST State Code"
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {validationErrors.stateCode}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={6} md={4} className="mb-3">
-                      <Form.Group controlId="contactNo">
-                        <Form.Label>Contact No</Form.Label>
-                        <Form.Control
-                          name="contactNo"
-                          value={formData.contactNo}
-                          onChange={handleInputChange}
-                          placeholder="Contact No"
-                          isInvalid={!!validationErrors.contactNo}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {validationErrors.contactNo}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={6} md={4} className="mb-3">
-                      <Form.Group controlId="currency">
-                        <Form.Label>Currency</Form.Label>
-                        <Form.Select
-                          name="currency"
-                          value={formData.currency}
-                          onChange={handleInputChange}
-                        >
-                          <option value={'INR'}>INR</option>
-                        </Form.Select>
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={6} md={4} className="mb-3">
-                      <Form.Group controlId="gstNo">
-                        <Form.Label>GST No</Form.Label>
-                        <Form.Control
-                          name="gstNo"
-                          value={formData.gstNo}
-                          onChange={handleInputChange}
-                          placeholder="GST No"
-                          isInvalid={!!validationErrors.gstNo}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {validationErrors.gstNo}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={6} md={4} className="mb-3">
-                      <Form.Group controlId="website">
-                        <Form.Label>Website</Form.Label>
-                        <Form.Control
-                          name="website"
-                          value={formData.website}
-                          onChange={handleInputChange}
-                          placeholder="Website"
-                          isInvalid={!!validationErrors.website}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {validationErrors.website}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={6} md={4} className="mb-3">
-                      <Form.Group controlId="financialYearFrom">
-                        <Form.Label>Financial Year From</Form.Label>
-                        <Form.Control
-                          name="financialYearFrom"
-                          value={formData.financialYearFrom}
-                          onChange={handleInputChange}
-                          placeholder="Financial Year From"
-                          isInvalid={!!validationErrors.financialYearFrom}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {validationErrors.financialYearFrom}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={6} md={4} className="mb-3">
-                      <Form.Group controlId="financialYearTo">
-                        <Form.Label>Financial Year To</Form.Label>
-                        <Form.Control
-                          name="financialYearTo"
-                          value={formData.financialYearTo}
-                          onChange={handleInputChange}
-                          placeholder="Financial Year To"
-                          isInvalid={!!validationErrors.financialYearTo}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {validationErrors.financialYearTo}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={6} md={4} className="mb-3">
-                      <Form.Group controlId="cinNo">
-                        <Form.Label>CIN No.</Form.Label>
-                        <Form.Control
-                          name="cinNo"
-                          value={formData.cinNo}
-                          onChange={handleInputChange}
-                          placeholder="CIN No."
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={6} md={4} className="mb-3">
-                      <Form.Group controlId="vatTin">
-                        <Form.Label>VAT TIN</Form.Label>
-                        <Form.Control
-                          name="vatTin"
-                          value={formData.vatTin}
-                          onChange={handleInputChange}
-                          placeholder="VAT TIN"
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12} sm={6} md={4} className="mb-3">
-                      <Form.Group controlId="cstTin">
-                        <Form.Label>CST TIN</Form.Label>
-                        <Form.Control
-                          name="cstTin"
-                          value={formData.cstTin}
-                          onChange={handleInputChange}
-                          placeholder="CST TIN"
-                        />
-                      </Form.Group>
-                    </Col>
-                    {/* <Col xs={12} sm={6} md={3} className="mb-3">
+            <div className="company-form-wrapper">
+              <Form className="company-form" onSubmit={handleSubmit}>
+                <Tabs
+                  activeKey={activeTab}
+                  onSelect={(k) => setActiveTab(k)}
+                  className="mb-3"
+                >
+                  {/* Company Details Tab */}
+                  <Tab eventKey="companyDetails" title="Company Details">
+                    <Row>
+                      <Col xs={12} sm={6} md={4} className="mb-3">
+                        <Form.Group controlId="companyName">
+                          <Form.Label>Company Name *</Form.Label>
+                          <Form.Control
+                            name="companyName"
+                            value={formData.companyName}
+                            onChange={handleInputChange}
+                            placeholder="Company Name"
+                            isInvalid={!!validationErrors.companyName}
+                            required
+                          />
+                          <Form.Control.Feedback type="invalid">
+                            {validationErrors.companyName}
+                          </Form.Control.Feedback>
+                        </Form.Group>
+                      </Col>
+                      <Col xs={12} sm={6} md={4} className="mb-3">
+                        <Form.Group controlId="contactPersonName">
+                          <Form.Label>Contact Person Name</Form.Label>
+                          <Form.Control
+                            name="contactPersonName"
+                            value={formData.contactPersonName}
+                            onChange={handleInputChange}
+                            placeholder="Contact Person Name"
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col xs={12} sm={6} md={4} className="mb-3">
+                        <Form.Group controlId="emailId">
+                          <Form.Label>Email ID *</Form.Label>
+                          <Form.Control
+                            name="emailId"
+                            value={formData.emailId}
+                            onChange={handleInputChange}
+                            placeholder="Email ID"
+                            type="email"
+                            isInvalid={!!validationErrors.emailId}
+                            required
+                          />
+                          <Form.Control.Feedback type="invalid">
+                            {validationErrors.emailId}
+                          </Form.Control.Feedback>
+                        </Form.Group>
+                      </Col>
+                      <Col xs={12} sm={6} md={4} className="mb-3">
+                        <Form.Group controlId="address">
+                          <Form.Label>Address</Form.Label>
+                          <Form.Control
+                            as={'textarea'}
+                            name="address"
+                            value={formData.address}
+                            onChange={handleInputChange}
+                            placeholder="Address"
+                            rows={3}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col xs={12} sm={6} md={4} className="mb-3">
+                        <Form.Group controlId="country">
+                          <Form.Label>Country</Form.Label>
+                          <Form.Control
+                            name="country"
+                            value={formData.country}
+                            onChange={handleInputChange}
+                            placeholder="Country"
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col xs={12} sm={6} md={4} className="mb-3">
+                        <Form.Group controlId="regionState">
+                          <Form.Label>State</Form.Label>
+                          <Form.Control
+                            name="regionState"
+                            value={formData.regionState}
+                            onChange={handleInputChange}
+                            placeholder="State"
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col xs={12} sm={6} md={4} className="mb-3">
+                        <Form.Group controlId="city">
+                          <Form.Label>City</Form.Label>
+                          <Form.Control
+                            name="city"
+                            value={formData.city}
+                            onChange={handleInputChange}
+                            placeholder="City"
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col xs={12} sm={6} md={4} className="mb-3">
+                        <Form.Group controlId="pincode">
+                          <Form.Label>Pincode</Form.Label>
+                          <Form.Control
+                            name="pincode"
+                            value={formData.pincode}
+                            onChange={handleInputChange}
+                            placeholder="Pincode"
+                            isInvalid={!!validationErrors.pincode}
+                          />
+                          <Form.Control.Feedback type="invalid">
+                            {validationErrors.pincode}
+                          </Form.Control.Feedback>
+                        </Form.Group>
+                      </Col>
+                      <Col xs={12} sm={6} md={4} className="mb-3">
+                        <Form.Group controlId="stateCode">
+                          <Form.Label>GST State Code</Form.Label>
+                          <Form.Control
+                            name="stateCode"
+                            value={formData.stateCode}
+                            onChange={handleInputChange}
+                            isInvalid={!!validationErrors.stateCode}
+                            placeholder="GST State Code"
+                          />
+                          <Form.Control.Feedback type="invalid">
+                            {validationErrors.stateCode}
+                          </Form.Control.Feedback>
+                        </Form.Group>
+                      </Col>
+                      <Col xs={12} sm={6} md={4} className="mb-3">
+                        <Form.Group controlId="contactNo">
+                          <Form.Label>Contact No</Form.Label>
+                          <Form.Control
+                            name="contactNo"
+                            value={formData.contactNo}
+                            onChange={handleInputChange}
+                            placeholder="Contact No"
+                            isInvalid={!!validationErrors.contactNo}
+                          />
+                          <Form.Control.Feedback type="invalid">
+                            {validationErrors.contactNo}
+                          </Form.Control.Feedback>
+                        </Form.Group>
+                      </Col>
+                      <Col xs={12} sm={6} md={4} className="mb-3">
+                        <Form.Group controlId="currency">
+                          <Form.Label>Currency</Form.Label>
+                          <Form.Select
+                            name="currency"
+                            value={formData.currency}
+                            onChange={handleInputChange}
+                          >
+                            <option value={'INR'}>INR</option>
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col xs={12} sm={6} md={4} className="mb-3">
+                        <Form.Group controlId="gstNo">
+                          <Form.Label>GST No</Form.Label>
+                          <Form.Control
+                            name="gstNo"
+                            value={formData.gstNo}
+                            onChange={handleInputChange}
+                            placeholder="GST No"
+                            isInvalid={!!validationErrors.gstNo}
+                          />
+                          <Form.Control.Feedback type="invalid">
+                            {validationErrors.gstNo}
+                          </Form.Control.Feedback>
+                        </Form.Group>
+                      </Col>
+                      <Col xs={12} sm={6} md={4} className="mb-3">
+                        <Form.Group controlId="website">
+                          <Form.Label>Website</Form.Label>
+                          <Form.Control
+                            name="website"
+                            value={formData.website}
+                            onChange={handleInputChange}
+                            placeholder="Website"
+                            isInvalid={!!validationErrors.website}
+                          />
+                          <Form.Control.Feedback type="invalid">
+                            {validationErrors.website}
+                          </Form.Control.Feedback>
+                        </Form.Group>
+                      </Col>
+                      {/* <Col xs={12} sm={6} md={4} className="mb-3">
+                        <Form.Group controlId="financialYearFrom">
+                          <Form.Label>Financial Year From</Form.Label>
+                          <Form.Control
+                            name="financialYearFrom"
+                            value={formData.financialYearFrom}
+                            onChange={handleInputChange}
+                            placeholder="Financial Year From"
+                            isInvalid={!!validationErrors.financialYearFrom}
+                          />
+                          <Form.Control.Feedback type="invalid">
+                            {validationErrors.financialYearFrom}
+                          </Form.Control.Feedback>
+                        </Form.Group>
+                      </Col> */}
+                      {/* <Col xs={12} sm={6} md={4} className="mb-3">
+                        <Form.Group controlId="financialYearTo">
+                          <Form.Label>Financial Year To</Form.Label>
+                          <Form.Control
+                            name="financialYearTo"
+                            value={formData.financialYearTo}
+                            onChange={handleInputChange}
+                            placeholder="Financial Year To"
+                            isInvalid={!!validationErrors.financialYearTo}
+                          />
+                          <Form.Control.Feedback type="invalid">
+                            {validationErrors.financialYearTo}
+                          </Form.Control.Feedback>
+                        </Form.Group>
+                      </Col> */}
+                      <Col xs={12} sm={6} md={4} className="mb-3">
+                        <Form.Group controlId="cinNo">
+                          <Form.Label>CIN No.</Form.Label>
+                          <Form.Control
+                            name="cinNo"
+                            value={formData.cinNo}
+                            onChange={handleInputChange}
+                            placeholder="CIN No."
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col xs={12} sm={6} md={4} className="mb-3">
+                        <Form.Group controlId="vatTin">
+                          <Form.Label>VAT TIN</Form.Label>
+                          <Form.Control
+                            name="vatTin"
+                            value={formData.vatTin}
+                            onChange={handleInputChange}
+                            placeholder="VAT TIN"
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col xs={12} sm={6} md={4} className="mb-3">
+                        <Form.Group controlId="cstTin">
+                          <Form.Label>CST TIN</Form.Label>
+                          <Form.Control
+                            name="cstTin"
+                            value={formData.cstTin}
+                            onChange={handleInputChange}
+                            placeholder="CST TIN"
+                          />
+                        </Form.Group>
+                      </Col>
+                      {/* <Col xs={12} sm={6} md={3} className="mb-3">
                       <Form.Group controlId="iec">
                         <Form.Label>IEC</Form.Label>
                         <Form.Control
@@ -1030,465 +1040,476 @@ const CompanyPage = () => {
                         />
                       </Form.Group>
                     </Col> */}
-                    <Col xs={12} sm={6} md={3} className="mb-3">
-                      <Form.Group controlId="formLogo">
-                        <Form.Label>Attach Logo</Form.Label>
-                        <Form.Control
-                          type="file"
-                          accept=".jpg,.jpeg,.png,.webp"
-                          name="logo"
-                          onChange={handleFileChange}
-                        />
-                      </Form.Group>
-                    </Col>
-                    {logoPreview && (
-                      <Col
-                        xs={12}
-                        sm={6}
-                        md={3}
-                        className="mb-3 text-center d-flex align-items-center justify-content-center"
-                      >
-                        <img
-                          src={logoPreview}
-                          alt="logo preview"
-                          style={{
-                            maxHeight: '120px',
-                            maxWidth: '150px',
-                            objectFit: 'contain',
-                            border: '1px solid #ddd',
-                            borderRadius: '8px',
-                            padding: '4px',
-                            backgroundColor: '#fff',
-                          }}
-                        />
+                      <Col xs={12} sm={6} md={3} className="mb-3">
+                        <Form.Group controlId="formLogo">
+                          <Form.Label>Attach Logo</Form.Label>
+                          <Form.Control
+                            type="file"
+                            accept=".jpg,.jpeg,.png,.webp"
+                            name="logo"
+                            onChange={handleFileChange}
+                          />
+                        </Form.Group>
                       </Col>
-                    )}
-                    <Col xs={12} sm={12} md={12} className="mb-3">
-                      <Form.Group controlId="termsAndCond">
-                        <Form.Label>Terms And Conditions</Form.Label>
-                        <Form.Control
-                          as="textarea"
-                          name="termsAndCond"
-                          value={formData.termsAndCond}
-                          onChange={handleInputChange}
-                          placeholder="Terms & Conditions"
-                          rows={3}
-                        />
-                      </Form.Group>
-                    </Col>
-                  </Row>
-                  <div
-                    className="form-actions d-flex justify-content-end"
-                    style={{
-                      position: 'relative',
-                      left: '-40%',
-                    }}
-                  >
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      className="me-2"
-                      onClick={() => {
-                        resetForm()
-                        setShowForm(false)
+                      {logoPreview && (
+                        <Col
+                          xs={12}
+                          sm={6}
+                          md={3}
+                          className="mb-3 text-center d-flex align-items-center justify-content-center"
+                        >
+                          <img
+                            src={logoPreview}
+                            alt="logo preview"
+                            style={{
+                              maxHeight: '120px',
+                              maxWidth: '150px',
+                              objectFit: 'contain',
+                              border: '1px solid #ddd',
+                              borderRadius: '8px',
+                              padding: '4px',
+                              backgroundColor: '#fff',
+                            }}
+                          />
+                        </Col>
+                      )}
+                      <Col xs={12} sm={12} md={12} className="mb-3">
+                        <Form.Group controlId="termsAndCond">
+                          <Form.Label>Terms And Conditions</Form.Label>
+                          <Form.Control
+                            as="textarea"
+                            name="termsAndCond"
+                            value={formData.termsAndCond}
+                            onChange={handleInputChange}
+                            placeholder="Terms & Conditions"
+                            rows={3}
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    <div
+                      className="form-actions d-flex justify-content-end"
+                      style={{
+                        position: 'relative',
+                        left: '-40%',
                       }}
                     >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        if (validateCompanyDetails()) {
-                          setActiveTab('bankDetails') // switch only if validation passes
-                        } else {
-                          alert('Please fix the validation errors.')
-                        }
-                      }}
-                      variant="primary"
-                      type="button"
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </Tab>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="me-2"
+                        onClick={() => {
+                          resetForm()
+                          setShowForm(false)
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          if (validateCompanyDetails()) {
+                            setActiveTab('bankDetails') // switch only if validation passes
+                          } else {
+                            alert('Please fix the validation errors.')
+                          }
+                        }}
+                        variant="primary"
+                        type="button"
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </Tab>
 
-                {/* Bank Details Tab */}
-                <Tab eventKey="bankDetails" title="Bank Details">
-                  <Table bordered hover responsive>
-                    <thead className="table-secondary">
-                      <tr>
-                        <th>Bank Name</th>
-                        <th>Account No</th>
-                        <th>Account Type</th>
-                        <th>Branch City</th>
-                        <th>Address</th>
-                        <th>Swift A/C No</th>
-                        <th>MICR No</th>
-                        <th>IFSC Code</th>
-                        <th>
-                          <button
-                            type="button"
-                            onClick={addBankRow}
-                            className="icon-btn add text-warning"
-                          >
-                            <FaPlus />
-                          </button>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {bankDetails.map((bank, idx) => (
-                        <tr key={idx}>
-                          <td>
-                            <Form.Control
-                              name="bankName"
-                              value={bank.bankName}
-                              onChange={(e) => handleBankChange(idx, e)}
-                              isInvalid={!!validationErrors[`bankName_${idx}`]}
-                            />
-                            <Form.Control.Feedback type="invalid">
-                              {validationErrors[`bankName_${idx}`]}
-                            </Form.Control.Feedback>
-                          </td>
-
-                          <td>
-                            <Form.Control
-                              name="accountNo"
-                              value={bank.accountNo}
-                              onChange={(e) => handleBankChange(idx, e)}
-                              isInvalid={!!validationErrors[`accountNo_${idx}`]}
-                            />
-                            <Form.Control.Feedback type="invalid">
-                              {validationErrors[`accountNo_${idx}`]}
-                            </Form.Control.Feedback>
-                          </td>
-
-                          <td>
-                            <Form.Select
-                              name="accountType"
-                              value={bank.accountType}
-                              onChange={(e) => handleBankChange(idx, e)}
-                              isInvalid={
-                                !!validationErrors[`accountType_${idx}`]
-                              }
+                  {/* Bank Details Tab */}
+                  <Tab eventKey="bankDetails" title="Bank Details">
+                    <Table bordered hover responsive>
+                      <thead className="table-secondary">
+                        <tr>
+                          <th>Bank Name</th>
+                          <th>Account No</th>
+                          <th>Account Type</th>
+                          <th>Branch City</th>
+                          <th>Address</th>
+                          <th>Swift A/C No</th>
+                          <th>MICR No</th>
+                          <th>IFSC Code</th>
+                          <th>
+                            <button
+                              type="button"
+                              onClick={addBankRow}
+                              className="icon-btn add text-warning"
                             >
-                              <option value="">
-                                -- Select Account Type --
-                              </option>
-                              <option value="Savings">Savings</option>
-                              <option value="Current">Current</option>
-                              <option value="Salary">Salary</option>
-                              <option value="Other">Other</option>
-                            </Form.Select>
-                            <Form.Control.Feedback type="invalid">
-                              {validationErrors[`accountType_${idx}`]}
-                            </Form.Control.Feedback>
-                          </td>
-
-                          <td>
-                            <Form.Control
-                              name="branchCity"
-                              value={bank.branchCity}
-                              onChange={(e) => handleBankChange(idx, e)}
-                              isInvalid={
-                                !!validationErrors[`branchCity_${idx}`]
-                              }
-                            />
-                            <Form.Control.Feedback type="invalid">
-                              {validationErrors[`branchCity_${idx}`]}
-                            </Form.Control.Feedback>
-                          </td>
-
-                          <td>
-                            <Form.Control
-                              as="textarea"
-                              rows={2}
-                              name="address"
-                              value={bank.address}
-                              onChange={(e) => handleBankChange(idx, e)}
-                              isInvalid={!!validationErrors[`address_${idx}`]}
-                            />
-                            <Form.Control.Feedback type="invalid">
-                              {validationErrors[`address_${idx}`]}
-                            </Form.Control.Feedback>
-                          </td>
-
-                          <td>
-                            <Form.Control
-                              name="swift"
-                              value={bank.swift}
-                              onChange={(e) => handleBankChange(idx, e)}
-                            />
-                          </td>
-
-                          <td>
-                            <Form.Control
-                              name="micr"
-                              value={bank.micr}
-                              isInvalid={!!validationErrors[`micr_${idx}`]}
-                              onChange={(e) => handleBankChange(idx, e)}
-                            />
-                            <Form.Control.Feedback type="invalid">
-                              {validationErrors[`micr_${idx}`]}
-                            </Form.Control.Feedback>
-                          </td>
-
-                          <td>
-                            <Form.Control
-                              name="ifsc"
-                              value={bank.ifsc}
-                              isInvalid={!!validationErrors[`ifsc_${idx}`]}
-                              onChange={(e) => handleBankChange(idx, e)}
-                            />
-                            <Form.Control.Feedback type="invalid">
-                              {validationErrors[`ifsc_${idx}`]}
-                            </Form.Control.Feedback>
-                          </td>
-                          <td>
-                            <div className="table-actions">
-                              {idx > 0 && (
-                                <button
-                                  type="button"
-                                  className="icon-btn delete"
-                                  onClick={() => removeBankRow(idx)}
-                                >
-                                  <FaTimes />
-                                </button>
-                              )}
-                            </div>
-                          </td>
+                              <FaPlus />
+                            </button>
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </Table>
+                      </thead>
+                      <tbody>
+                        {bankDetails.map((bank, idx) => (
+                          <tr key={idx}>
+                            <td>
+                              <Form.Control
+                                name="bankName"
+                                value={bank.bankName}
+                                onChange={(e) => handleBankChange(idx, e)}
+                                isInvalid={
+                                  !!validationErrors[`bankName_${idx}`]
+                                }
+                              />
+                              <Form.Control.Feedback type="invalid">
+                                {validationErrors[`bankName_${idx}`]}
+                              </Form.Control.Feedback>
+                            </td>
 
-                  <div
-                    className="form-actions d-flex justify-content-end mt-3"
-                  // style={{
-                  //   position: 'relative',
-                  //   left: '-20%',
-                  // }}
-                  >
-                    <Button
-                      variant="outline-secondary"
-                      type="button"
-                      className="me-2"
-                      onClick={() => setActiveTab('companyDetails')}
+                            <td>
+                              <Form.Control
+                                name="accountNo"
+                                value={bank.accountNo}
+                                onChange={(e) => handleBankChange(idx, e)}
+                                isInvalid={
+                                  !!validationErrors[`accountNo_${idx}`]
+                                }
+                              />
+                              <Form.Control.Feedback type="invalid">
+                                {validationErrors[`accountNo_${idx}`]}
+                              </Form.Control.Feedback>
+                            </td>
+
+                            <td>
+                              <Form.Select
+                                name="accountType"
+                                value={bank.accountType}
+                                onChange={(e) => handleBankChange(idx, e)}
+                                isInvalid={
+                                  !!validationErrors[`accountType_${idx}`]
+                                }
+                              >
+                                <option value="">
+                                  -- Select Account Type --
+                                </option>
+                                <option value="Savings">Savings</option>
+                                <option value="Current">Current</option>
+                                <option value="Salary">Salary</option>
+                                <option value="Other">Other</option>
+                              </Form.Select>
+                              <Form.Control.Feedback type="invalid">
+                                {validationErrors[`accountType_${idx}`]}
+                              </Form.Control.Feedback>
+                            </td>
+
+                            <td>
+                              <Form.Control
+                                name="branchCity"
+                                value={bank.branchCity}
+                                onChange={(e) => handleBankChange(idx, e)}
+                                isInvalid={
+                                  !!validationErrors[`branchCity_${idx}`]
+                                }
+                              />
+                              <Form.Control.Feedback type="invalid">
+                                {validationErrors[`branchCity_${idx}`]}
+                              </Form.Control.Feedback>
+                            </td>
+
+                            <td>
+                              <Form.Control
+                                as="textarea"
+                                rows={2}
+                                name="address"
+                                value={bank.address}
+                                onChange={(e) => handleBankChange(idx, e)}
+                                isInvalid={!!validationErrors[`address_${idx}`]}
+                              />
+                              <Form.Control.Feedback type="invalid">
+                                {validationErrors[`address_${idx}`]}
+                              </Form.Control.Feedback>
+                            </td>
+
+                            <td>
+                              <Form.Control
+                                name="swift"
+                                value={bank.swift}
+                                onChange={(e) => handleBankChange(idx, e)}
+                              />
+                            </td>
+
+                            <td>
+                              <Form.Control
+                                name="micr"
+                                value={bank.micr}
+                                isInvalid={!!validationErrors[`micr_${idx}`]}
+                                onChange={(e) => handleBankChange(idx, e)}
+                              />
+                              <Form.Control.Feedback type="invalid">
+                                {validationErrors[`micr_${idx}`]}
+                              </Form.Control.Feedback>
+                            </td>
+
+                            <td>
+                              <Form.Control
+                                name="ifsc"
+                                value={bank.ifsc}
+                                isInvalid={!!validationErrors[`ifsc_${idx}`]}
+                                onChange={(e) => handleBankChange(idx, e)}
+                              />
+                              <Form.Control.Feedback type="invalid">
+                                {validationErrors[`ifsc_${idx}`]}
+                              </Form.Control.Feedback>
+                            </td>
+                            <td>
+                              <div className="table-actions">
+                                {idx > 0 && (
+                                  <button
+                                    type="button"
+                                    className="icon-btn delete"
+                                    onClick={() => removeBankRow(idx)}
+                                  >
+                                    <FaTimes />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+
+                    <div
+                      className="form-actions d-flex justify-content-end mt-3"
+                    // style={{
+                    //   position: 'relative',
+                    //   left: '-20%',
+                    // }}
                     >
-                      Previous
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      className="me-2"
-                      onClick={() => {
-                        resetForm()
-                        setShowForm(false)
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit" variant="primary">
-                      {isEditing ? 'Update Company' : 'Save Company'}
-                    </Button>
-                  </div>
-                </Tab>
-              </Tabs>
-            </Form>
-          </div>
+                      <Button
+                        variant="outline-secondary"
+                        type="button"
+                        className="me-2"
+                        onClick={() => setActiveTab('companyDetails')}
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="me-2"
+                        onClick={() => {
+                          resetForm()
+                          setShowForm(false)
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit" variant="primary">
+                        {isEditing ? 'Update Company' : 'Save Company'}
+                      </Button>
+                    </div>
+                  </Tab>
+                </Tabs>
+              </Form>
+            </div>
           </Card.Body>
         </Card>
       ) : (
-      /* Company Status Tabs */
+        /* Company Status Tabs */
         <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
           <Card.Body className="p-4">
-          {showSearch && (
-            <SearchPanel
-              searchFields={searchFields}
-              setSearchFields={setSearchFields}
-              dateFilter={dateFilter}
-              setDateFilter={setDateFilter}
-              onSearch={handleSearch}
-              onReset={handleReset}
-              onDownloadExcel={handleDownloadExcel}
-              searchOptions={searchOptions}
-            />
-          )}
-          <Tabs
-            activeKey={statusFilter}
-            onSelect={(key) => setStatusFilter(key)}
-          >
-            {/* <Tab
+            {showSearch && (
+              <SearchPanel
+                searchFields={searchFields}
+                setSearchFields={setSearchFields}
+                dateFilter={dateFilter}
+                setDateFilter={setDateFilter}
+                onSearch={handleSearch}
+                onReset={handleReset}
+                onDownloadExcel={handleDownloadExcel}
+                searchOptions={searchOptions}
+              />
+            )}
+            <Tabs
+              activeKey={statusFilter}
+              onSelect={(key) => setStatusFilter(key)}
+            >
+              {/* <Tab
               eventKey="all"
               title={`Total Companies (${counts.totalCompanies})`}
             /> */}
 
-            <Tab
-              eventKey="approved"
-              title={`Active (${counts.approvedCompanies})`}
-            />
+              <Tab
+                eventKey="approved"
+                title={`Active (${counts.approvedCompanies})`}
+              />
 
-            <Tab
-              eventKey="deleted"
-              title={`Deleted (${counts.deletedCompanies})`}
-            />
-          </Tabs>
+              <Tab
+                eventKey="deleted"
+                title={`Deleted (${counts.deletedCompanies})`}
+              />
+            </Tabs>
 
-      {/* Company List Table */}
-          {loading ? (
-            <Alert variant="warning" className="mb-0 text-center">
-              Loading...
-            </Alert>
-          ) : error ? (
-            <Alert variant="danger" className="mb-0 text-center">
-              {error}
-            </Alert>
-          ) : (
-            <div>
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <h4 className="mb-0">Company List</h4>
+            {/* Company List Table */}
+            {loading ? (
+              <Alert variant="warning" className="mb-0 text-center">
+                Loading...
+              </Alert>
+            ) : error ? (
+              <Alert variant="danger" className="mb-0 text-center">
+                {error}
+              </Alert>
+            ) : (
+              <div>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h4 className="mb-0">Company List</h4>
 
-                <div className="d-flex align-items-center gap-2 p-3">
-                  <span>Show</span>
+                  <div className="d-flex align-items-center gap-2 p-3">
+                    <span>Show</span>
 
-                  <Form.Select
-                    size="sm"
-                    style={{ width: '90px' }}
-                    value={itemsPerPage}
-                    onChange={(e) => {
-                      setItemsPerPage(Number(e.target.value))
-                      setCurrentPage(1)
-                    }}
+                    <Form.Select
+                      size="sm"
+                      style={{ width: '90px' }}
+                      value={itemsPerPage}
+                      onChange={(e) => {
+                        setItemsPerPage(Number(e.target.value))
+                        setCurrentPage(1)
+                      }}
+                    >
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                      <option value={150}>150</option>
+                    </Form.Select>
+                  </div>
+                </div>
+                <div
+                  className="table-responsive"
+                  style={{ overflowX: 'auto', minHeight: '200px' }}
+                >
+                  <Table
+                    bordered
+                    hover
+                    responsive
+                    className="list-table align-middle table-sm w-100 shadow-sm"
+                    style={{ fontSize: '13px' }}
                   >
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                    <option value={150}>150</option>
-                  </Form.Select>
+                    <thead className="table-light text-center text-secondary">
+                      <tr>
+                        <th className="fw-semibold px-3 py-2 text-nowrap">Logo</th>
+                        <th className="fw-semibold px-3 py-2 text-nowrap">Company</th>
+                        <th className="fw-semibold px-3 py-2 text-nowrap">Contact Person</th>
+                        <th className="fw-semibold px-3 py-2 text-nowrap">Email ID</th>
+                        <th className="fw-semibold px-3 py-2 text-nowrap">Contact No</th>
+                        <th className="fw-semibold px-3 py-2 text-nowrap">City</th>
+                        <th className="fw-semibold px-3 py-2 text-nowrap">Actions</th>
+                      </tr>
+                    </thead>
+
+                    <tbody className="text-center">
+                      {companies.length === 0 ? (
+                        <tr className="text-center">
+                          <td colSpan={7}>No data found</td>
+                        </tr>
+                      ) : (
+                        companies
+                          .slice(
+                            (currentPage - 1) * itemsPerPage,
+                            currentPage * itemsPerPage,
+                          )
+                          .map((company) => (
+                            <tr key={company.id}>
+                              <td>
+                                <img
+                                  src={
+                                    company.image
+                                      ? `http://localhost:5000/uploads/${company.image}`
+                                      : download
+                                  }
+                                  alt="Logo"
+                                  style={{
+                                    width: '40px',
+                                    height: '40px',
+                                    objectFit: 'contain',
+                                    border: '1px solid #eee',
+                                    borderRadius: '4px',
+                                    padding: '2px',
+                                    backgroundColor: '#fff',
+                                  }}
+                                  onError={(e) => {
+                                    e.target.src = download
+                                  }}
+                                />
+                              </td>
+                              <td>{company.company_name}</td>
+                              <td>{company.contact_person}</td>
+                              <td>{company.email_id}</td>
+                              <td>{company.contact_no}</td>
+                              <td>{company.city_name}</td>
+
+                              <td className="text-center">
+                                <Dropdown>
+                                  <Dropdown.Toggle
+                                    variant="outline-secondary"
+                                    size="sm"
+                                    id={`dropdown-${company.id}`}
+                                    className="bg-secondary text-white"
+                                    style={{
+                                      border: '1px solid #ddd',
+                                    }}
+                                  >
+                                    <BsThreeDotsVertical />
+                                  </Dropdown.Toggle>
+
+                                  <Dropdown.Menu>
+                                    <Dropdown.Item
+                                      onClick={() => handleView(company)}
+                                    >
+                                      <FaStreetView className="me-2 text-primary" />
+                                      View
+                                    </Dropdown.Item>
+
+                                    <Dropdown.Item
+                                      onClick={() => handleEdit(company)}
+                                    >
+                                      <FaPen className="me-2 text-primary" />
+                                      Edit
+                                    </Dropdown.Item>
+
+                                    {/* 🔴 ACTIVE = 0 → SHOW NORMAL DELETE */}
+                                    {company.active == 0 && (
+                                      <Dropdown.Item
+                                        onClick={() => handleDelete(company.id)}
+                                        className="text-danger"
+                                      >
+                                        <FaTrashAlt className="me-2" />
+                                        Delete
+                                      </Dropdown.Item>
+                                    )}
+
+                                    {/* 🟢 ACTIVE = 1 → ONLY RESTORE */}
+                                    {company.active == 1 && (
+                                      <Dropdown.Item
+                                        onClick={() =>
+                                          handleRestore(company.id)
+                                        }
+                                      >
+                                        ♻️ Restore
+                                      </Dropdown.Item>
+                                    )}
+                                  </Dropdown.Menu>
+                                </Dropdown>
+                              </td>
+                            </tr>
+                          ))
+                      )}
+                    </tbody>
+                  </Table>
+                  <Pagination
+                    totalItems={companies.length}
+                    itemsPerPage={10}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                  />
                 </div>
               </div>
-              <div className="table-responsive" style={{ overflowX: 'auto', minHeight: '200px' }}>
-                <Table
-                  bordered
-                  hover
-                  className="list-table align-middle table-sm w-100"
-                >
-                  <thead className="table text-center">
-                    <tr>
-                      <th>Logo</th>
-                      <th>Company</th>
-                      <th>Contact Person</th>
-                      <th>Email ID</th>
-                      <th>Contact No</th>
-                      <th>City</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-
-                  <tbody className="text-center">
-                    {companies.length === 0 ? (
-                      <tr className="text-center">
-                        <td colSpan={7}>No data found</td>
-                      </tr>
-                    ) : (
-                      companies
-                        .slice(
-                          (currentPage - 1) * itemsPerPage,
-                          currentPage * itemsPerPage,
-                        )
-                        .map((company) => (
-                          <tr key={company.id}>
-                            <td>
-                              <img
-                                src={
-                                  company.image
-                                    ? `http://localhost:5000/uploads/${company.image}`
-                                    : download
-                                }
-                                alt="Logo"
-                                style={{
-                                  width: '40px',
-                                  height: '40px',
-                                  objectFit: 'contain',
-                                  border: '1px solid #eee',
-                                  borderRadius: '4px',
-                                  padding: '2px',
-                                  backgroundColor: '#fff',
-                                }}
-                                onError={(e) => {
-                                  e.target.src = download
-                                }}
-                              />
-                            </td>
-                            <td>{company.company_name}</td>
-                            <td>{company.contact_person}</td>
-                            <td>{company.email_id}</td>
-                            <td>{company.contact_no}</td>
-                            <td>{company.city_name}</td>
-
-                            <td className="text-center">
-                              <Dropdown>
-                                <Dropdown.Toggle
-                                  variant="outline-secondary"
-                                  size="sm"
-                                  id={`dropdown-${company.id}`}
-                                  className="bg-secondary text-white"
-                                  style={{
-                                    border: '1px solid #ddd',
-                                  }}
-                                >
-                                  <BsThreeDotsVertical />
-                                </Dropdown.Toggle>
-
-                                <Dropdown.Menu>
-                                  <Dropdown.Item
-                                    onClick={() => handleView(company)}
-                                  >
-                                    <FaStreetView className="me-2 text-primary" />
-                                    View
-                                  </Dropdown.Item>
-
-                                  <Dropdown.Item
-                                    onClick={() => handleEdit(company)}
-                                  >
-                                    <FaPen className="me-2 text-primary" />
-                                    Edit
-                                  </Dropdown.Item>
-
-                                  {/* 🔴 ACTIVE = 0 → SHOW NORMAL DELETE */}
-                                  {company.active == 0 && (
-                                    <Dropdown.Item
-                                      onClick={() => handleDelete(company.id)}
-                                      className="text-danger"
-                                    >
-                                      <FaTrashAlt className="me-2" />
-                                      Delete
-                                    </Dropdown.Item>
-                                  )}
-
-                                  {/* 🟢 ACTIVE = 1 → ONLY RESTORE */}
-                                  {company.active == 1 && (
-                                    <Dropdown.Item
-                                      onClick={() => handleRestore(company.id)}
-                                    >
-                                      ♻️ Restore
-                                    </Dropdown.Item>
-                                  )}
-                                </Dropdown.Menu>
-                              </Dropdown>
-                            </td>
-                          </tr>
-                        ))
-                    )}
-                  </tbody>
-                </Table>
-                <Pagination
-                  totalItems={companies.length}
-                  itemsPerPage={10}
-                  currentPage={currentPage}
-                  onPageChange={setCurrentPage}
-                />
-              </div>
-            </div>
-          )}
+            )}
           </Card.Body>
         </Card>
       )}

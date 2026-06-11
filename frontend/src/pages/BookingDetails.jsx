@@ -19,6 +19,16 @@ const BookingDetails = () => {
   const navigate = useNavigate()
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
+  const [overallCounts, setOverallCounts] = useState({
+    total: 0,
+    booked: 0,
+    reserved: 0,
+    cancelled: 0,
+    soon: 0,
+    overdue: 0,
+    deleted: 0,
+    vacant: 0
+  })
 
   // Modal states for Info and Checkout
   const [showModal, setShowModal] = useState(false)
@@ -29,78 +39,113 @@ const BookingDetails = () => {
     try {
       setLoading(true)
 
+      const token = localStorage.getItem('token')
+      const [bookingsRes, deletedRes, roomsRes] = await Promise.all([
+        axios.get(`${API_URL}/api/bookings`),
+        axios.get(`${API_URL}/api/deleted-bookings`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_URL}/api/rooms`)
+      ])
+
+      const allBookings = bookingsRes.data.data || []
+      const allDeleted = deletedRes.data.data || []
+      const allRooms = roomsRes.data.data || []
+
+      const hotelBookings = hotelId && hotelId !== 'all' 
+        ? allBookings.filter(b => Number(b.hotel_id) === Number(hotelId)) 
+        : allBookings
+      
+      const hotelDeleted = hotelId && hotelId !== 'all'
+        ? allDeleted.filter(b => Number(b.hotel_id) === Number(hotelId))
+        : allDeleted
+
+      const hotelRooms = hotelId && hotelId !== 'all'
+        ? allRooms.filter(r => Number(r.hotel_id) === Number(hotelId))
+        : allRooms
+
+      const now = new Date()
+      const oneDayMs = 24 * 60 * 60 * 1000
+      const normalize = (s) => (s || '').toLowerCase().replace(/\s+/g, '')
+
+      let counts = {
+        total: hotelBookings.length,
+        booked: 0,
+        reserved: 0,
+        cancelled: 0,
+        soon: 0,
+        overdue: 0,
+        deleted: hotelDeleted.length,
+        vacant: hotelRooms.filter(r => {
+          const s = normalize(r.status);
+          return s === 'available' || s === 'vacant' || s === 'avalable';
+        }).length
+      }
+
+      hotelBookings.forEach(b => {
+        const status = normalize(b.status)
+        if (status === 'booked' || status === 'occupied') counts.booked++
+        if (status === 'reserved') counts.reserved++
+        if (status === 'cancelled') counts.cancelled++
+
+        const checkout = new Date(b.check_out_date)
+        const diff = checkout - now
+        if (diff > 0 && diff <= oneDayMs && status !== 'cancelled' && status !== 'deleted') {
+          counts.soon++
+        }
+        if (checkout < now && status !== 'cancelled' && status !== 'deleted') {
+          counts.overdue++
+        }
+      })
+
+      setOverallCounts(counts)
+
       let data = []
 
       if (statusType === 'maintenance') {
-        const res = await axios.get(`${API_URL}/api/rooms`)
-        data = res.data.data || []
-
-        if (hotelId && hotelId !== 'all') {
-          data = data.filter((room) => Number(room.hotel_id) === Number(hotelId))
-        }
-
-        data = data.filter((room) => room.status?.toLowerCase() === 'maintenance')
+        data = hotelRooms.filter((room) => normalize(room.status) === 'maintenance')
       } else if (statusType === 'deleted') {
-        const token = localStorage.getItem('token')
-        const res = await axios.get(`${API_URL}/api/deleted-bookings`, {
-          headers: { Authorization: `Bearer ${token}` }
+        data = hotelDeleted.map(d => ({ ...d, status: 'deleted' }))
+      } else if (statusType === 'vacant') {
+        data = hotelRooms.filter((room) => {
+          const s = normalize(room.status);
+          return s === 'available' || s === 'vacant' || s === 'avalable';
         })
-        data = res.data.data || []
-
-        if (hotelId && hotelId !== 'all') {
-          data = data.filter((b) => Number(b.hotel_id) === Number(hotelId))
-        }
-
-        // Add status for color config
-        data = data.map(d => ({ ...d, status: 'deleted' }))
+      } else if (statusType === 'all') {
+        data = hotelBookings
       } else {
-        const res = await axios.get(`${API_URL}/api/bookings`)
-        data = res.data.data || []
+        data = hotelBookings.filter((b) => {
+          const status = normalize(b.status)
 
-        if (hotelId && hotelId !== 'all') {
-          data = data.filter((b) => Number(b.hotel_id) === Number(hotelId))
-        }
+          if (statusType === 'checkedout') {
+            return status === 'checkedout'
+          }
 
-        if (statusType !== 'all') {
-          const now = new Date()
-          const oneDayMs = 24 * 60 * 60 * 1000
-          const normalize = (s) => (s || '').toLowerCase().replace(/\s+/g, '')
+          if (statusType === 'checkout_soon') {
+            const checkout = new Date(b.check_out_date)
+            const diff = checkout - now
+            const isSoon = diff > 0 && diff <= oneDayMs && status !== 'cancelled' && status !== 'deleted'
+            if (isSoon) b.displayStatus = 'Checkout Soon'
+            return isSoon
+          }
 
-          data = data.filter((b) => {
-            const status = normalize(b.status)
+          if (statusType === 'checkout_overdue') {
+            const checkout = new Date(b.check_out_date)
+            const isOverdue = checkout < now && status !== 'cancelled' && status !== 'deleted'
+            if (isOverdue) {
+              const today = new Date(now)
+              today.setHours(0, 0, 0, 0)
+              const checkOutDate = new Date(b.check_out_date)
+              checkOutDate.setHours(0, 0, 0, 0)
+              const diffTime = today.getTime() - checkOutDate.getTime()
+              const diffDays = Math.floor(diffTime / oneDayMs)
 
-            if (statusType === 'checkedout') {
-              return status === 'checkedout' || status === 'checkedout'
+              b.displayStatus = `Overdue (${diffDays} day${diffDays > 1 ? 's' : ''})`
+              b.statusTypeForColor = 'checkoutoverdue'
             }
+            return isOverdue
+          }
 
-            if (statusType === 'checkout_soon') {
-              const checkout = new Date(b.check_out_date)
-              const diff = checkout - now
-              const isSoon = diff > 0 && diff <= oneDayMs && status !== 'cancelled' && status !== 'deleted'
-              if (isSoon) b.displayStatus = 'Checkout Soon'
-              return isSoon
-            }
-
-            if (statusType === 'checkout_overdue') {
-              const checkout = new Date(b.check_out_date)
-              const isOverdue = checkout < now && status !== 'cancelled' && status !== 'deleted'
-              if (isOverdue) {
-                const today = new Date(now)
-                today.setHours(0, 0, 0, 0)
-                const checkOutDate = new Date(b.check_out_date)
-                checkOutDate.setHours(0, 0, 0, 0)
-                const diffTime = today.getTime() - checkOutDate.getTime()
-                const diffDays = Math.floor(diffTime / oneDayMs)
-
-                b.displayStatus = `Overdue (${diffDays} day${diffDays > 1 ? 's' : ''})`
-                b.statusTypeForColor = 'checkoutoverdue'
-              }
-              return isOverdue
-            }
-
-            return status === normalize(statusType)
-          })
-        }
+          return status === normalize(statusType)
+        })
       }
 
       setBookings(data)
@@ -148,9 +193,9 @@ const BookingDetails = () => {
       case 'occupied':
         return { bg: 'bg-success text-white border-success' } // Green color
       case 'reserved':
-        return { bg: 'bg-primary text-white border-primary' } // Blue color
+        return { bg: 'bg-info text-white border-info' } // Blue color
       case 'cancelled':
-        return { bg: 'bg-danger text-white border-danger' } // Red color
+        return { bg: 'bg-dark text-white border-dark' } // Dark color
       case 'checkoutsoon':
       case 'maintenance':
         return { bg: 'bg-warning text-dark border-warning' } // Warning/Yellow color
@@ -252,6 +297,93 @@ const BookingDetails = () => {
           </div>
         </Col>
       </Row>
+
+      {/* COUNTS NAVIGATION BAR */}
+      <div 
+        className="d-flex flex-nowrap gap-2 mb-4 mt-2 pb-1" 
+        style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}
+      >
+        <style>{`.d-flex::-webkit-scrollbar { display: none; }`}</style>
+        {/* Total Bookings */}
+        <div 
+          onClick={() => navigate(`/booking-details/${hotelId}/all`)}
+          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+          className={`px-2 py-1 rounded-3 d-flex align-items-center gap-1 shadow-sm flex-shrink-0 ${statusType === 'all' ? 'bg-secondary text-white' : 'bg-white text-secondary'}`}
+        >
+          <span className="fw-bold" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Total</span>
+          <span className={`badge ${statusType === 'all' ? 'bg-white text-secondary' : 'bg-secondary'} rounded-pill`} style={{ fontSize: '0.65rem' }}>{overallCounts.total}</span>
+        </div>
+
+        {/* Booked */}
+        <div 
+          onClick={() => navigate(`/booking-details/${hotelId}/booked`)}
+          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+          className={`px-2 py-1 rounded-3 d-flex align-items-center gap-1 shadow-sm flex-shrink-0 ${statusType === 'booked' ? 'bg-danger text-white' : 'bg-white text-danger'}`}
+        >
+          <span className="fw-bold" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Booked</span>
+          <span className={`badge ${statusType === 'booked' ? 'bg-white text-danger' : 'bg-danger'} rounded-pill`} style={{ fontSize: '0.65rem' }}>{overallCounts.booked}</span>
+        </div>
+
+        {/* Reserved */}
+        <div 
+          onClick={() => navigate(`/booking-details/${hotelId}/reserved`)}
+          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+          className={`px-2 py-1 rounded-3 d-flex align-items-center gap-1 shadow-sm flex-shrink-0 ${statusType === 'reserved' ? 'bg-info text-white' : 'bg-white text-info'}`}
+        >
+          <span className="fw-bold" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Reserved</span>
+          <span className={`badge ${statusType === 'reserved' ? 'bg-white text-info' : 'bg-info'} rounded-pill`} style={{ fontSize: '0.65rem' }}>{overallCounts.reserved}</span>
+        </div>
+
+        {/* Cancelled */}
+        <div 
+          onClick={() => navigate(`/booking-details/${hotelId}/cancelled`)}
+          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+          className={`px-2 py-1 rounded-3 d-flex align-items-center gap-1 shadow-sm flex-shrink-0 ${statusType === 'cancelled' ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+        >
+          <span className="fw-bold" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Cancelled</span>
+          <span className={`badge ${statusType === 'cancelled' ? 'bg-white text-dark' : 'bg-dark'} rounded-pill`} style={{ fontSize: '0.65rem' }}>{overallCounts.cancelled}</span>
+        </div>
+
+        {/* Checkout Soon */}
+        <div 
+          onClick={() => navigate(`/booking-details/${hotelId}/checkout_soon`)}
+          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+          className={`px-2 py-1 rounded-3 d-flex align-items-center gap-1 shadow-sm flex-shrink-0 ${statusType === 'checkout_soon' ? 'bg-warning text-dark' : 'bg-white text-warning'}`}
+        >
+          <span className="fw-bold" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Soon</span>
+          <span className={`badge ${statusType === 'checkout_soon' ? 'bg-white text-warning' : 'bg-warning text-dark'} rounded-pill`} style={{ fontSize: '0.65rem' }}>{overallCounts.soon}</span>
+        </div>
+
+        {/* Checkout Overdue */}
+        <div 
+          onClick={() => navigate(`/booking-details/${hotelId}/checkout_overdue`)}
+          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+          className={`px-2 py-1 rounded-3 d-flex align-items-center gap-1 shadow-sm flex-shrink-0 ${statusType === 'checkout_overdue' ? 'bg-danger text-white' : 'bg-white text-danger'}`}
+        >
+          <span className="fw-bold" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Overdue</span>
+          <span className={`badge ${statusType === 'checkout_overdue' ? 'bg-white text-danger' : 'bg-danger'} rounded-pill`} style={{ fontSize: '0.65rem' }}>{overallCounts.overdue}</span>
+        </div>
+
+        {/* Deleted */}
+        <div 
+          onClick={() => navigate(`/booking-details/${hotelId}/deleted`)}
+          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+          className={`px-2 py-1 rounded-3 d-flex align-items-center gap-1 shadow-sm flex-shrink-0 ${statusType === 'deleted' ? 'bg-secondary text-white' : 'bg-white text-secondary'}`}
+        >
+          <span className="fw-bold" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Deleted</span>
+          <span className={`badge ${statusType === 'deleted' ? 'bg-white text-secondary' : 'bg-secondary'} rounded-pill`} style={{ fontSize: '0.65rem' }}>{overallCounts.deleted}</span>
+        </div>
+
+        {/* Vacant */}
+        <div 
+          onClick={() => navigate(`/booking-details/${hotelId}/vacant`)}
+          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+          className={`px-2 py-1 rounded-3 d-flex align-items-center gap-1 shadow-sm flex-shrink-0 ${statusType === 'vacant' ? 'bg-success text-white' : 'bg-white text-success'}`}
+        >
+          <span className="fw-bold" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Vacant</span>
+          <span className={`badge ${statusType === 'vacant' ? 'bg-white text-success' : 'bg-success'} rounded-pill`} style={{ fontSize: '0.65rem' }}>{overallCounts.vacant}</span>
+        </div>
+      </div>
 
       {loading ? (
         <div className="text-center py-4">

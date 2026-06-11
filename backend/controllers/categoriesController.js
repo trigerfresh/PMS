@@ -1,35 +1,11 @@
-const { poolPromise, sql } = require('../config/db')
+const CategoryModel = require('../models/categoriesModels')
 
 exports.createCategory = async (req, res) => {
   try {
     const { category_name, pcat_id } = req.body
-
     const image = req.file ? req.file.filename : null
 
-    const pool = await poolPromise
-
-    await pool
-      .request()
-      .input('name', sql.NVarChar, category_name)
-      .input('pcat_id', sql.BigInt, pcat_id)
-      .input('image', sql.NVarChar, image).query(`
-        INSERT INTO categories
-        (
-          category_name,
-          pcat_id,
-          image,
-          active,
-          created_on
-        )
-        VALUES
-        (
-          @name,
-          @pcat_id,
-          @image,
-          '0',
-          GETDATE()
-        )
-      `)
+    await CategoryModel.createCategory(category_name, pcat_id, image)
 
     res.json({
       success: true,
@@ -42,80 +18,24 @@ exports.createCategory = async (req, res) => {
     })
   }
 }
+
 exports.getCategories = async (req, res) => {
   try {
-    const pool = await poolPromise
+    const data = await CategoryModel.getCategories()
 
-    const result = await pool.request().query(`
-      SELECT 
-        c.id,
-        c.category_name,
-        c.image,
-        c.pcat_id,
-        p.primary_categories_name,
-        c.active
-      FROM categories c
-      LEFT JOIN primary_categories p ON p.id = c.pcat_id
-      ORDER BY c.id DESC
-    `)
-
-    res.json({ success: true, data: result.recordset })
+    res.json({ success: true, data })
   } catch (err) {
     res.status(500).json({ success: false, message: err.message })
   }
 }
 
-// exports.getCategories = async (req, res) => {
-//   try {
-//     const pool = await poolPromise
-
-//     const result = await pool.request().query(`
-//       SELECT c.id, c.category_name, c.pcat_id, p.primary_categories_name, c.active
-//       FROM categories c
-//       LEFT JOIN primary_categories p ON p.id = c.pcat_id
-//       WHERE c.active = '0'
-//       ORDER BY c.id DESC
-//     `)
-
-//     res.json({ success: true, data: result.recordset })
-//   } catch (err) {
-//     res.status(500).json({ success: false, message: err.message })
-//   }
-// }
-
 exports.updateCategory = async (req, res) => {
   try {
     const { id } = req.params
     const { category_name, pcat_id } = req.body
-
     const image = req.file ? req.file.filename : null
 
-    let query = `
-      UPDATE categories
-      SET category_name = @name,
-          pcat_id = @pcat_id,
-          modified_on = GETDATE()
-    `
-
-    if (image) {
-      query += `, image = @image`
-    }
-
-    query += ` WHERE id = @id`
-
-    const pool = await poolPromise
-
-    const request = pool
-      .request()
-      .input('id', sql.BigInt, id)
-      .input('name', sql.NVarChar, category_name)
-      .input('pcat_id', sql.BigInt, pcat_id)
-
-    if (image) {
-      request.input('image', sql.NVarChar, image)
-    }
-
-    await request.query(query)
+    await CategoryModel.updateCategory(id, category_name, pcat_id, image)
 
     res.json({
       success: true,
@@ -133,14 +53,7 @@ exports.deleteCategory = async (req, res) => {
   try {
     const { id } = req.params
 
-    const pool = await poolPromise
-
-    await pool.request().input('id', sql.Int, id).query(`
-      UPDATE categories
-      SET active = '1',
-          disabled_on = GETDATE()
-      WHERE id = @id
-    `)
+    await CategoryModel.deleteCategory(id)
 
     res.json({ success: true, message: 'Category deleted' })
   } catch (err) {
@@ -152,14 +65,7 @@ exports.restoreCategory = async (req, res) => {
   try {
     const { id } = req.params
 
-    const pool = await poolPromise
-
-    await pool.request().input('id', sql.Int, id).query(`
-      UPDATE categories
-      SET active = '0',
-          modified_on = GETDATE()
-      WHERE id = @id
-    `)
+    await CategoryModel.restoreCategory(id)
 
     res.json({ success: true, message: 'Category restored' })
   } catch (err) {
@@ -169,20 +75,11 @@ exports.restoreCategory = async (req, res) => {
 
 exports.getPrimaryCategoryDropdown = async (req, res) => {
   try {
-    const pool = await poolPromise
-
-    const result = await pool.request().query(`
-      SELECT
-        id,
-        primary_categories_name
-      FROM primary_categories
-      WHERE active = '0'
-      ORDER BY primary_categories_name
-    `)
+    const data = await CategoryModel.getPrimaryCategoryDropdown()
 
     res.json({
       success: true,
-      data: result.recordset,
+      data,
     })
   } catch (err) {
     res.status(500).json({

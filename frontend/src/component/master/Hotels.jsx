@@ -27,6 +27,7 @@ import {
 
 import Dropdown from 'react-bootstrap/Dropdown'
 import { BsThreeDotsVertical } from 'react-icons/bs'
+import './Company.css'
 
 const HotelPage = () => {
   const [branches, setBranches] = useState([])
@@ -487,7 +488,7 @@ const HotelPage = () => {
       minHeight: '100vh',
       transition: 'background-color 0.5s ease',
     }}>
-      <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+      <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 pb-2 border-bottom gap-3">
         <h1
           className="page-title mb-0"
           style={{
@@ -925,17 +926,19 @@ const HotelPage = () => {
                 <Table
                   hover
                   bordered
-                  className="list-table align-middle table-sm w-100"
+                  responsive
+                  className="list-table align-middle table-sm w-100 shadow-sm"
+                  style={{ fontSize: '13px' }}
                 >
-                  <thead className="table text-center">
+                  <thead className="table-light text-center text-secondary">
                     <tr>
-                      <th>Image</th>
-                      <th>Hotel Name</th>
-                      <th>Branch Name</th>
-                      <th>Address</th>
-                      <th>Pincode</th>
-                      <th>Companies</th>
-                      <th>Actions</th>
+                      <th className="fw-semibold px-3 py-2 text-nowrap">Image</th>
+                      <th className="fw-semibold px-3 py-2 text-nowrap">Hotel Name</th>
+                      <th className="fw-semibold px-3 py-2 text-nowrap">Branch Name</th>
+                      <th className="fw-semibold px-3 py-2 text-nowrap">Address</th>
+                      <th className="fw-semibold px-3 py-2 text-nowrap">Pincode</th>
+                      <th className="fw-semibold px-3 py-2 text-nowrap">Companies</th>
+                      <th className="fw-semibold px-3 py-2 text-nowrap">Actions</th>
                     </tr>
                   </thead>
                 <tbody className="text-center">
@@ -979,7 +982,7 @@ const HotelPage = () => {
                           <td>{branch.pincode}</td>
                           <td>{branch.company_name || '-'}</td>
                           <td className="text-center">
-                            <Dropdown>
+                            <Dropdown drop="start">
                               <Dropdown.Toggle
                                 variant="outline-secondary"
                                 size="sm"

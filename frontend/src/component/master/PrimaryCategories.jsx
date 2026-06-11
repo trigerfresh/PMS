@@ -193,7 +193,7 @@ export default function PrimaryCategories() {
       transition: 'background-color 0.5s ease',
     }}>
       {/* HEADER SECTION */}
-      <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+      <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 pb-2 border-bottom gap-3">
         <h1
           className="page-title mb-0"
           style={{
@@ -399,13 +399,13 @@ export default function PrimaryCategories() {
                 className="table-responsive"
                 style={{ overflowX: 'auto', minHeight: '200px' }}
               >
-                <table className="table table-bordered table-striped bg-white shadow-sm align-middle table-sm w-100 mb-0">
-                  <thead className="table text-center">
+                <table className="table table-bordered table-striped list-table bg-white shadow-sm align-middle table-sm w-100 mb-0" style={{ fontSize: '13px' }}>
+                  <thead className="table-light text-center text-secondary">
                     <tr>
-                      <th className="text-center">ID</th>
-                      <th>Name</th>
-                      <th className="text-center">Image</th>
-                      <th className="text-center">Action</th>
+                      <th className="text-center fw-semibold px-3 py-2 text-nowrap">ID</th>
+                      <th className="fw-semibold px-3 py-2 text-nowrap">Name</th>
+                      <th className="text-center fw-semibold px-3 py-2 text-nowrap">Image</th>
+                      <th className="text-center fw-semibold px-3 py-2 text-nowrap">Action</th>
                     </tr>
                   </thead>
                   <tbody className="text-center">
@@ -504,14 +504,14 @@ export default function PrimaryCategories() {
                   </Form.Select>
                 </div>
               </div>
-              <div className="table-responsive" style={{ overflowX: 'auto' }}>
-                <table className="table table-bordered table-striped bg-white shadow-sm align-middle table-sm w-100 mb-0">
+              <div className="table-responsive" style={{ overflowX: 'auto', minHeight: '200px' }}>
+                <table className="table table-bordered table-striped list-table bg-white shadow-sm align-middle table-sm w-100 mb-0" style={{ fontSize: '13px' }}>
                   <thead className="table-dark text-center">
                     <tr>
-                      <th className="text-center">ID</th>
-                      <th>Name</th>
-                      <th className="text-center">Image</th>
-                      <th className="text-center">Action</th>
+                      <th className="text-center fw-semibold px-3 py-2 text-nowrap">ID</th>
+                      <th className="fw-semibold px-3 py-2 text-nowrap">Name</th>
+                      <th className="text-center fw-semibold px-3 py-2 text-nowrap">Image</th>
+                      <th className="text-center fw-semibold px-3 py-2 text-nowrap">Action</th>
                     </tr>
                   </thead>
                   <tbody className="text-center">

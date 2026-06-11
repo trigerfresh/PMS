@@ -46,7 +46,7 @@ function App() {
           <Route path="/checkout-soon" element={<CheckoutSoon />} />
           <Route path="/reserved" element={<Reserved />} />
 
-          <Route path="users" element={<User />} />
+          {/* <Route path="users" element={<User />} /> */}
           <Route path="/master/dashboard" element={<Dashboard />} />
 
           <Route path="/master/companies" element={<CompanyPage />} />

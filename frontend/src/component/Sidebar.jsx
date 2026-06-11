@@ -115,7 +115,12 @@ const Sidebar = () => {
 
           {/* USER */}
           <div className="sidebar-user text-center pt-4 pb-3 mb-3 border-bottom border-secondary border-opacity-25">
-            <h6 className="m-0 fw-bold text-white tracking-wide" style={{ letterSpacing: '0.5px' }}>{user?.name || 'Guest'}</h6>
+            <h6
+              className="m-0 fw-bold text-white tracking-wide"
+              style={{ letterSpacing: '0.5px' }}
+            >
+              {user?.name || 'Guest'}
+            </h6>
           </div>
 
           <ul className="sidebar-menu">
@@ -215,13 +220,13 @@ const Sidebar = () => {
                     </a>
                   </li>
 
-                  <li>
+                  {/* <li>
                     <a onClick={() => handleNavigate('/master/rooms')}>
                       {' '}
                       <FaBed className="submenu-icon me-1" />
                       <span>Rooms</span>
                     </a>
-                  </li>
+                  </li> */}
 
                   {/* <li>
                     <a onClick={() => handleNavigate('/master/foodMaster')}>
@@ -276,6 +281,14 @@ const Sidebar = () => {
                     <a href="#!" onClick={() => handleNavigate('/products')}>
                       <FaBox className="submenu-icon me-1" />
                       <span>Food</span>
+                    </a>
+                  </li>
+
+                  <li>
+                    <a onClick={() => handleNavigate('/master/rooms')}>
+                      {' '}
+                      <FaBed className="submenu-icon me-1" />
+                      <span>Rooms</span>
                     </a>
                   </li>
 

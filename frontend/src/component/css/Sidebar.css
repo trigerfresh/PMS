@@ -3,7 +3,7 @@
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   background: linear-gradient(180deg, #0b1a30 0%, #19365d 100%);
   color: #f8fafc;
-  box-shadow: 4px 0 15px rgba(0,0,0,0.15);
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.15);
   z-index: 1040;
 }
 
@@ -75,9 +75,9 @@
   align-items: center;
   gap: 12px;
   cursor: pointer;
-  padding: 12px 20px;
-  margin: 4px 16px;
-  border-radius: 8px;
+  padding: 10px 0;
+  margin: 0;
+  border-radius: 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: #cbd5e1;
   text-decoration: none;
@@ -85,12 +85,21 @@
   letter-spacing: 0.3px;
 }
 
+.sidebar-submenu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-submenu li a {
+  padding-left: 10px;
+}
+
 .sidebar-menu li a:hover,
-.sidebar-menu li.active > a {
+.sidebar-menu li.active>a {
   background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
-  transform: translateX(4px);
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-menu li a .menu-icon,
@@ -113,6 +122,7 @@
   color: #cbd5e1;
   transition: all 0.3s ease;
 }
+
 .collapse-btn:hover {
   color: #ffffff;
 }
@@ -189,8 +199,8 @@
 /* Responsive adjustments */
 @media (max-width: 991px) {
   .page-sidebar~.page-body {
-    margin-left: 250px !important;
-    width: calc(100% - 250px) !important;
+    margin-left: 0 !important;
+    width: 100% !important;
   }
 
   .page-sidebar.collapsed~.page-body {

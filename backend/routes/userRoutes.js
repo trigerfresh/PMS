@@ -14,6 +14,7 @@ const {
   getUsersSearch,
   getProfile,
   updateProfile,
+  exportUsersExcel,
 } = require('../controllers/userController')
 
 // multer config
@@ -32,6 +33,7 @@ const upload = multer({ storage })
 router.post('/', upload.single('profile_image'), createUser)
 router.post('/search', getUsersSearch)
 router.get('/profile/:id', authMiddleware, getProfile)
+router.get('/export', exportUsersExcel)
 router.put('/restore/:id', restoreUser)
 router.get('/deleted', getDeletedUsers)
 // UPDATE USER

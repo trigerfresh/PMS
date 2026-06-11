@@ -20,6 +20,14 @@ const RoomDetailsPage = () => {
   const [loading, setLoading] = useState(false)
   const [roomsData, setRoomsData] = useState([])
   const [bookingsData, setBookingsData] = useState([])
+  const [overallCounts, setOverallCounts] = useState({
+    total: 0,
+    available: 0,
+    occupied: 0,
+    maintenance: 0,
+    booked: 0,
+    reserved: 0
+  })
 
   // Modal states for Room Info & Checkout
   const [showModal, setShowModal] = useState(false)
@@ -48,26 +56,39 @@ const RoomDetailsPage = () => {
       setRoomsData([])
       setBookingsData([])
 
+      // FETCH ALL DATA ONCE FOR OVERALL COUNTS
+      const [roomsRes, bookingsRes] = await Promise.all([
+        axios.get(`${API_URL}/api/rooms`),
+        axios.get(`${API_URL}/api/bookings`),
+      ])
+
+      const allRooms = roomsRes.data.data || []
+      const allBookings = bookingsRes.data.data || []
+
+      const hotelRooms = hotelId === 'all'
+        ? allRooms
+        : allRooms.filter((room) => Number(room.hotel_id) === Number(hotelId))
+
+      const hotelBookings = hotelId === 'all'
+        ? allBookings
+        : allBookings.filter((b) => Number(b.hotel_id) === Number(hotelId))
+
+      const activeHotelBookings = hotelBookings.filter((b) => isActiveBooking(b))
+
+      // CALCULATE OVERALL COUNTS
+      setOverallCounts({
+        total: hotelRooms.length,
+        available: hotelRooms.filter(r => r.status?.toLowerCase() === 'available' || r.status?.toLowerCase() === 'vacant' || r.status?.toLowerCase() === 'avalable').length,
+        occupied: hotelRooms.filter(r => r.status?.toLowerCase() === 'occupied').length,
+        maintenance: hotelRooms.filter(r => r.status?.toLowerCase() === 'maintenance').length,
+        booked: hotelBookings.filter(b => b.status?.toLowerCase() === 'booked' && b.active === '0').length,
+        reserved: hotelRooms.filter(r => r.status?.toLowerCase() === 'reserved').length
+      })
+
       // 1. ALL ROOMS
       if (currentStatus === 'all') {
-        const [roomsRes, bookingsRes] = await Promise.all([
-          axios.get(`${API_URL}/api/rooms`),
-          axios.get(`${API_URL}/api/bookings`),
-        ])
-
-        const rooms = roomsRes.data.data || []
-        const bookings = bookingsRes.data.data || []
-
-        const hotelRooms = hotelId === 'all'
-          ? rooms
-          : rooms.filter((room) => Number(room.hotel_id) === Number(hotelId))
-
-        const hotelBookings = hotelId === 'all'
-          ? bookings.filter((b) => isActiveBooking(b))
-          : bookings.filter((b) => Number(b.hotel_id) === Number(hotelId) && isActiveBooking(b))
-
         const mergedRooms = hotelRooms.map((room) => {
-          const activeBooking = hotelBookings.find(
+          const activeBooking = activeHotelBookings.find(
             (b) =>
               Number(b.room_id) === Number(room.room_id) ||
               String(b.room_no) === String(room.room_no),
@@ -76,23 +97,15 @@ const RoomDetailsPage = () => {
           if (activeBooking) {
             return {
               ...room,
-
-              booking_id:
-                activeBooking.booking_id ||
-                activeBooking.id ||
-                activeBooking.bookingId,
-
+              booking_id: activeBooking.booking_id || activeBooking.id || activeBooking.bookingId,
               guest_name: activeBooking.guest_name,
               check_in_date: activeBooking.check_in_date,
               check_out_date: activeBooking.check_out_date,
               total_amount: activeBooking.total_amount,
-
               booking_status: activeBooking.status,
-
               status: 'occupied',
             }
           }
-
           return room
         })
 
@@ -100,65 +113,41 @@ const RoomDetailsPage = () => {
       }
       // 2. AVAILABLE / VACANT ROOMS
       else if (currentStatus === 'available' || currentStatus === 'vacant') {
-        const res = await axios.get(`${API_URL}/api/rooms`)
-        const rooms = res.data.data || []
-        const filteredRooms = rooms.filter(
+        const filteredRooms = hotelRooms.filter(
           (room) =>
-            (hotelId === 'all' || Number(room.hotel_id) === Number(hotelId)) &&
-            (room.status?.toLowerCase() === 'available' ||
-              room.status?.toLowerCase() === 'vacant' ||
-              room.status?.toLowerCase() === 'avalable'),
+            room.status?.toLowerCase() === 'available' ||
+            room.status?.toLowerCase() === 'vacant' ||
+            room.status?.toLowerCase() === 'avalable'
         )
         setRoomsData(filteredRooms)
       }
       // 3. MAINTENANCE ROOMS
       else if (currentStatus === 'maintenance') {
-        const res = await axios.get(`${API_URL}/api/rooms`)
-        const rooms = res.data.data || []
-        const filteredRooms = rooms.filter(
-          (room) =>
-            (hotelId === 'all' || Number(room.hotel_id) === Number(hotelId)) &&
-            room.status?.toLowerCase() === 'maintenance',
+        const filteredRooms = hotelRooms.filter(
+          (room) => room.status?.toLowerCase() === 'maintenance'
         )
         setRoomsData(filteredRooms)
       }
       // 4. RESERVED ROOMS
       else if (currentStatus === 'reserved') {
-        const res = await axios.get(`${API_URL}/api/rooms`)
-        const rooms = res.data.data || []
-        const filteredRooms = rooms.filter(
-          (room) =>
-            (hotelId === 'all' || Number(room.hotel_id) === Number(hotelId)) &&
-            room.status?.toLowerCase() === 'reserved',
+        const filteredRooms = hotelRooms.filter(
+          (room) => room.status?.toLowerCase() === 'reserved'
         )
         setRoomsData(filteredRooms)
       }
       // 5. OCCUPIED / BOOKED ROOMS
       else if (currentStatus === 'occupied' || currentStatus === 'booked') {
-        const [roomsRes, bookingsRes] = await Promise.all([
-          axios.get(`${API_URL}/api/rooms`),
-          axios.get(`${API_URL}/api/bookings`),
-        ])
-
-        const rooms = roomsRes.data.data || []
-        const bookings = bookingsRes.data.data || []
-
-        const hotelRooms = hotelId === 'all'
-          ? rooms
-          : rooms.filter((room) => Number(room.hotel_id) === Number(hotelId))
-
-        const occupiedBookings = bookings
+        const occupiedBookingsArray = hotelBookings
           .filter(
             (b) =>
-              (hotelId === 'all' || Number(b.hotel_id) === Number(hotelId)) &&
-              (b.status?.toLowerCase() === 'booked' ||
-                b.status?.toLowerCase() === 'occupied'),
+              b.status?.toLowerCase() === 'booked' ||
+              b.status?.toLowerCase() === 'occupied'
           )
           .map((booking) => {
             const room = hotelRooms.find(
               (r) =>
                 Number(r.room_id) === Number(booking.room_id) ||
-                Number(r.room_no) === Number(booking.room_no),
+                Number(r.room_no) === Number(booking.room_no)
             )
 
             return {
@@ -169,7 +158,7 @@ const RoomDetailsPage = () => {
             }
           })
 
-        setBookingsData(occupiedBookings)
+        setBookingsData(occupiedBookingsArray)
       }
     } catch (err) {
       console.error('Error loading details:', err)
@@ -184,16 +173,17 @@ const RoomDetailsPage = () => {
     switch (checkStatus) {
       case 'occupied':
       case 'booked':
-        return { bg: 'bg-success text-white border-success' } // Green color
+        return { bg: 'bg-danger text-white border-danger' } // Red color (matches Occupied tab)
       case 'reserved':
-        return { bg: 'bg-primary text-white border-primary' } // Blue color
+        return { bg: 'bg-info text-white border-info' } // Blue/Info color (matches Reserved tab)
       case 'cancelled':
-        return { bg: 'bg-danger text-white border-danger' } // Red color
+        return { bg: 'bg-dark text-white border-dark' } 
       case 'maintenance':
-        return { bg: 'bg-warning text-dark border-warning' } // Yellow color
+        return { bg: 'bg-warning text-dark border-warning' } // Yellow color (matches Maintenance tab)
       case 'available':
       case 'vacant':
       case 'avalable':
+        return { bg: 'bg-success text-white border-success' } // Green color (matches Available tab)
       default:
         return { bg: 'bg-light text-dark border-secondary' } // Light color
     }
@@ -310,12 +300,65 @@ const RoomDetailsPage = () => {
             <h2 className="fw-bold mb-0 text-capitalize" style={{ color: '#2c3e50', letterSpacing: '-0.5px' }}>
               {status === 'all' ? 'All' : status} Rooms Information
             </h2>
-            <small className="text-muted fw-bold" style={{ letterSpacing: '0.5px', textTransform: 'uppercase', fontSize: '0.75rem' }}>
+            <small className="text-muted fw-bold d-block mt-1" style={{ letterSpacing: '0.5px', textTransform: 'uppercase', fontSize: '0.75rem' }}>
               Floor & Hotel Wise Details
             </small>
           </div>
         </Col>
       </Row>
+
+      {/* COUNTS NAVIGATION BAR */}
+      <div className="d-flex flex-wrap gap-2 mb-4">
+        {/* Total Rooms */}
+        <div 
+          onClick={() => navigate(`/rooms-details/${hotelId}/all`)}
+          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+          className={`px-3 py-2 rounded-3 d-flex align-items-center gap-2 shadow-sm ${status === 'all' ? 'bg-secondary text-white' : 'bg-white text-secondary'}`}
+        >
+          <span className="fw-bold" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Total</span>
+          <span className={`badge ${status === 'all' ? 'bg-white text-secondary' : 'bg-secondary'} rounded-pill`}>{overallCounts.total}</span>
+        </div>
+
+        {/* Available Rooms */}
+        <div 
+          onClick={() => navigate(`/rooms-details/${hotelId}/available`)}
+          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+          className={`px-3 py-2 rounded-3 d-flex align-items-center gap-2 shadow-sm ${status === 'available' ? 'bg-success text-white' : 'bg-white text-success'}`}
+        >
+          <span className="fw-bold" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Available</span>
+          <span className={`badge ${status === 'available' ? 'bg-white text-success' : 'bg-success'} rounded-pill`}>{overallCounts.available}</span>
+        </div>
+
+        {/* Occupied Rooms */}
+        <div 
+          onClick={() => navigate(`/rooms-details/${hotelId}/occupied`)}
+          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+          className={`px-3 py-2 rounded-3 d-flex align-items-center gap-2 shadow-sm ${status === 'occupied' ? 'bg-danger text-white' : 'bg-white text-danger'}`}
+        >
+          <span className="fw-bold" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Occupied</span>
+          <span className={`badge ${status === 'occupied' ? 'bg-white text-danger' : 'bg-danger'} rounded-pill`}>{overallCounts.occupied}</span>
+        </div>
+
+        {/* Maintenance Rooms */}
+        <div 
+          onClick={() => navigate(`/rooms-details/${hotelId}/maintenance`)}
+          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+          className={`px-3 py-2 rounded-3 d-flex align-items-center gap-2 shadow-sm ${status === 'maintenance' ? 'bg-warning text-dark' : 'bg-white text-warning'}`}
+        >
+          <span className="fw-bold" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Maintenance</span>
+          <span className={`badge ${status === 'maintenance' ? 'bg-white text-warning' : 'bg-warning text-dark'} rounded-pill`}>{overallCounts.maintenance}</span>
+        </div>
+
+        {/* Reserved Rooms */}
+        <div 
+          onClick={() => navigate(`/rooms-details/${hotelId}/reserved`)}
+          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+          className={`px-3 py-2 rounded-3 d-flex align-items-center gap-2 shadow-sm ${status === 'reserved' ? 'bg-info text-white' : 'bg-white text-info'}`}
+        >
+          <span className="fw-bold" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Reserved</span>
+          <span className={`badge ${status === 'reserved' ? 'bg-white text-info' : 'bg-info'} rounded-pill`}>{overallCounts.reserved}</span>
+        </div>
+      </div>
 
       {loading ? (
         <div className="text-center py-4">

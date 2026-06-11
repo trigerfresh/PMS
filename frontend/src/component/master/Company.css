@@ -62,5 +62,11 @@
 
 .table th,
 .table td {
-  padding: 0rem;
+  padding: 0.5rem 0.75rem;
+  vertical-align: middle;
+}
+
+.list-table th,
+.list-table td {
+  white-space: nowrap;
 }

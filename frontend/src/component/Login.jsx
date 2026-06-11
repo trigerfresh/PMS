@@ -26,9 +26,9 @@ const Login = () => {
 
       // ROLE BASED REDIRECT
       if (user.role === 'ADMIN') {
-        navigate('/')
+        navigate('/master/dashboard')
       } else {
-        navigate('/users') // user blank page
+        navigate('/master/dashboard') // user blank page
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Login failed')

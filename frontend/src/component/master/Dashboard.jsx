@@ -64,6 +64,7 @@ const Dashboard = () => {
     occupiedRooms: 0,
     availableRooms: 0,
     maintenanceRooms: 0,
+    reservedRooms: 0,
   })
 
   const [bookingStats, setBookingStats] = useState({
@@ -196,6 +197,10 @@ const Dashboard = () => {
 
       const maintenanceRooms = hotelRooms.filter(
         (room) => room.status?.toLowerCase() === 'maintenance',
+      ).length
+
+      const reservedRooms = hotelRooms.filter(
+        (room) => room.status?.toLowerCase() === 'reserved',
       ).length
 
       const bookings = bookingRes.data.data || []
@@ -366,6 +371,7 @@ const Dashboard = () => {
         occupiedRooms,
         availableRooms,
         maintenanceRooms,
+        reservedRooms,
       })
 
       // ===================== RECENT BOOKINGS =====================
@@ -631,6 +637,26 @@ const Dashboard = () => {
                   </h2>
                   <p className="text-warning mb-0 small fw-bold position-relative z-1">
                     Maintenance →
+                  </p>
+                </Card.Body>
+              </Card>
+            </Col>
+
+            <Col xl={2} lg={3} md={4} xs={6}>
+              <Card
+                className="dashboard-card shadow-sm border-0 rounded-3"
+                style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
+                onClick={() => handleRoomCardClick('reserved')}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.classList.add('shadow'); }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.classList.remove('shadow'); }}
+              >
+                <Card.Body className="p-3 position-relative overflow-hidden bg-white rounded-3">
+                  <FaCalendarAlt className="position-absolute text-info" size={40} style={{ right: '5px', top: '50%', transform: 'translateY(-50%)', opacity: 0.1 }} />
+                  <h2 className="mb-1 fw-bold text-dark position-relative z-1">
+                    {roomStats.reservedRooms}
+                  </h2>
+                  <p className="text-info mb-0 small fw-bold position-relative z-1">
+                    Reserved →
                   </p>
                 </Card.Body>
               </Card>

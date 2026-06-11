@@ -26,6 +26,7 @@ import {
   Tab,
 } from 'react-bootstrap'
 import { BsThreeDotsVertical } from 'react-icons/bs'
+import './Company.css'
 
 const BranchPage = () => {
   const [branches, setBranches] = useState([])
@@ -414,7 +415,7 @@ const BranchPage = () => {
       minHeight: '100vh',
       transition: 'background-color 0.5s ease',
     }}>
-      <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+      <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 pb-2 border-bottom gap-3">
         <h1
           className="page-title mb-0"
           style={{
@@ -491,363 +492,365 @@ const BranchPage = () => {
       {showForm ? (
         <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4" style={{ transition: 'all 0.3s ease' }}>
           <Card.Body className="p-4">
-          <h2 className="mb-4 fw-bold text-secondary" style={{ fontSize: '1.5rem' }}>
-            {isEditing ? (
-              <span>Edit Branch - {isEditing.branch_name}</span>
-            ) : (
-              'Branch Details'
-            )}
-          </h2>
-          {Object.keys(validationErrors).length > 0 && (
-            <Alert variant="danger">
-              Please fix the validation errors below.
-            </Alert>
-          )}
-          <Form className="branch-form" onSubmit={handleSubmit}>
-            <Row>
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="branchName">
-                  <Form.Label>Branch Name *</Form.Label>
-                  <Form.Control
-                    name="branchName"
-                    value={formData.branchName}
-                    onChange={handleInputChange}
-                    placeholder="Enter Branch name"
-                    isInvalid={!!validationErrors.branchName}
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {validationErrors.branchName}
-                  </Form.Control.Feedback>
-                </Form.Group>
-              </Col>
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="address">
-                  <Form.Label>Address</Form.Label>
-                  <Form.Control
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    placeholder="Address"
-                  />
-                </Form.Group>
-              </Col>
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="areaName">
-                  <Form.Label>Area Name</Form.Label>
-                  <Form.Control
-                    name="areaName"
-                    value={formData.areaName}
-                    onChange={handleInputChange}
-                    placeholder="Enter your area name"
-                  />
-                </Form.Group>
-              </Col>
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="pincode">
-                  <Form.Label>Pincode</Form.Label>
-                  <Form.Control
-                    name="pincode"
-                    value={formData.pincode}
-                    onChange={handleInputChange}
-                    placeholder="Pincode"
-                  />
-                </Form.Group>
-              </Col>
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="email">
-                  <Form.Label>Email ID</Form.Label>
-                  <Form.Control
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="Email ID"
-                    type="text"
-                  />
-                </Form.Group>
-              </Col>
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="contactNo">
-                  <Form.Label>Contact No</Form.Label>
-                  <Form.Control
-                    name="contactNo"
-                    value={formData.contactNo}
-                    onChange={handleInputChange}
-                    placeholder="Contact No"
-                  />
-                </Form.Group>
-              </Col>
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="costingMethod">
-                  <Form.Label>Costing Method</Form.Label>
-                  <Form.Select
-                    name="costingMethod"
-                    value={formData.costingMethod}
-                    onChange={handleInputChange}
-                  >
-                    <option value="FIFO">FIFO</option>
-                    <option value="LIFO">LIFO</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="defPurchaseAccount">
-                  <Form.Label>Def. Purchase Account</Form.Label>
-                  <Form.Control
-                    name="defPurchaseAccount"
-                    value={formData.defPurchaseAccount}
-                    onChange={handleInputChange}
-                    placeholder="Def. Purchase Account"
-                  />
-                </Form.Group>
-              </Col>
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="defSalesAccount">
-                  <Form.Label>Def. Sales Account</Form.Label>
-                  <Form.Control
-                    name="defSalesAccount"
-                    value={formData.defSalesAccount}
-                    onChange={handleInputChange}
-                    placeholder="Def. Sales Account"
-                  />
-                </Form.Group>
-              </Col>
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="defBranchRecvAccount">
-                  <Form.Label>Def. Branch Recv. Account</Form.Label>
-                  <Form.Control
-                    name="defBranchRecvAccount"
-                    value={formData.defBranchRecvAccount}
-                    onChange={handleInputChange}
-                    placeholder="Def. Branch Recv. Account"
-                  />
-                </Form.Group>
-              </Col>
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="defBranchDispAccount">
-                  <Form.Label>Def. Branch Disp. Account</Form.Label>
-                  <Form.Control
-                    name="defBranchDispAccount"
-                    value={formData.defBranchDispAccount}
-                    onChange={handleInputChange}
-                    placeholder="Def. Branch Disp. Account"
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-            <hr />
-            <div className="mb-3 branch-company-selection">
-              <h4 className="fs-5">Select Company *</h4>
-              <div className="d-flex flex-wrap gap-3 mb-2">
-                {companies.map((company) => (
-                  <Form.Check
-                    key={company.id}
-                    type="checkbox"
-                    id={`company-${company.id}`}
-                    label={company.company_name}
-                    checked={formData.companyId.includes(company.id)}
-                    onChange={() => handleCompanySelection(company.id)}
-                    isInvalid={!!validationErrors.companyId}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        handleCompanySelection(company.id) // ✅ call directly
-                      }
-                    }}
-                  />
-                ))}
-              </div>
-              {validationErrors.companyId && (
-                <div className="invalid-feedback d-block">
-                  {validationErrors.companyId}
-                </div>
+            <h2 className="mb-4 fw-bold text-secondary" style={{ fontSize: '1.5rem' }}>
+              {isEditing ? (
+                <span>Edit Branch - {isEditing.branch_name}</span>
+              ) : (
+                'Branch Details'
               )}
-            </div>
+            </h2>
+            {Object.keys(validationErrors).length > 0 && (
+              <Alert variant="danger">
+                Please fix the validation errors below.
+              </Alert>
+            )}
+            <Form className="branch-form" onSubmit={handleSubmit}>
+              <Row>
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="branchName">
+                    <Form.Label>Branch Name *</Form.Label>
+                    <Form.Control
+                      name="branchName"
+                      value={formData.branchName}
+                      onChange={handleInputChange}
+                      placeholder="Enter Branch name"
+                      isInvalid={!!validationErrors.branchName}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {validationErrors.branchName}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+                </Col>
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="address">
+                    <Form.Label>Address</Form.Label>
+                    <Form.Control
+                      name="address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      placeholder="Address"
+                    />
+                  </Form.Group>
+                </Col>
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="areaName">
+                    <Form.Label>Area Name</Form.Label>
+                    <Form.Control
+                      name="areaName"
+                      value={formData.areaName}
+                      onChange={handleInputChange}
+                      placeholder="Enter your area name"
+                    />
+                  </Form.Group>
+                </Col>
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="pincode">
+                    <Form.Label>Pincode</Form.Label>
+                    <Form.Control
+                      name="pincode"
+                      value={formData.pincode}
+                      onChange={handleInputChange}
+                      placeholder="Pincode"
+                    />
+                  </Form.Group>
+                </Col>
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="email">
+                    <Form.Label>Email ID</Form.Label>
+                    <Form.Control
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      placeholder="Email ID"
+                      type="text"
+                    />
+                  </Form.Group>
+                </Col>
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="contactNo">
+                    <Form.Label>Contact No</Form.Label>
+                    <Form.Control
+                      name="contactNo"
+                      value={formData.contactNo}
+                      onChange={handleInputChange}
+                      placeholder="Contact No"
+                    />
+                  </Form.Group>
+                </Col>
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="costingMethod">
+                    <Form.Label>Costing Method</Form.Label>
+                    <Form.Select
+                      name="costingMethod"
+                      value={formData.costingMethod}
+                      onChange={handleInputChange}
+                    >
+                      <option value="FIFO">FIFO</option>
+                      <option value="LIFO">LIFO</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="defPurchaseAccount">
+                    <Form.Label>Def. Purchase Account</Form.Label>
+                    <Form.Control
+                      name="defPurchaseAccount"
+                      value={formData.defPurchaseAccount}
+                      onChange={handleInputChange}
+                      placeholder="Def. Purchase Account"
+                    />
+                  </Form.Group>
+                </Col>
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="defSalesAccount">
+                    <Form.Label>Def. Sales Account</Form.Label>
+                    <Form.Control
+                      name="defSalesAccount"
+                      value={formData.defSalesAccount}
+                      onChange={handleInputChange}
+                      placeholder="Def. Sales Account"
+                    />
+                  </Form.Group>
+                </Col>
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="defBranchRecvAccount">
+                    <Form.Label>Def. Branch Recv. Account</Form.Label>
+                    <Form.Control
+                      name="defBranchRecvAccount"
+                      value={formData.defBranchRecvAccount}
+                      onChange={handleInputChange}
+                      placeholder="Def. Branch Recv. Account"
+                    />
+                  </Form.Group>
+                </Col>
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="defBranchDispAccount">
+                    <Form.Label>Def. Branch Disp. Account</Form.Label>
+                    <Form.Control
+                      name="defBranchDispAccount"
+                      value={formData.defBranchDispAccount}
+                      onChange={handleInputChange}
+                      placeholder="Def. Branch Disp. Account"
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+              <hr />
+              <div className="mb-3 branch-company-selection">
+                <h4 className="fs-5">Select Company *</h4>
+                <div className="d-flex flex-wrap gap-3 mb-2">
+                  {companies.map((company) => (
+                    <Form.Check
+                      key={company.id}
+                      type="checkbox"
+                      id={`company-${company.id}`}
+                      label={company.company_name}
+                      checked={formData.companyId.includes(company.id)}
+                      onChange={() => handleCompanySelection(company.id)}
+                      isInvalid={!!validationErrors.companyId}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          handleCompanySelection(company.id) // ✅ call directly
+                        }
+                      }}
+                    />
+                  ))}
+                </div>
+                {validationErrors.companyId && (
+                  <div className="invalid-feedback d-block">
+                    {validationErrors.companyId}
+                  </div>
+                )}
+              </div>
 
-            <div className="form-actions d-flex justify-content-end">
-              <Button
-                variant="secondary"
-                className="me-2"
-                onClick={() => {
-                  resetForm()
-                  setShowForm(false)
-                }}
-              >
-                Cancel
-              </Button>
-              <Button type="button" variant="primary" onClick={handleSubmit}>
-                {isEditing ? 'Update Company' : 'Save Company'}
-              </Button>
-            </div>
-          </Form>
+              <div className="form-actions d-flex justify-content-end">
+                <Button
+                  variant="secondary"
+                  className="me-2"
+                  onClick={() => {
+                    resetForm()
+                    setShowForm(false)
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button type="button" variant="primary" onClick={handleSubmit}>
+                  {isEditing ? 'Update Company' : 'Save Company'}
+                </Button>
+              </div>
+            </Form>
           </Card.Body>
         </Card>
       ) : (
-      /* Branch Status Tabs */
+        /* Branch Status Tabs */
         <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
           <Card.Body className="p-4">
-          {showSearch && (
-            <SearchPanel
-              searchFields={searchFields}
-              setSearchFields={setSearchFields}
-              dateFilter={dateFilter}
-              setDateFilter={setDateFilter}
-              onSearch={handleSearch}
-              onReset={resetSearch}
-              onDownloadExcel={handleDownloadExcel}
-              searchOptions={branchSearchOptions}
-            />
-          )}
-          <Tabs
-            id="branch-status-tabs"
-            activeKey={statusFilter}
-            onSelect={(key) => setStatusFilter(key)}
-            className="mb-3 custom-bootstrap-tabs"
-          >
-            {/* <Tab
+            {showSearch && (
+              <SearchPanel
+                searchFields={searchFields}
+                setSearchFields={setSearchFields}
+                dateFilter={dateFilter}
+                setDateFilter={setDateFilter}
+                onSearch={handleSearch}
+                onReset={resetSearch}
+                onDownloadExcel={handleDownloadExcel}
+                searchOptions={branchSearchOptions}
+              />
+            )}
+            <Tabs
+              id="branch-status-tabs"
+              activeKey={statusFilter}
+              onSelect={(key) => setStatusFilter(key)}
+              className="mb-3 custom-bootstrap-tabs"
+            >
+              {/* <Tab
               eventKey="all"
               title={`Total (${counts.totalBranches})`}
             /> */}
-            <Tab
-              eventKey="approved"
-              title={`Approved (${counts.approvedBranches})`}
-            />
-            <Tab
-              eventKey="deleted"
-              title={`Deleted (${counts.deletedBranches})`}
-            />
-          </Tabs>
-
-      {/* Branch List Table */}
-          {loading ? (
-            <Alert variant="warning" className="mb-0 text-center">
-              Loading...
-            </Alert>
-          ) : error ? (
-            <Alert variant="danger" className="mb-0 text-center">
-              {error}
-            </Alert>
-          ) : (
-            <>
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <h4 className="mb-0">Branch List</h4>
-
-                <div className="d-flex align-items-center gap-2">
-                  <span>Show:</span>
-
-                  <Form.Select
-                    style={{ width: '120px' }}
-                    value={pageSize}
-                    onChange={(e) => {
-                      setPageSize(Number(e.target.value))
-                      setCurrentPage(1) // reset page
-                    }}
-                  >
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                    <option value={150}>150</option>
-                  </Form.Select>
-                </div>
-              </div>
-              <div className="table-responsive" style={{ overflowX: 'auto', minHeight: '200px' }}>
-                <Table
-                  hover
-                  bordered
-                  className="list-table align-middle table-sm w-100"
-                >
-                  <thead className="table text-center">
-                    <tr>
-                      <th>Branch Name</th>
-                      <th>Address</th>
-                      <th>Pincode</th>
-                      <th>Companies</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                <tbody className="text-center">
-                  {branches.length === 0 ? (
-                    <tr className="text-center">
-                      <td colSpan={5}>No data found</td>
-                    </tr>
-                  ) : (
-                    branches
-                      .slice(
-                        (currentPage - 1) * pageSize,
-                        currentPage * pageSize,
-                      )
-                      .map((branch) => (
-                        <tr key={branch.id}>
-                          <td>{branch.branch_name}</td>
-                          <td>{branch.address}</td>
-                          <td>{branch.pincode}</td>
-                          <td>{branch.company_name || '-'}</td>
-
-                          <td>
-                            <Dropdown align="end">
-                              <Dropdown.Toggle
-                                variant="outline-secondary"
-                                size="sm"
-                                id={`dropdown-${branch.id}`}
-                                className="bg-secondary text-white shadow-sm border"
-                              >
-                                <BsThreeDotsVertical />
-                              </Dropdown.Toggle>
-
-                              <Dropdown.Menu>
-                                {/* VIEW */}
-                                <Dropdown.Item
-                                  onClick={() => {
-                                    setViewData(branch)
-                                    setShowView(true)
-                                  }}
-                                >
-                                  <FaEye className="me-2 text-info" />
-                                  View
-                                </Dropdown.Item>
-
-                                {/* EDIT */}
-                                <Dropdown.Item
-                                  onClick={() => handleEdit(branch)}
-                                >
-                                  <FaPen className="me-2 text-primary" />
-                                  Edit
-                                </Dropdown.Item>
-
-                                {/* 🔴 ACTIVE = 0 → SHOW NORMAL DELETE */}
-                                {branch.active == 0 && (
-                                  <Dropdown.Item
-                                    onClick={() => handleDelete(branch.id)}
-                                    className="text-danger"
-                                  >
-                                    <FaTrashAlt className="me-2" />
-                                    Delete
-                                  </Dropdown.Item>
-                                )}
-
-                                {/* 🟢 ACTIVE = 1 → ONLY RESTORE */}
-                                {branch.active == 1 && (
-                                  <Dropdown.Item
-                                    onClick={() => handleRestore(branch.id)}
-                                  >
-                                    ♻️ Restore
-                                  </Dropdown.Item>
-                                )}
-                              </Dropdown.Menu>
-                            </Dropdown>
-                          </td>
-                        </tr>
-                      ))
-                  )}
-                </tbody>
-              </Table>
-              <Pagination
-                totalItems={branches.length}
-                itemsPerPage={pageSize}
-                currentPage={currentPage}
-                onPageChange={setCurrentPage}
+              <Tab
+                eventKey="approved"
+                title={`Approved (${counts.approvedBranches})`}
               />
-            </div>
-            </>
-          )}
+              <Tab
+                eventKey="deleted"
+                title={`Deleted (${counts.deletedBranches})`}
+              />
+            </Tabs>
+
+            {/* Branch List Table */}
+            {loading ? (
+              <Alert variant="warning" className="mb-0 text-center">
+                Loading...
+              </Alert>
+            ) : error ? (
+              <Alert variant="danger" className="mb-0 text-center">
+                {error}
+              </Alert>
+            ) : (
+              <>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h4 className="mb-0">Branch List</h4>
+
+                  <div className="d-flex align-items-center gap-2">
+                    <span>Show:</span>
+
+                    <Form.Select
+                      style={{ width: '120px' }}
+                      value={pageSize}
+                      onChange={(e) => {
+                        setPageSize(Number(e.target.value))
+                        setCurrentPage(1) // reset page
+                      }}
+                    >
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                      <option value={150}>150</option>
+                    </Form.Select>
+                  </div>
+                </div>
+                <div className="table-responsive" style={{ overflowX: 'auto', minHeight: '200px' }}>
+                  <Table
+                    hover
+                    bordered
+                    responsive
+                    className="list-table align-middle table-sm w-100 shadow-sm"
+                    style={{ fontSize: '13px' }}
+                  >
+                    <thead className="table-light text-center text-secondary">
+                      <tr>
+                        <th className="fw-semibold px-3 py-2 text-nowrap">Branch Name</th>
+                        <th className="fw-semibold px-3 py-2 text-nowrap">Address</th>
+                        <th className="fw-semibold px-3 py-2 text-nowrap">Pincode</th>
+                        <th className="fw-semibold px-3 py-2 text-nowrap">Companies</th>
+                        <th className="fw-semibold px-3 py-2 text-nowrap">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-center">
+                      {branches.length === 0 ? (
+                        <tr className="text-center">
+                          <td colSpan={5}>No data found</td>
+                        </tr>
+                      ) : (
+                        branches
+                          .slice(
+                            (currentPage - 1) * pageSize,
+                            currentPage * pageSize,
+                          )
+                          .map((branch) => (
+                            <tr key={branch.id}>
+                              <td>{branch.branch_name}</td>
+                              <td>{branch.address}</td>
+                              <td>{branch.pincode}</td>
+                              <td>{branch.company_name || '-'}</td>
+
+                              <td>
+                                <Dropdown drop="start">
+                                  <Dropdown.Toggle
+                                    variant="outline-secondary"
+                                    size="sm"
+                                    id={`dropdown-${branch.id}`}
+                                    className="bg-secondary text-white shadow-sm border"
+                                  >
+                                    <BsThreeDotsVertical />
+                                  </Dropdown.Toggle>
+
+                                  <Dropdown.Menu>
+                                    {/* VIEW */}
+                                    <Dropdown.Item
+                                      onClick={() => {
+                                        setViewData(branch)
+                                        setShowView(true)
+                                      }}
+                                    >
+                                      <FaEye className="me-2 text-info" />
+                                      View
+                                    </Dropdown.Item>
+
+                                    {/* EDIT */}
+                                    <Dropdown.Item
+                                      onClick={() => handleEdit(branch)}
+                                    >
+                                      <FaPen className="me-2 text-primary" />
+                                      Edit
+                                    </Dropdown.Item>
+
+                                    {/* 🔴 ACTIVE = 0 → SHOW NORMAL DELETE */}
+                                    {branch.active == 0 && (
+                                      <Dropdown.Item
+                                        onClick={() => handleDelete(branch.id)}
+                                        className="text-danger"
+                                      >
+                                        <FaTrashAlt className="me-2" />
+                                        Delete
+                                      </Dropdown.Item>
+                                    )}
+
+                                    {/* 🟢 ACTIVE = 1 → ONLY RESTORE */}
+                                    {branch.active == 1 && (
+                                      <Dropdown.Item
+                                        onClick={() => handleRestore(branch.id)}
+                                      >
+                                        ♻️ Restore
+                                      </Dropdown.Item>
+                                    )}
+                                  </Dropdown.Menu>
+                                </Dropdown>
+                              </td>
+                            </tr>
+                          ))
+                      )}
+                    </tbody>
+                  </Table>
+                  <Pagination
+                    totalItems={branches.length}
+                    itemsPerPage={pageSize}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                  />
+                </div>
+              </>
+            )}
           </Card.Body>
         </Card>
       )}
@@ -857,18 +860,58 @@ const BranchPage = () => {
         </Modal.Header>
 
         <Modal.Body>
-          <p>
-            <b>Name:</b> {viewData?.branch_name}
-          </p>
-          <p>
-            <b>Address:</b> {viewData?.address}
-          </p>
-          <p>
-            <b>Pincode:</b> {viewData?.pincode}
-          </p>
-          <p>
-            <b>Company:</b> {viewData?.company_name}
-          </p>
+          <Table bordered hover size="sm" className="mb-0">
+            <tbody>
+              <tr>
+                <th style={{ width: '35%', backgroundColor: '#f8f9fa' }}>Branch Name</th>
+                <td>{viewData?.branch_name || 'N/A'}</td>
+              </tr>
+              <tr>
+                <th style={{ backgroundColor: '#f8f9fa' }}>Company</th>
+                <td>{viewData?.company_name || 'N/A'}</td>
+              </tr>
+              <tr>
+                <th style={{ backgroundColor: '#f8f9fa' }}>Address</th>
+                <td>{viewData?.address || 'N/A'}</td>
+              </tr>
+              <tr>
+                <th style={{ backgroundColor: '#f8f9fa' }}>Area/City</th>
+                <td>{viewData?.city || 'N/A'}</td>
+              </tr>
+              <tr>
+                <th style={{ backgroundColor: '#f8f9fa' }}>Pincode</th>
+                <td>{viewData?.pincode || 'N/A'}</td>
+              </tr>
+              <tr>
+                <th style={{ backgroundColor: '#f8f9fa' }}>Email ID</th>
+                <td>{viewData?.email || 'N/A'}</td>
+              </tr>
+              <tr>
+                <th style={{ backgroundColor: '#f8f9fa' }}>Contact No</th>
+                <td>{viewData?.phone || 'N/A'}</td>
+              </tr>
+              <tr>
+                <th style={{ backgroundColor: '#f8f9fa' }}>Costing Method</th>
+                <td>{viewData?.costing_method || 'N/A'}</td>
+              </tr>
+              <tr>
+                <th style={{ backgroundColor: '#f8f9fa' }}>Def. Purchase A/C</th>
+                <td>{viewData?.def_purchase_ac || 'N/A'}</td>
+              </tr>
+              <tr>
+                <th style={{ backgroundColor: '#f8f9fa' }}>Def. Sales A/C</th>
+                <td>{viewData?.def_sales_ac || 'N/A'}</td>
+              </tr>
+              <tr>
+                <th style={{ backgroundColor: '#f8f9fa' }}>Def. Branch Recv. A/C</th>
+                <td>{viewData?.def_branch_recv_ac || 'N/A'}</td>
+              </tr>
+              <tr>
+                <th style={{ backgroundColor: '#f8f9fa' }}>Def. Branch Disp. A/C</th>
+                <td>{viewData?.def_branch_desp_ac || 'N/A'}</td>
+              </tr>
+            </tbody>
+          </Table>
         </Modal.Body>
       </Modal>
     </Container>

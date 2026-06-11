@@ -27,6 +27,7 @@ import {
   Container,
 } from 'react-bootstrap'
 import defaultImg from './download.jfif'
+import './Company.css'
 
 const API_BASE_URL = `http://localhost:5000/api`
 const IMAGE_BASE_URL = `http://localhost:5000/uploads`
@@ -644,7 +645,7 @@ const Users = () => {
       </Modal>
 
       {/* UNIFIED HEADER */}
-      <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+      <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 pb-2 border-bottom gap-3">
         <h1 className="page-title mb-0" style={{ fontSize: '25px' }}>
           {showForm
             ? isEditing
@@ -1093,7 +1094,7 @@ const Users = () => {
           ) : (
             <>
               <div className="d-flex justify-content-between align-items-center mb-2">
-                <h5 className="mb-0">Primary Category List</h5>
+                <h5 className="mb-0">Users List</h5>
 
                 <div className="d-flex align-items-center gap-2">
                   <span>Show:</span>
@@ -1116,16 +1117,18 @@ const Users = () => {
                 <Table
                   bordered
                   hover
-                  className="list-table align-middle table-sm w-100 mb-0"
+                  responsive
+                  className="list-table align-middle table-sm w-100 shadow-sm mb-0"
+                  style={{ fontSize: '13px' }}
                 >
-                  <thead className="table text-center">
+                  <thead className="table-light text-center text-secondary">
                     <tr>
-                      <th className="text-center">Name</th>
-                      <th>Email ID</th>
-                      <th>Role</th>
-                      <th>Branch</th>
-                      <th>Contact No</th>
-                      <th className="text-center">Actions</th>
+                      <th className="text-center fw-semibold px-3 py-2 text-nowrap">Name</th>
+                      <th className="fw-semibold px-3 py-2 text-nowrap">Email ID</th>
+                      <th className="fw-semibold px-3 py-2 text-nowrap">Role</th>
+                      <th className="fw-semibold px-3 py-2 text-nowrap">Branch</th>
+                      <th className="fw-semibold px-3 py-2 text-nowrap">Contact No</th>
+                      <th className="text-center fw-semibold px-3 py-2 text-nowrap">Actions</th>
                     </tr>
                   </thead>
                 <tbody className="text-center">
@@ -1174,7 +1177,7 @@ const Users = () => {
                             <td>{user.phone || 'NA'}</td>
 
                             <td>
-                              <Dropdown>
+                              <Dropdown drop="start">
                                 <Dropdown.Toggle variant="secondary" size="sm">
                                   <BsThreeDotsVertical />
                                 </Dropdown.Toggle>

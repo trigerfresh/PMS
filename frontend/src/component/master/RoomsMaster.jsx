@@ -24,6 +24,7 @@ import { useEffect, useState } from 'react'
 import { Dropdown } from 'react-bootstrap'
 import { FaEllipsisV, FaEye } from 'react-icons/fa'
 import '../css/RoomMaster.css'
+import './Company.css'
 import Pagination from '../../utils/Pagination'
 import { BsThreeDotsVertical } from 'react-icons/bs'
 
@@ -519,7 +520,7 @@ const RoomsMaster = () => {
       transition: 'background-color 0.5s ease',
     }}>
       {/* UNIFIED HEADER */}
-      <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+      <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 pb-2 border-bottom gap-3">
         <h1 className="page-title mb-0" style={{ fontSize: '25px' }}>
           {showForm
             ? isEditing
@@ -552,9 +553,8 @@ const RoomsMaster = () => {
           )}
           <button
             type="button"
-            className={`shadow-sm rounded-3 ${
-              showForm ? 'btn-danger' : 'btn-primary'
-            }`}
+            className={`shadow-sm rounded-3 ${showForm ? 'btn-danger' : 'btn-primary'
+              }`}
             onClick={() => {
               if (showForm) {
                 setShowForm(false)
@@ -592,123 +592,123 @@ const RoomsMaster = () => {
 
       {showForm ? (
         <div>
-        <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4" style={{ transition: 'all 0.3s ease' }}>
-          <Card.Body className="p-4">
-            <h2 className="mb-4 fw-bold text-secondary" style={{ fontSize: '1.5rem' }}>
-              {isEditing ? 'Edit Room Details' : 'Add New Room'}
-            </h2>
-            <Form onSubmit={handleSaveAndNext}>
-              <Row className="g-3">
-                <Col md={4}>
-                  <Form.Label>Hotel</Form.Label>
-                  <Form.Select
-                    name="hotel_id"
-                    value={formData.hotel_id}
-                    onChange={(e) => {
-                      const hotelId = e.target.value
-                      setFormData((prev) => ({
-                        ...prev,
-                        hotel_id: hotelId,
-                        floor_id: '',
-                      }))
-                      fetchFloors(hotelId)
+          <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4" style={{ transition: 'all 0.3s ease' }}>
+            <Card.Body className="p-4">
+              <h2 className="mb-4 fw-bold text-secondary" style={{ fontSize: '1.5rem' }}>
+                {isEditing ? 'Edit Room Details' : 'Add New Room'}
+              </h2>
+              <Form onSubmit={handleSaveAndNext}>
+                <Row className="g-3">
+                  <Col md={4}>
+                    <Form.Label>Hotel</Form.Label>
+                    <Form.Select
+                      name="hotel_id"
+                      value={formData.hotel_id}
+                      onChange={(e) => {
+                        const hotelId = e.target.value
+                        setFormData((prev) => ({
+                          ...prev,
+                          hotel_id: hotelId,
+                          floor_id: '',
+                        }))
+                        fetchFloors(hotelId)
+                      }}
+                      required
+                    >
+                      <option value="">Select Hotel</option>
+                      {hotels.map((h) => (
+                        <option key={h.id} value={h.id}>
+                          {h.hotel_name}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Col>
+
+                  <Col md={4}>
+                    <Form.Label>Floor</Form.Label>
+                    <Form.Select
+                      name="floor_id"
+                      value={formData.floor_id}
+                      onChange={handleInputChange}
+                      required
+                    >
+                      <option value="">Select Floor</option>
+                      {floors.map((f) => (
+                        <option key={f.floor_id} value={f.floor_id}>
+                          {f.floor_name}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Col>
+
+                  <Col md={4}>
+                    <Form.Label>Room No</Form.Label>
+                    <Form.Control
+                      placeholder="Room No"
+                      name="room_no"
+                      value={formData.room_no}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </Col>
+
+                  <Col md={4}>
+                    <Form.Label>Room Type</Form.Label>
+                    <Form.Control
+                      placeholder="Room Type"
+                      name="room_type"
+                      value={formData.room_type}
+                      onChange={handleInputChange}
+                    />
+                  </Col>
+
+                  <Col md={4}>
+                    <Form.Label>Price</Form.Label>
+                    <Form.Control
+                      placeholder="Price"
+                      name="price"
+                      value={formData.price}
+                      onChange={handleInputChange}
+                    />
+                  </Col>
+
+                  <Col md={4}>
+                    <Form.Label>Status</Form.Label>
+                    <Form.Select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleInputChange}
+                      required
+                    >
+                      <option value="">Select Status</option>
+                      <option value="Available">Available</option>
+                      <option value="Occupied">Occupied</option>
+                      <option value="Maintenance">Maintenance</option>
+                    </Form.Select>
+                  </Col>
+                </Row>
+
+                <div className="mt-4 d-flex gap-2">
+                  <Button type="submit" variant="success">
+                    {isEditing ? 'Save & Next (Update)' : 'Save & Next'}
+                  </Button>
+                  <Button
+                    variant="danger"
+                    onClick={() => {
+                      setShowForm(false)
+                      setIsEditing(false)
+                      resetForm()
                     }}
-                    required
                   >
-                    <option value="">Select Hotel</option>
-                    {hotels.map((h) => (
-                      <option key={h.id} value={h.id}>
-                        {h.hotel_name}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Col>
+                    Cancel
+                  </Button>
+                </div>
+              </Form>
+            </Card.Body>
+          </Card>
 
-                <Col md={4}>
-                  <Form.Label>Floor</Form.Label>
-                  <Form.Select
-                    name="floor_id"
-                    value={formData.floor_id}
-                    onChange={handleInputChange}
-                    required
-                  >
-                    <option value="">Select Floor</option>
-                    {floors.map((f) => (
-                      <option key={f.floor_id} value={f.floor_id}>
-                        {f.floor_name}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Col>
-
-                <Col md={4}>
-                  <Form.Label>Room No</Form.Label>
-                  <Form.Control
-                    placeholder="Room No"
-                    name="room_no"
-                    value={formData.room_no}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </Col>
-
-                <Col md={4}>
-                  <Form.Label>Room Type</Form.Label>
-                  <Form.Control
-                    placeholder="Room Type"
-                    name="room_type"
-                    value={formData.room_type}
-                    onChange={handleInputChange}
-                  />
-                </Col>
-
-                <Col md={4}>
-                  <Form.Label>Price</Form.Label>
-                  <Form.Control
-                    placeholder="Price"
-                    name="price"
-                    value={formData.price}
-                    onChange={handleInputChange}
-                  />
-                </Col>
-
-                <Col md={4}>
-                  <Form.Label>Status</Form.Label>
-                  <Form.Select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleInputChange}
-                    required
-                  >
-                    <option value="">Select Status</option>
-                    <option value="Available">Available</option>
-                    <option value="Occupied">Occupied</option>
-                    <option value="Maintenance">Maintenance</option>
-                  </Form.Select>
-                </Col>
-              </Row>
-
-              <div className="mt-4 d-flex gap-2">
-                <Button type="submit" variant="success">
-                  {isEditing ? 'Save & Next (Update)' : 'Save & Next'}
-                </Button>
-                <Button
-                  variant="danger"
-                  onClick={() => {
-                    setShowForm(false)
-                    setIsEditing(false)
-                    resetForm()
-                  }}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </Form>
-          </Card.Body>
-        </Card>
-
-        {/* ROOM SETTINGS MODAL (Triggered via Save & Next) */}
-        <Modal
+          {/* ROOM SETTINGS MODAL (Triggered via Save & Next) */}
+          <Modal
             show={showSettingsModal}
             onHide={() => setShowSettingsModal(false)}
             size="lg"
@@ -863,154 +863,155 @@ const RoomsMaster = () => {
         /* TABLE LIST SCREEN */
         <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
           <Card.Body className="p-4">
-          {showSearch && (
-            <SearchPanel
-              searchFields={searchFields}
-              setSearchFields={setSearchFields}
-              dateFilter={dateFilter}
-              setDateFilter={setDateFilter}
-              onSearch={handleSearch}
-              onReset={resetSearch}
-              onDownloadExcel={handleDownloadExcel}
-              searchOptions={branchSearchOptions}
-            />
-          )}
+            {showSearch && (
+              <SearchPanel
+                searchFields={searchFields}
+                setSearchFields={setSearchFields}
+                dateFilter={dateFilter}
+                setDateFilter={setDateFilter}
+                onSearch={handleSearch}
+                onReset={resetSearch}
+                onDownloadExcel={handleDownloadExcel}
+                searchOptions={branchSearchOptions}
+              />
+            )}
 
-          <Tabs
-            activeKey={selectedStat}
-            onSelect={(k) => handleStatClick(k)}
-            className="mb-3 custom-bootstrap-tabs"
-            style={{ overflow: 'visible', flexWrap: 'wrap' }}
-          >
-            <Tab
-              eventKey="total"
-              title={`Total Rooms (${roomStats.totalRooms})`}
-            />
-            <Tab
-              eventKey="occupied"
-              title={`Occupied (${roomStats.occupiedRooms})`}
-            />
-            <Tab
-              eventKey="available"
-              title={`Available (${roomStats.availableRooms})`}
-            />
-            <Tab
-              eventKey="maintenance"
-              title={`Maintenance (${roomStats.maintenanceRooms})`}
-            />
-            <Tab
-              eventKey="deleted"
-              title={`Deleted (${deletedRooms.length})`}
-            />
-          </Tabs>
-
-          <div>
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h5 className="mb-0">Room List</h5>
-
-              <div className="d-flex align-items-center gap-2">
-                <span>Show:</span>
-
-                <Form.Select
-                  style={{ width: '120px' }}
-                  value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value))
-                    setCurrentPage(1)
-                  }}
-                >
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                  <option value={150}>150</option>
-                </Form.Select>
-              </div>
-            </div>
-            <div className="table-responsive" style={{ overflowX: 'auto', minHeight: '200px' }}>
-            <Table
-              bordered
-              hover
-              responsive
-              className="list-table align-middle mb-0"
+            <Tabs
+              activeKey={selectedStat}
+              onSelect={(k) => handleStatClick(k)}
+              className="mb-3 custom-bootstrap-tabs flex-nowrap"
+              style={{ overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap' }}
             >
-              <thead className="table text-center">
-                <tr>
-                  <th>Hotel Name</th>
-                  <th>Floor Name</th>
-                  <th>Room No</th>
-                  <th>Type</th>
-                  <th>Price</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody className="text-center">
-                {rooms.length > 0 ? (
-                  rooms
-                    .slice((currentPage - 1) * pageSize, currentPage * pageSize)
-                    .map((room) => (
-                      <tr key={room.room_id}>
-                        <td>{room.hotel_name}</td>
-                        <td>{room.floor_name}</td>
-                        <td>{room.room_no}</td>
-                        <td>{room.room_type}</td>
-                        <td>{room.price}</td>
-                        <td>{room.status}</td>
-                        <td>
-                          <Dropdown align="end">
-                            <Dropdown.Toggle
-                              variant="outline-secondary"
-                              size="sm"
-                              id={`dropdown-${room.room_id}`}
-                              className="bg-secondary text-white shadow-sm border"
-                            >
-                              <BsThreeDotsVertical />
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu>
-                              <Dropdown.Item onClick={() => handleView(room)}>
-                                <FaEye className="me-2 text-primary" /> View
-                              </Dropdown.Item>
-                              {selectedStat !== 'deleted' && (
-                                <Dropdown.Item onClick={() => handleEdit(room)}>
-                                  <FaPen className="me-2 text-warning" /> Edit
-                                </Dropdown.Item>
-                              )}
-                              <Dropdown.Divider />
-                              {selectedStat === 'deleted' ? (
-                                <Dropdown.Item
-                                  onClick={() => handleRestore(room.room_id)}
+              <Tab
+                eventKey="total"
+                title={`Total Rooms (${roomStats.totalRooms})`}
+              />
+              <Tab
+                eventKey="occupied"
+                title={`Occupied (${roomStats.occupiedRooms})`}
+              />
+              <Tab
+                eventKey="available"
+                title={`Available (${roomStats.availableRooms})`}
+              />
+              <Tab
+                eventKey="maintenance"
+                title={`Maintenance (${roomStats.maintenanceRooms})`}
+              />
+              <Tab
+                eventKey="deleted"
+                title={`Deleted (${deletedRooms.length})`}
+              />
+            </Tabs>
+
+            <div>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h5 className="mb-0">Room List</h5>
+
+                <div className="d-flex align-items-center gap-2">
+                  <span>Show:</span>
+
+                  <Form.Select
+                    style={{ width: '120px' }}
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value))
+                      setCurrentPage(1)
+                    }}
+                  >
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                    <option value={150}>150</option>
+                  </Form.Select>
+                </div>
+              </div>
+              <div className="table-responsive" style={{ overflowX: 'auto', minHeight: '200px' }}>
+                <Table
+                  bordered
+                  hover
+                  responsive
+                  className="list-table align-middle mb-0 shadow-sm"
+                  style={{ fontSize: '13px' }}
+                >
+                  <thead className="table-light text-center text-secondary">
+                    <tr>
+                      <th className="text-center fw-semibold px-3 py-2 text-nowrap">Hotel Name</th>
+                      <th className="fw-semibold px-3 py-2 text-nowrap">Floor Name</th>
+                      <th className="fw-semibold px-3 py-2 text-nowrap">Room No</th>
+                      <th className="fw-semibold px-3 py-2 text-nowrap">Type</th>
+                      <th className="fw-semibold px-3 py-2 text-nowrap">Price</th>
+                      <th className="fw-semibold px-3 py-2 text-nowrap">Status</th>
+                      <th className="text-center fw-semibold px-3 py-2 text-nowrap">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-center">
+                    {rooms.length > 0 ? (
+                      rooms
+                        .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+                        .map((room) => (
+                          <tr key={room.room_id}>
+                            <td>{room.hotel_name}</td>
+                            <td>{room.floor_name}</td>
+                            <td>{room.room_no}</td>
+                            <td>{room.room_type}</td>
+                            <td>{room.price}</td>
+                            <td>{room.status}</td>
+                            <td>
+                              <Dropdown align="end">
+                                <Dropdown.Toggle
+                                  variant="outline-secondary"
+                                  size="sm"
+                                  id={`dropdown-${room.room_id}`}
+                                  className="bg-secondary text-white shadow-sm border"
                                 >
-                                  Restore Room
-                                </Dropdown.Item>
-                              ) : (
-                                <Dropdown.Item
-                                  onClick={() => handleDelete(room.room_id)}
-                                >
-                                  <FaTrashAlt className="me-2" />
-                                  Delete
-                                </Dropdown.Item>
-                              )}
-                            </Dropdown.Menu>
-                          </Dropdown>
+                                  <BsThreeDotsVertical />
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu>
+                                  <Dropdown.Item onClick={() => handleView(room)}>
+                                    <FaEye className="me-2 text-primary" /> View
+                                  </Dropdown.Item>
+                                  {selectedStat !== 'deleted' && (
+                                    <Dropdown.Item onClick={() => handleEdit(room)}>
+                                      <FaPen className="me-2 text-warning" /> Edit
+                                    </Dropdown.Item>
+                                  )}
+                                  <Dropdown.Divider />
+                                  {selectedStat === 'deleted' ? (
+                                    <Dropdown.Item
+                                      onClick={() => handleRestore(room.room_id)}
+                                    >
+                                      Restore Room
+                                    </Dropdown.Item>
+                                  ) : (
+                                    <Dropdown.Item
+                                      onClick={() => handleDelete(room.room_id)}
+                                    >
+                                      <FaTrashAlt className="me-2" />
+                                      Delete
+                                    </Dropdown.Item>
+                                  )}
+                                </Dropdown.Menu>
+                              </Dropdown>
+                            </td>
+                          </tr>
+                        ))
+                    ) : (
+                      <tr>
+                        <td colSpan="7" className="text-center py-3">
+                          No rooms found.
                         </td>
                       </tr>
-                    ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="text-center py-3">
-                      No rooms found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </Table>
-            <Pagination
-              totalItems={rooms.length}
-              itemsPerPage={pageSize}
-              currentPage={currentPage}
-              onPageChange={setCurrentPage}
-            />
+                    )}
+                  </tbody>
+                </Table>
+                <Pagination
+                  totalItems={rooms.length}
+                  itemsPerPage={pageSize}
+                  currentPage={currentPage}
+                  onPageChange={setCurrentPage}
+                />
+              </div>
             </div>
-          </div>
           </Card.Body>
         </Card>
       )}

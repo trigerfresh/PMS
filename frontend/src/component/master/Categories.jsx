@@ -232,7 +232,7 @@ export default function Categories() {
       transition: 'background-color 0.5s ease',
     }}>
       {/* HEADER SECTION */}
-      <div className="page-header d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+      <div className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 pb-2 border-bottom gap-3">
         <h1
           className="page-title mb-0"
           style={{
@@ -273,9 +273,8 @@ export default function Categories() {
 
           <button
             type="button"
-            className={`btn shadow-sm rounded-3 text-white ${
-              showForm ? 'btn-danger' : 'btn-primary'
-            }`}
+            className={`btn shadow-sm rounded-3 text-white ${showForm ? 'btn-danger' : 'btn-primary'
+              }`}
             onClick={() => {
               if (showForm) {
                 resetForm()
@@ -316,327 +315,327 @@ export default function Categories() {
             </h2>
 
             <div className="company-form-wrapper">
-            <Form className="company-form" onSubmit={handleSubmit}>
-              <Row>
-                {/* PRIMARY CATEGORY SELECT */}
-                <Col xs={12} sm={6} md={6} className="mb-3">
-                  <Form.Group controlId="pcatId">
-                    <Form.Label>Primary Category *</Form.Label>
-                    <Form.Select
-                      value={pcatId}
-                      onChange={(e) => setPcatId(e.target.value)}
-                      required
-                    >
-                      <option value="">Select Primary Category</option>
-                      {primaryList.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.primary_categories_name}
-                        </option>
-                      ))}
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
-
-                {/* CATEGORY NAME INPUT */}
-                <Col xs={12} sm={6} md={6} className="mb-3">
-                  <Form.Group controlId="categoryName">
-                    <Form.Label>Category Name *</Form.Label>
-                    <Form.Control
-                      placeholder="Enter Category Name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
-                  </Form.Group>
-                </Col>
-
-                {/* IMAGE INPUT */}
-                <Col xs={12} sm={6} md={6} className="mb-3">
-                  <Form.Group controlId="categoryImage">
-                    <Form.Label>Upload Image</Form.Label>
-                    <Form.Control
-                      id="category-image"
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setImage(e.target.files[0])}
-                    />
-                  </Form.Group>
-                </Col>
-
-                {/* CURRENT IMAGE PREVIEW (In Edit Mode) */}
-                {editId && existingImage && (
-                  <Col
-                    xs={12}
-                    sm={6}
-                    md={6}
-                    className="mb-3 d-flex align-items-end"
-                  >
-                    <div className="p-2 border rounded d-inline-flex align-items-center gap-2 bg-light">
-                      <img
-                        src={`http://localhost:5000/uploads/${existingImage}`}
-                        alt="Current"
-                        width="50"
-                        height="50"
-                        style={{ objectFit: 'cover', borderRadius: '4px' }}
-                      />
-                      <div style={{ fontSize: '12px' }} className="text-muted">
-                        <span className="fw-bold d-block">Current Image</span>
-                        {existingImage}
-                      </div>
-                    </div>
+              <Form className="company-form" onSubmit={handleSubmit}>
+                <Row>
+                  {/* PRIMARY CATEGORY SELECT */}
+                  <Col xs={12} sm={6} md={6} className="mb-3">
+                    <Form.Group controlId="pcatId">
+                      <Form.Label>Primary Category *</Form.Label>
+                      <Form.Select
+                        value={pcatId}
+                        onChange={(e) => setPcatId(e.target.value)}
+                        required
+                      >
+                        <option value="">Select Primary Category</option>
+                        {primaryList.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.primary_categories_name}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
                   </Col>
-                )}
-              </Row>
 
-              {/* FORM FOOTER BUTTONS */}
-              <div className="form-actions d-flex justify-content-end mt-4">
-                <Button
-                  variant="secondary"
-                  className="me-2"
-                  onClick={resetForm}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" variant="primary">
-                  {editId ? 'Update Category' : 'Save Category'}
-                </Button>
-              </div>
-            </Form>
-          </div>
+                  {/* CATEGORY NAME INPUT */}
+                  <Col xs={12} sm={6} md={6} className="mb-3">
+                    <Form.Group controlId="categoryName">
+                      <Form.Label>Category Name *</Form.Label>
+                      <Form.Control
+                        placeholder="Enter Category Name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+
+                  {/* IMAGE INPUT */}
+                  <Col xs={12} sm={6} md={6} className="mb-3">
+                    <Form.Group controlId="categoryImage">
+                      <Form.Label>Upload Image</Form.Label>
+                      <Form.Control
+                        id="category-image"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setImage(e.target.files[0])}
+                      />
+                    </Form.Group>
+                  </Col>
+
+                  {/* CURRENT IMAGE PREVIEW (In Edit Mode) */}
+                  {editId && existingImage && (
+                    <Col
+                      xs={12}
+                      sm={6}
+                      md={6}
+                      className="mb-3 d-flex align-items-end"
+                    >
+                      <div className="p-2 border rounded d-inline-flex align-items-center gap-2 bg-light">
+                        <img
+                          src={`http://localhost:5000/uploads/${existingImage}`}
+                          alt="Current"
+                          width="50"
+                          height="50"
+                          style={{ objectFit: 'cover', borderRadius: '4px' }}
+                        />
+                        <div style={{ fontSize: '12px' }} className="text-muted">
+                          <span className="fw-bold d-block">Current Image</span>
+                          {existingImage}
+                        </div>
+                      </div>
+                    </Col>
+                  )}
+                </Row>
+
+                {/* FORM FOOTER BUTTONS */}
+                <div className="form-actions d-flex justify-content-end mt-4">
+                  <Button
+                    variant="secondary"
+                    className="me-2"
+                    onClick={resetForm}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" variant="primary">
+                    {editId ? 'Update Category' : 'Save Category'}
+                  </Button>
+                </div>
+              </Form>
+            </div>
           </Card.Body>
         </Card>
       ) : (
         /* VIEW 2: SEARCH PANEL AND TABS TABLE (Jab form band hoga) */
         <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
           <Card.Body className="p-4">
-          {showSearch && (
-            <SearchPanel
-              searchFields={searchFields}
-              setSearchFields={setSearchFields}
-              onSearch={handleSearch}
-              onReset={resetSearch}
-              searchOptions={searchOptions}
-              dateFilter={dateFilter}
-              setDateFilter={setDateFilter}
-              onDownloadExcel={downloadExcel}
-            />
-          )}
+            {showSearch && (
+              <SearchPanel
+                searchFields={searchFields}
+                setSearchFields={setSearchFields}
+                onSearch={handleSearch}
+                onReset={resetSearch}
+                searchOptions={searchOptions}
+                dateFilter={dateFilter}
+                setDateFilter={setDateFilter}
+                onDownloadExcel={downloadExcel}
+              />
+            )}
 
-          <Tabs
-            activeKey={key}
-            onSelect={(k) => {
-              setKey(k)
-              setCurrentPage(1)
-            }}
-            className="mb-3 custom-bootstrap-tabs"
-            style={{ overflow: 'visible', flexWrap: 'wrap' }}
-          >
-            {/* ACTIVE TAB */}
-            <Tab eventKey="active" title="Active">
-              <>
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <h5 className="mb-0">Category List</h5>
+            <Tabs
+              activeKey={key}
+              onSelect={(k) => {
+                setKey(k)
+                setCurrentPage(1)
+              }}
+              className="mb-3 custom-bootstrap-tabs"
+              style={{ overflow: 'visible', flexWrap: 'wrap' }}
+            >
+              {/* ACTIVE TAB */}
+              <Tab eventKey="active" title="Active">
+                <>
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <h5 className="mb-0">Category List</h5>
 
-                  <div className="d-flex align-items-center gap-2">
-                    <span>Show:</span>
+                    <div className="d-flex align-items-center gap-2">
+                      <span>Show:</span>
 
-                    <Form.Select
-                      style={{ width: '120px' }}
-                      value={pageSize}
-                      onChange={(e) => {
-                        setPageSize(Number(e.target.value))
-                        setCurrentPage(1)
-                      }}
-                    >
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                      <option value={150}>150</option>
-                    </Form.Select>
+                      <Form.Select
+                        style={{ width: '120px' }}
+                        value={pageSize}
+                        onChange={(e) => {
+                          setPageSize(Number(e.target.value))
+                          setCurrentPage(1)
+                        }}
+                      >
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                        <option value={150}>150</option>
+                      </Form.Select>
+                    </div>
                   </div>
-                </div>
-              <div className="table-responsive" style={{ overflowX: 'auto', minHeight: '200px' }}>
-                <table className="table table-bordered table-striped mt-3 bg-white shadow-sm align-middle table-sm w-100">
-                  <thead className="table text-center">
-                    <tr>
-                      <th className="text-center">ID</th>
-                      <th className="text-center">Image</th>
-                      <th>Primary Category</th>
-                      <th>Category</th>
-                      <th className="text-center">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-center">
-                    {activeList.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan="5"
-                          className="text-center text-muted py-3 small"
-                        >
-                          No active categories found.
-                        </td>
-                      </tr>
-                    ) : (
-                      activeList
-                        .slice(
-                          (currentPage - 1) * pageSize,
-                          currentPage * pageSize,
-                        )
-                        .map((item) => (
-                          <tr key={item.id}>
-                            <td className="text-center">{item.id}</td>
-                            <td className="text-center">
-                              {item.image ? (
-                                <img
-                                  src={`http://localhost:5000/uploads/${item.image}`}
-                                  alt={item.category_name}
-                                  width="30"
-                                  height="30"
-                                  style={{
-                                    objectFit: 'cover',
-                                    borderRadius: '4px',
-                                  }}
-                                />
-                              ) : (
-                                <span className="text-muted small">—</span>
-                              )}
-                            </td>
-                            <td>{item.primary_categories_name}</td>
-                            <td className="fw-semibold">
-                              {item.category_name}
-                            </td>
-                            <td className="text-center">
-                              <Dropdown>
-                                <Dropdown.Toggle
-                                  size="sm"
-                                  variant="outline-secondary"
-                                  className="bg-secondary text-white"
-                                >
-                                  <BsThreeDotsVertical />
-                                </Dropdown.Toggle>
-                                <Dropdown.Menu>
-                                  <Dropdown.Item
-                                    onClick={() => handleEdit(item)}
-                                  >
-                                    Edit
-                                  </Dropdown.Item>
-                                  <Dropdown.Item
-                                    onClick={() => handleDelete(item.id)}
-                                    className="text-danger"
-                                  >
-                                    Delete
-                                  </Dropdown.Item>
-                                </Dropdown.Menu>
-                              </Dropdown>
+                  <div className="table-responsive" style={{ overflowX: 'auto', minHeight: '200px' }}>
+                    <table className="table table-bordered table-striped mt-3 bg-white shadow-sm align-middle table-sm w-100 list-table" style={{ fontSize: '13px' }}>
+                      <thead className="table-light text-center text-secondary">
+                        <tr>
+                          <th className="text-center fw-semibold px-3 py-2 text-nowrap">ID</th>
+                          <th className="text-center fw-semibold px-3 py-2 text-nowrap">Image</th>
+                          <th className="fw-semibold px-3 py-2 text-nowrap">Primary Category</th>
+                          <th className="fw-semibold px-3 py-2 text-nowrap">Category</th>
+                          <th className="text-center fw-semibold px-3 py-2 text-nowrap">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-center">
+                        {activeList.length === 0 ? (
+                          <tr>
+                            <td
+                              colSpan="5"
+                              className="text-center text-muted py-3 small"
+                            >
+                              No active categories found.
                             </td>
                           </tr>
-                        ))
-                    )}
-                  </tbody>
-                </table>
-                <Pagination
-                  totalItems={activeList.length}
-                  itemsPerPage={pageSize}
-                  currentPage={currentPage}
-                  onPageChange={setCurrentPage}
-                />
-              </div>
-              </>
-            </Tab>
-
-            {/* DELETED TAB */}
-            <Tab eventKey="deleted" title="Deleted">
-              <>
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <h5 className="mb-0">Category List</h5>
-
-                  <div className="d-flex align-items-center gap-2">
-                    <span>Show:</span>
-
-                    <Form.Select
-                      style={{ width: '120px' }}
-                      value={pageSize}
-                      onChange={(e) => {
-                        setPageSize(Number(e.target.value))
-                        setCurrentPage(1)
-                      }}
-                    >
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                      <option value={150}>150</option>
-                    </Form.Select>
+                        ) : (
+                          activeList
+                            .slice(
+                              (currentPage - 1) * pageSize,
+                              currentPage * pageSize,
+                            )
+                            .map((item) => (
+                              <tr key={item.id}>
+                                <td className="text-center">{item.id}</td>
+                                <td className="text-center">
+                                  {item.image ? (
+                                    <img
+                                      src={`http://localhost:5000/uploads/${item.image}`}
+                                      alt={item.category_name}
+                                      width="30"
+                                      height="30"
+                                      style={{
+                                        objectFit: 'cover',
+                                        borderRadius: '4px',
+                                      }}
+                                    />
+                                  ) : (
+                                    <span className="text-muted small">—</span>
+                                  )}
+                                </td>
+                                <td>{item.primary_categories_name}</td>
+                                <td className="fw-semibold">
+                                  {item.category_name}
+                                </td>
+                                <td className="text-center">
+                                  <Dropdown>
+                                    <Dropdown.Toggle
+                                      size="sm"
+                                      variant="outline-secondary"
+                                      className="bg-secondary text-white"
+                                    >
+                                      <BsThreeDotsVertical />
+                                    </Dropdown.Toggle>
+                                    <Dropdown.Menu>
+                                      <Dropdown.Item
+                                        onClick={() => handleEdit(item)}
+                                      >
+                                        Edit
+                                      </Dropdown.Item>
+                                      <Dropdown.Item
+                                        onClick={() => handleDelete(item.id)}
+                                        className="text-danger"
+                                      >
+                                        Delete
+                                      </Dropdown.Item>
+                                    </Dropdown.Menu>
+                                  </Dropdown>
+                                </td>
+                              </tr>
+                            ))
+                        )}
+                      </tbody>
+                    </table>
+                    <Pagination
+                      totalItems={activeList.length}
+                      itemsPerPage={pageSize}
+                      currentPage={currentPage}
+                      onPageChange={setCurrentPage}
+                    />
                   </div>
-                </div>
-              <div className="table-responsive" style={{ overflowX: 'auto' }}>
-                <table className="table table-bordered table-striped mt-3 bg-white shadow-sm align-middle table-sm w-100">
-                  <thead className="table">
-                    <tr>
-                      <th className="text-center">ID</th>
-                      <th className="text-center">Image</th>
-                      <th>Primary Category</th>
-                      <th>Category</th>
-                      <th className="text-center">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {deletedList.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan="5"
-                          className="text-center text-muted py-3 small"
-                        >
-                          No deleted records.
-                        </td>
-                      </tr>
-                    ) : (
-                      deletedList
-                        .slice(
-                          (currentPage - 1) * pageSize,
-                          currentPage * pageSize,
-                        )
-                        .map((item) => (
-                          <tr key={item.id}>
-                            <td className="text-center">{item.id}</td>
-                            <td className="text-center">
-                              {item.image ? (
-                                <img
-                                  src={`http://localhost:5000/uploads/${item.image}`}
-                                  alt={item.category_name}
-                                  width="30"
-                                  height="30"
-                                  style={{
-                                    objectFit: 'cover',
-                                    borderRadius: '4px',
-                                  }}
-                                />
-                              ) : (
-                                <span className="text-muted small">—</span>
-                              )}
-                            </td>
-                            <td>{item.primary_categories_name}</td>
-                            <td>{item.category_name}</td>
-                            <td className="text-center">
-                              <button
-                                className="btn btn-sm btn-success px-3"
-                                onClick={() => handleRestore(item.id)}
-                              >
-                                Restore
-                              </button>
+                </>
+              </Tab>
+
+              {/* DELETED TAB */}
+              <Tab eventKey="deleted" title="Deleted">
+                <>
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <h5 className="mb-0">Category List</h5>
+
+                    <div className="d-flex align-items-center gap-2">
+                      <span>Show:</span>
+
+                      <Form.Select
+                        style={{ width: '120px' }}
+                        value={pageSize}
+                        onChange={(e) => {
+                          setPageSize(Number(e.target.value))
+                          setCurrentPage(1)
+                        }}
+                      >
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                        <option value={150}>150</option>
+                      </Form.Select>
+                    </div>
+                  </div>
+                  <div className="table-responsive" style={{ overflowX: 'auto', minHeight: '200px' }}>
+                    <table className="table table-bordered table-striped mt-3 bg-white shadow-sm align-middle table-sm w-100 list-table" style={{ fontSize: '13px' }}>
+                      <thead className="table-dark text-center">
+                        <tr>
+                          <th className="text-center fw-semibold px-3 py-2 text-nowrap">ID</th>
+                          <th className="text-center fw-semibold px-3 py-2 text-nowrap">Image</th>
+                          <th className="fw-semibold px-3 py-2 text-nowrap">Primary Category</th>
+                          <th className="fw-semibold px-3 py-2 text-nowrap">Category</th>
+                          <th className="text-center fw-semibold px-3 py-2 text-nowrap">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {deletedList.length === 0 ? (
+                          <tr>
+                            <td
+                              colSpan="5"
+                              className="text-center text-muted py-3 small"
+                            >
+                              No deleted records.
                             </td>
                           </tr>
-                        ))
-                    )}
-                  </tbody>
-                </table>
-                <Pagination
-                  totalItems={deletedList.length}
-                  itemsPerPage={pageSize}
-                  currentPage={currentPage}
-                  onPageChange={setCurrentPage}
-                />
-              </div>
-              </>
-            </Tab>
-          </Tabs>
+                        ) : (
+                          deletedList
+                            .slice(
+                              (currentPage - 1) * pageSize,
+                              currentPage * pageSize,
+                            )
+                            .map((item) => (
+                              <tr key={item.id}>
+                                <td className="text-center">{item.id}</td>
+                                <td className="text-center">
+                                  {item.image ? (
+                                    <img
+                                      src={`http://localhost:5000/uploads/${item.image}`}
+                                      alt={item.category_name}
+                                      width="30"
+                                      height="30"
+                                      style={{
+                                        objectFit: 'cover',
+                                        borderRadius: '4px',
+                                      }}
+                                    />
+                                  ) : (
+                                    <span className="text-muted small">—</span>
+                                  )}
+                                </td>
+                                <td>{item.primary_categories_name}</td>
+                                <td>{item.category_name}</td>
+                                <td className="text-center">
+                                  <button
+                                    className="btn btn-sm btn-success px-3"
+                                    onClick={() => handleRestore(item.id)}
+                                  >
+                                    Restore
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                        )}
+                      </tbody>
+                    </table>
+                    <Pagination
+                      totalItems={deletedList.length}
+                      itemsPerPage={pageSize}
+                      currentPage={currentPage}
+                      onPageChange={setCurrentPage}
+                    />
+                  </div>
+                </>
+              </Tab>
+            </Tabs>
           </Card.Body>
         </Card>
       )}
