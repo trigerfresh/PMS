@@ -43,7 +43,7 @@ const CompanyPage = () => {
   const [selectedCompany, setSelectedCompany] = useState(null)
   const [itemsPerPage, setItemsPerPage] = useState(50)
 
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('approved')
   const [currentPage, setCurrentPage] = useState(1)
   const [counts, setCounts] = useState({
     totalCompanies: 0,

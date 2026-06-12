@@ -42,7 +42,7 @@ const HotelPage = () => {
   const [validationErrors, setValidationErrors] = useState({})
   const [showModal, setShowModal] = useState(false)
   const [selectedHotel, setSelectedHotel] = useState(null)
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('approved')
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
@@ -565,93 +565,93 @@ const HotelPage = () => {
       {showForm ? (
         <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4" style={{ transition: 'all 0.3s ease' }}>
           <Card.Body className="p-4">
-          <h2 className="mb-4 fw-bold text-secondary" style={{ fontSize: '1.5rem' }}>
-            {isEditing ? (
-              <span>Edit Hotel - {isEditing.hotel_name}</span>
-            ) : (
-              'Hotel Details'
+            <h2 className="mb-4 fw-bold text-secondary" style={{ fontSize: '1.5rem' }}>
+              {isEditing ? (
+                <span>Edit Hotel - {isEditing.hotel_name}</span>
+              ) : (
+                'Hotel Details'
+              )}
+            </h2>
+            {Object.keys(validationErrors).length > 0 && (
+              <Alert variant="danger">
+                Please fix the validation errors below.
+              </Alert>
             )}
-          </h2>
-          {Object.keys(validationErrors).length > 0 && (
-            <Alert variant="danger">
-              Please fix the validation errors below.
-            </Alert>
-          )}
-          <Form className="branch-form" onSubmit={handleSubmit}>
-            <Row>
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="hotelName">
-                  {/* <Form.Label>Hotel Name *</Form.Label> */}
-                  <Form.Control
-                    name="hotelName"
-                    value={formData.hotelName}
-                    onChange={handleInputChange}
-                    placeholder="Enter Hotel name"
-                    isInvalid={!!validationErrors.hotelName}
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {validationErrors.hotelName}
-                  </Form.Control.Feedback>
-                </Form.Group>
-              </Col>
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="address">
-                  {/* <Form.Label>Address</Form.Label> */}
-                  <Form.Control
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    placeholder="Address"
-                  />
-                </Form.Group>
-              </Col>
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="city">
-                  {/* <Form.Label>City</Form.Label> */}
-                  <Form.Control
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    placeholder="Enter your city name"
-                  />
-                </Form.Group>
-              </Col>
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="pincode">
-                  {/* <Form.Label>Pincode</Form.Label> */}
-                  <Form.Control
-                    name="pincode"
-                    value={formData.pincode}
-                    onChange={handleInputChange}
-                    placeholder="Pincode"
-                  />
-                </Form.Group>
-              </Col>
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="email">
-                  {/* <Form.Label>Email ID</Form.Label> */}
-                  <Form.Control
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="Email ID"
-                    type="text"
-                  />
-                </Form.Group>
-              </Col>
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="phone">
-                  {/* <Form.Label>Contact No</Form.Label> */}
-                  <Form.Control
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    placeholder="Contact Number"
-                  />
-                </Form.Group>
-              </Col>
+            <Form className="branch-form" onSubmit={handleSubmit}>
+              <Row>
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="hotelName">
+                    {/* <Form.Label>Hotel Name *</Form.Label> */}
+                    <Form.Control
+                      name="hotelName"
+                      value={formData.hotelName}
+                      onChange={handleInputChange}
+                      placeholder="Enter Hotel name"
+                      isInvalid={!!validationErrors.hotelName}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {validationErrors.hotelName}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+                </Col>
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="address">
+                    {/* <Form.Label>Address</Form.Label> */}
+                    <Form.Control
+                      name="address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      placeholder="Address"
+                    />
+                  </Form.Group>
+                </Col>
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="city">
+                    {/* <Form.Label>City</Form.Label> */}
+                    <Form.Control
+                      name="city"
+                      value={formData.city}
+                      onChange={handleInputChange}
+                      placeholder="Enter your city name"
+                    />
+                  </Form.Group>
+                </Col>
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="pincode">
+                    {/* <Form.Label>Pincode</Form.Label> */}
+                    <Form.Control
+                      name="pincode"
+                      value={formData.pincode}
+                      onChange={handleInputChange}
+                      placeholder="Pincode"
+                    />
+                  </Form.Group>
+                </Col>
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="email">
+                    {/* <Form.Label>Email ID</Form.Label> */}
+                    <Form.Control
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      placeholder="Email ID"
+                      type="text"
+                    />
+                  </Form.Group>
+                </Col>
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="phone">
+                    {/* <Form.Label>Contact No</Form.Label> */}
+                    <Form.Control
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      placeholder="Contact Number"
+                    />
+                  </Form.Group>
+                </Col>
 
-              {/* <Col xs={12} sm={6} md={4} className="mb-3">
+                {/* <Col xs={12} sm={6} md={4} className="mb-3">
                 <Form.Group controlId="defPurchaseAccount">
                   <Form.Label>Def. Purchase Account</Form.Label>
                   <Form.Control
@@ -663,385 +663,385 @@ const HotelPage = () => {
                 </Form.Group>
               </Col> */}
 
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="gstNo">
-                  {/* <Form.Label>GST NO</Form.Label> */}
-                  <Form.Control
-                    name="gstNo"
-                    value={formData.gstNo}
-                    onChange={handleInputChange}
-                    placeholder="Enter GST No"
-                  />
-                </Form.Group>
-              </Col>
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="contact_person">
-                  {/* <Form.Label>Description</Form.Label> */}
-                  <Form.Control
-                    name="contact_person"
-                    value={formData.contact_person}
-                    onChange={handleInputChange}
-                    placeholder="Enter contact person"
-                  />
-                </Form.Group>
-              </Col>
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="gstNo">
+                    {/* <Form.Label>GST NO</Form.Label> */}
+                    <Form.Control
+                      name="gstNo"
+                      value={formData.gstNo}
+                      onChange={handleInputChange}
+                      placeholder="Enter GST No"
+                    />
+                  </Form.Group>
+                </Col>
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="contact_person">
+                    {/* <Form.Label>Description</Form.Label> */}
+                    <Form.Control
+                      name="contact_person"
+                      value={formData.contact_person}
+                      onChange={handleInputChange}
+                      placeholder="Enter contact person"
+                    />
+                  </Form.Group>
+                </Col>
 
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="companyId">
-                  {/* <Form.Label>Select Company *</Form.Label> */}
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="companyId">
+                    {/* <Form.Label>Select Company *</Form.Label> */}
 
-                  <Form.Select
-                    name="companyId"
-                    value={formData.companyId}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        companyId: e.target.value,
-                        branchId: '',
-                      })
-                    }
-                  >
-                    <option value="">Select Company</option>
+                    <Form.Select
+                      name="companyId"
+                      value={formData.companyId}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          companyId: e.target.value,
+                          branchId: '',
+                        })
+                      }
+                    >
+                      <option value="">Select Company</option>
 
-                    {companies.map((company) => (
-                      <option key={company.id} value={company.id}>
-                        {company.company_name}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="branchId">
-                  {/* <Form.Label>Select Branch *</Form.Label> */}
-
-                  <Form.Select
-                    name="branchId"
-                    value={formData.branchId}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        branchId: e.target.value,
-                      })
-                    }
-                  >
-                    <option value="">Select Branch</option>
-
-                    {branch
-                      .filter((item) => {
-                        const isActive = item.active == 0
-                        let isAssigned = false
-                        if (formData.companyId) {
-                          const selectedCompanyId = String(formData.companyId)
-                          if (item.company_id) {
-                            const assignedCompanyIds = item.company_id
-                              .split(',')
-                              .map((id) => id.trim())
-                            isAssigned =
-                              assignedCompanyIds.includes(selectedCompanyId)
-                          }
-                        }
-                        return isActive && isAssigned
-                      })
-                      .map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.branch_name}
+                      {companies.map((company) => (
+                        <option key={company.id} value={company.id}>
+                          {company.company_name}
                         </option>
                       ))}
-                  </Form.Select>
-                </Form.Group>
-              </Col>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
 
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="thumbnailImage">
-                  {/* <Form.Label>Hotel Image</Form.Label> */}
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="branchId">
+                    {/* <Form.Label>Select Branch *</Form.Label> */}
 
-                  <Form.Control
-                    type="file"
-                    accept=".jpg,.jpeg,.png,.webp"
-                    name="thumbnailImage"
-                    onChange={handleFileChange}
-                  />
-                  {formData.existingThumbnailImage && (
-                    <small className="text-success">
-                      Current File: {formData.existingThumbnailImage}
-                    </small>
-                  )}
-                </Form.Group>
-              </Col>
+                    <Form.Select
+                      name="branchId"
+                      value={formData.branchId}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          branchId: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="">Select Branch</option>
 
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="image1">
-                  {/* <Form.Label>Image 1</Form.Label> */}
+                      {branch
+                        .filter((item) => {
+                          const isActive = item.active == 0
+                          let isAssigned = false
+                          if (formData.companyId) {
+                            const selectedCompanyId = String(formData.companyId)
+                            if (item.company_id) {
+                              const assignedCompanyIds = item.company_id
+                                .split(',')
+                                .map((id) => id.trim())
+                              isAssigned =
+                                assignedCompanyIds.includes(selectedCompanyId)
+                            }
+                          }
+                          return isActive && isAssigned
+                        })
+                        .map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.branch_name}
+                          </option>
+                        ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
 
-                  <Form.Control
-                    type="file"
-                    accept=".jpg,.jpeg,.png,.webp"
-                    name="image1"
-                    onChange={handleFileChange}
-                  />
-                  {formData.existingImage1 && (
-                    <small className="text-success">
-                      Current File: {formData.existingImage1}
-                    </small>
-                  )}
-                </Form.Group>
-              </Col>
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="thumbnailImage">
+                    {/* <Form.Label>Hotel Image</Form.Label> */}
 
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="image2">
-                  {/* <Form.Label>Image 2</Form.Label> */}
+                    <Form.Control
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.webp"
+                      name="thumbnailImage"
+                      onChange={handleFileChange}
+                    />
+                    {formData.existingThumbnailImage && (
+                      <small className="text-success">
+                        Current File: {formData.existingThumbnailImage}
+                      </small>
+                    )}
+                  </Form.Group>
+                </Col>
 
-                  <Form.Control
-                    type="file"
-                    accept=".jpg,.jpeg,.png,.webp"
-                    name="image2"
-                    onChange={handleFileChange}
-                  />
-                  {formData.existingImage2 && (
-                    <small className="text-success">
-                      Current File: {formData.existingImage2}
-                    </small>
-                  )}
-                </Form.Group>
-              </Col>
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="image1">
+                    {/* <Form.Label>Image 1</Form.Label> */}
 
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="image3">
-                  {/* <Form.Label>Image 3</Form.Label> */}
+                    <Form.Control
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.webp"
+                      name="image1"
+                      onChange={handleFileChange}
+                    />
+                    {formData.existingImage1 && (
+                      <small className="text-success">
+                        Current File: {formData.existingImage1}
+                      </small>
+                    )}
+                  </Form.Group>
+                </Col>
 
-                  <Form.Control
-                    type="file"
-                    accept=".jpg,.jpeg,.png,.webp"
-                    name="image3"
-                    onChange={handleFileChange}
-                  />
-                  {formData.existingImage3 && (
-                    <small className="text-success">
-                      Current File: {formData.existingImage3}
-                    </small>
-                  )}
-                </Form.Group>
-              </Col>
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="image2">
+                    {/* <Form.Label>Image 2</Form.Label> */}
 
-              <Col xs={12} sm={6} md={4} className="mb-3">
-                <Form.Group controlId="description">
-                  <Form.Control
-                    as="textarea"
-                    rows={4}
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    placeholder="Enter Description"
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
+                    <Form.Control
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.webp"
+                      name="image2"
+                      onChange={handleFileChange}
+                    />
+                    {formData.existingImage2 && (
+                      <small className="text-success">
+                        Current File: {formData.existingImage2}
+                      </small>
+                    )}
+                  </Form.Group>
+                </Col>
 
-            <hr />
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="image3">
+                    {/* <Form.Label>Image 3</Form.Label> */}
 
-            <div className="form-actions d-flex justify-content-end">
-              <Button
-                variant="secondary"
-                className="me-2"
-                onClick={() => {
-                  resetForm()
-                  setShowForm(false)
-                }}
-              >
-                Cancel
-              </Button>
-              <Button type="button" variant="primary" onClick={handleSubmit}>
-                {isEditing ? 'Update Hotel' : 'Save Hotel'}
-              </Button>
-            </div>
-          </Form>
+                    <Form.Control
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.webp"
+                      name="image3"
+                      onChange={handleFileChange}
+                    />
+                    {formData.existingImage3 && (
+                      <small className="text-success">
+                        Current File: {formData.existingImage3}
+                      </small>
+                    )}
+                  </Form.Group>
+                </Col>
+
+                <Col xs={12} sm={6} md={4} className="mb-3">
+                  <Form.Group controlId="description">
+                    <Form.Control
+                      as="textarea"
+                      rows={4}
+                      name="description"
+                      value={formData.description}
+                      onChange={handleInputChange}
+                      placeholder="Enter Description"
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+
+              <hr />
+
+              <div className="form-actions d-flex justify-content-end">
+                <Button
+                  variant="secondary"
+                  className="me-2"
+                  onClick={() => {
+                    resetForm()
+                    setShowForm(false)
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button type="button" variant="primary" onClick={handleSubmit}>
+                  {isEditing ? 'Update Hotel' : 'Save Hotel'}
+                </Button>
+              </div>
+            </Form>
           </Card.Body>
         </Card>
       ) : (
-      /* Hotel Status Tabs & Table */
+        /* Hotel Status Tabs & Table */
         <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
           <Card.Body className="p-4">
-          {showSearch && (
-            <SearchPanel
-              searchFields={searchFields}
-              setSearchFields={setSearchFields}
-              dateFilter={dateFilter}
-              setDateFilter={setDateFilter}
-              onSearch={handleSearch}
-              onReset={resetSearch}
-              onDownloadExcel={handleDownloadExcel}
-              searchOptions={branchSearchOptions}
-            />
-          )}
-          <Tabs
-            id="hotel-status-tabs"
-            activeKey={statusFilter}
-            onSelect={(key) => setStatusFilter(key)}
-            className="mb-3 custom-bootstrap-tabs"
-            style={{ overflow: 'visible', flexWrap: 'wrap' }}
-          >
-            {/* <Tab eventKey="all" title={`Total Hotels (${counts.totalHotels})`} /> */}
-            <Tab
-              eventKey="approved"
-              title={`Approved (${counts.approvedHotels})`}
-            />
-            <Tab
-              eventKey="deleted"
-              title={`Deleted (${counts.deletedHotels})`}
-            />
-          </Tabs>
-          {loading ? (
-            <Alert variant="warning" className="mb-0 text-center">
-              Loading...
-            </Alert>
-          ) : error ? (
-            <Alert variant="danger" className="mb-0 text-center">
-              {error}
-            </Alert>
-          ) : (
-            <>
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <h4 className="mb-0">Hotels List</h4>
-
-                <div className="d-flex align-items-center gap-2">
-                  <span>Show:</span>
-
-                  <Form.Select
-                    style={{ width: '120px' }}
-                    value={pageSize}
-                    onChange={(e) => {
-                      setPageSize(Number(e.target.value))
-                      setCurrentPage(1) // reset page
-                    }}
-                  >
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                    <option value={150}>150</option>
-                  </Form.Select>
-                </div>
-              </div>
-              <div className="table-responsive" style={{ overflowX: 'auto', minHeight: '200px' }}>
-                <Table
-                  hover
-                  bordered
-                  responsive
-                  className="list-table align-middle table-sm w-100 shadow-sm"
-                  style={{ fontSize: '13px' }}
-                >
-                  <thead className="table-light text-center text-secondary">
-                    <tr>
-                      <th className="fw-semibold px-3 py-2 text-nowrap">Image</th>
-                      <th className="fw-semibold px-3 py-2 text-nowrap">Hotel Name</th>
-                      <th className="fw-semibold px-3 py-2 text-nowrap">Branch Name</th>
-                      <th className="fw-semibold px-3 py-2 text-nowrap">Address</th>
-                      <th className="fw-semibold px-3 py-2 text-nowrap">Pincode</th>
-                      <th className="fw-semibold px-3 py-2 text-nowrap">Companies</th>
-                      <th className="fw-semibold px-3 py-2 text-nowrap">Actions</th>
-                    </tr>
-                  </thead>
-                <tbody className="text-center">
-                  {branches.length === 0 ? (
-                    <tr className="text-center">
-                      <td colSpan={7}>No data found</td>
-                    </tr>
-                  ) : (
-                    branches
-                      .slice(
-                        (currentPage - 1) * pageSize,
-                        currentPage * pageSize,
-                      )
-                      .map((branch) => (
-                        <tr key={branch.id}>
-                          <td>
-                            <img
-                              src={
-                                branch.thumbnail_image
-                                  ? `http://localhost:5000/uploads/${branch.thumbnail_image}`
-                                  : download
-                              }
-                              alt="Hotel"
-                              style={{
-                                width: '40px',
-                                height: '40px',
-                                objectFit: 'cover',
-                                border: '1px solid #eee',
-                                borderRadius: '4px',
-                                padding: '2px',
-                                backgroundColor: '#fff',
-                              }}
-                              onError={(e) => {
-                                e.target.src = download
-                              }}
-                            />
-                          </td>
-                          <td>{branch.hotel_name}</td>
-                          <td>{branch.branch_name}</td>
-                          <td>{branch.address}</td>
-                          <td>{branch.pincode}</td>
-                          <td>{branch.company_name || '-'}</td>
-                          <td className="text-center">
-                            <Dropdown drop="start">
-                              <Dropdown.Toggle
-                                variant="outline-secondary"
-                                size="sm"
-                                id={`dropdown-${branch.id}`}
-                                className="bg-secondary text-white shadow-sm border"
-                              >
-                                <BsThreeDotsVertical />
-                              </Dropdown.Toggle>
-
-                              <Dropdown.Menu>
-                                <Dropdown.Item
-                                  onClick={() => handleView(branch)}
-                                >
-                                  <FaEye className="me-2 text-info" />
-                                  View
-                                </Dropdown.Item>
-
-                                <Dropdown.Item
-                                  onClick={() => handleEdit(branch)}
-                                >
-                                  <FaPen className="me-2 text-primary" />
-                                  Edit
-                                </Dropdown.Item>
-
-                                {/* 🔴 ACTIVE = 0 → SHOW NORMAL DELETE */}
-                                {branch.active == 0 && (
-                                  <Dropdown.Item
-                                    onClick={() => handleDelete(branch.id)}
-                                  >
-                                    <FaTrashAlt className="me-2 text-danger" />
-                                    Delete
-                                  </Dropdown.Item>
-                                )}
-
-                                {/* 🟢 ACTIVE = 1 → ONLY RESTORE */}
-                                {branch.active == 1 && (
-                                  <Dropdown.Item
-                                    onClick={() => handleRestore(branch.id)}
-                                  >
-                                    ♻️ Restore
-                                  </Dropdown.Item>
-                                )}
-                              </Dropdown.Menu>
-                            </Dropdown>
-                          </td>
-                        </tr>
-                      ))
-                  )}
-                </tbody>
-              </Table>
-              <Pagination
-                totalItems={branches.length}
-                itemsPerPage={pageSize}
-                currentPage={currentPage}
-                onPageChange={setCurrentPage}
+            {showSearch && (
+              <SearchPanel
+                searchFields={searchFields}
+                setSearchFields={setSearchFields}
+                dateFilter={dateFilter}
+                setDateFilter={setDateFilter}
+                onSearch={handleSearch}
+                onReset={resetSearch}
+                onDownloadExcel={handleDownloadExcel}
+                searchOptions={branchSearchOptions}
               />
-            </div>
-            </>
-          )}
+            )}
+            <Tabs
+              id="hotel-status-tabs"
+              activeKey={statusFilter}
+              onSelect={(key) => setStatusFilter(key)}
+              className="mb-3 custom-bootstrap-tabs"
+              style={{ overflow: 'visible', flexWrap: 'wrap' }}
+            >
+              {/* <Tab eventKey="all" title={`Total Hotels (${counts.totalHotels})`} /> */}
+              <Tab
+                eventKey="approved"
+                title={`Approved (${counts.approvedHotels})`}
+              />
+              <Tab
+                eventKey="deleted"
+                title={`Deleted (${counts.deletedHotels})`}
+              />
+            </Tabs>
+            {loading ? (
+              <Alert variant="warning" className="mb-0 text-center">
+                Loading...
+              </Alert>
+            ) : error ? (
+              <Alert variant="danger" className="mb-0 text-center">
+                {error}
+              </Alert>
+            ) : (
+              <>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h4 className="mb-0">Hotels List</h4>
+
+                  <div className="d-flex align-items-center gap-2">
+                    <span>Show:</span>
+
+                    <Form.Select
+                      style={{ width: '120px' }}
+                      value={pageSize}
+                      onChange={(e) => {
+                        setPageSize(Number(e.target.value))
+                        setCurrentPage(1) // reset page
+                      }}
+                    >
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                      <option value={150}>150</option>
+                    </Form.Select>
+                  </div>
+                </div>
+                <div className="table-responsive" style={{ overflowX: 'auto', minHeight: '200px' }}>
+                  <Table
+                    hover
+                    bordered
+                    responsive
+                    className="list-table align-middle table-sm w-100 shadow-sm"
+                    style={{ fontSize: '13px' }}
+                  >
+                    <thead className="table-light text-center text-secondary">
+                      <tr>
+                        <th className="fw-semibold px-3 py-2 text-nowrap">Image</th>
+                        <th className="fw-semibold px-3 py-2 text-nowrap">Hotel Name</th>
+                        <th className="fw-semibold px-3 py-2 text-nowrap">Branch Name</th>
+                        <th className="fw-semibold px-3 py-2 text-nowrap">Address</th>
+                        <th className="fw-semibold px-3 py-2 text-nowrap">Pincode</th>
+                        <th className="fw-semibold px-3 py-2 text-nowrap">Companies</th>
+                        <th className="fw-semibold px-3 py-2 text-nowrap">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-center">
+                      {branches.length === 0 ? (
+                        <tr className="text-center">
+                          <td colSpan={7}>No data found</td>
+                        </tr>
+                      ) : (
+                        branches
+                          .slice(
+                            (currentPage - 1) * pageSize,
+                            currentPage * pageSize,
+                          )
+                          .map((branch) => (
+                            <tr key={branch.id}>
+                              <td>
+                                <img
+                                  src={
+                                    branch.thumbnail_image
+                                      ? `http://localhost:5000/uploads/${branch.thumbnail_image}`
+                                      : download
+                                  }
+                                  alt="Hotel"
+                                  style={{
+                                    width: '40px',
+                                    height: '40px',
+                                    objectFit: 'cover',
+                                    border: '1px solid #eee',
+                                    borderRadius: '4px',
+                                    padding: '2px',
+                                    backgroundColor: '#fff',
+                                  }}
+                                  onError={(e) => {
+                                    e.target.src = download
+                                  }}
+                                />
+                              </td>
+                              <td>{branch.hotel_name}</td>
+                              <td>{branch.branch_name}</td>
+                              <td>{branch.address}</td>
+                              <td>{branch.pincode}</td>
+                              <td>{branch.company_name || '-'}</td>
+                              <td className="text-center">
+                                <Dropdown drop="start">
+                                  <Dropdown.Toggle
+                                    variant="outline-secondary"
+                                    size="sm"
+                                    id={`dropdown-${branch.id}`}
+                                    className="bg-secondary text-white shadow-sm border"
+                                  >
+                                    <BsThreeDotsVertical />
+                                  </Dropdown.Toggle>
+
+                                  <Dropdown.Menu>
+                                    <Dropdown.Item
+                                      onClick={() => handleView(branch)}
+                                    >
+                                      <FaEye className="me-2 text-info" />
+                                      View
+                                    </Dropdown.Item>
+
+                                    <Dropdown.Item
+                                      onClick={() => handleEdit(branch)}
+                                    >
+                                      <FaPen className="me-2 text-primary" />
+                                      Edit
+                                    </Dropdown.Item>
+
+                                    {/* 🔴 ACTIVE = 0 → SHOW NORMAL DELETE */}
+                                    {branch.active == 0 && (
+                                      <Dropdown.Item
+                                        onClick={() => handleDelete(branch.id)}
+                                      >
+                                        <FaTrashAlt className="me-2 text-danger" />
+                                        Delete
+                                      </Dropdown.Item>
+                                    )}
+
+                                    {/* 🟢 ACTIVE = 1 → ONLY RESTORE */}
+                                    {branch.active == 1 && (
+                                      <Dropdown.Item
+                                        onClick={() => handleRestore(branch.id)}
+                                      >
+                                        ♻️ Restore
+                                      </Dropdown.Item>
+                                    )}
+                                  </Dropdown.Menu>
+                                </Dropdown>
+                              </td>
+                            </tr>
+                          ))
+                      )}
+                    </tbody>
+                  </Table>
+                  <Pagination
+                    totalItems={branches.length}
+                    itemsPerPage={pageSize}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                  />
+                </div>
+              </>
+            )}
           </Card.Body>
         </Card>
       )}

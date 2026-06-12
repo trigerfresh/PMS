@@ -778,13 +778,13 @@ const BookingMaster = () => {
 
         otherGuests: room.otherGuests
           ? room.otherGuests.map((g) => ({
-              guest_name: g.guest_name,
-              guest_phone: g.guest_phone,
-              guest_email: g.guest_email,
-              old_user_profile_pic: g.old_profile_pic || '',
-              old_adhar_card_pic: g.old_adhar_card_pic || '',
-              old_pan_card_pic: g.old_pan_card_pic || '',
-            }))
+            guest_name: g.guest_name,
+            guest_phone: g.guest_phone,
+            guest_email: g.guest_email,
+            old_user_profile_pic: g.old_profile_pic || '',
+            old_adhar_card_pic: g.old_adhar_card_pic || '',
+            old_pan_card_pic: g.old_pan_card_pic || '',
+          }))
           : [],
       }))
 
@@ -1410,6 +1410,7 @@ const BookingMaster = () => {
                             className="bg-light p-3 rounded mb-3 position-relative border border-info"
                           >
                             <Button
+                              type="button"
                               variant="outline-danger"
                               size="sm"
                               className="position-absolute top-0 end-0 m-2"
@@ -1541,6 +1542,7 @@ const BookingMaster = () => {
                         ))}
 
                       <Button
+                        type="button"
                         variant="outline-info"
                         size="sm"
                         onClick={() => addRoomGuest(index)}
@@ -1552,6 +1554,7 @@ const BookingMaster = () => {
                     <div className="mt-3">
                       {roomBookings.length > 1 && (
                         <Button
+                          type="button"
                           variant="danger"
                           size="sm"
                           onClick={() => removeRoomBooking(index)}
@@ -1569,6 +1572,7 @@ const BookingMaster = () => {
                   {isEdit ? 'Update Booking' : 'Save & Create Booking'}
                 </Button>
                 <Button
+                  type="button"
                   variant="danger"
                   onClick={() => {
                     setShowForm(false)
@@ -1693,8 +1697,8 @@ const BookingMaster = () => {
                     <tbody className="text-center">
                       {(filterHotelId
                         ? availableRooms.filter(
-                            (r) => String(r.hotel_id) === String(filterHotelId),
-                          )
+                          (r) => String(r.hotel_id) === String(filterHotelId),
+                        )
                         : availableRooms
                       ).map((r) => (
                         <tr key={r.room_id}>
@@ -1761,8 +1765,8 @@ const BookingMaster = () => {
                     <tbody className="text-center">
                       {(filterHotelId
                         ? deletedBookings.filter(
-                            (b) => String(b.hotel_id) === String(filterHotelId),
-                          )
+                          (b) => String(b.hotel_id) === String(filterHotelId),
+                        )
                         : deletedBookings
                       ).map((b) => (
                         <tr key={b.booking_id}>
@@ -1919,22 +1923,22 @@ const BookingMaster = () => {
 
                               {getCheckoutStatus(b.check_out_date, b.status) ===
                                 'overdue' && (
-                                <div>
-                                  <span className="badge bg-danger mt-1 d-inline-block" style={{ fontSize: '10px', padding: '3px 6px' }}>
-                                    Overdue ({getOverdueDays(b.check_out_date)}{' '}
-                                    days)
-                                  </span>
-                                </div>
-                              )}
+                                  <div>
+                                    <span className="badge bg-danger mt-1 d-inline-block" style={{ fontSize: '10px', padding: '3px 6px' }}>
+                                      Overdue ({getOverdueDays(b.check_out_date)}{' '}
+                                      days)
+                                    </span>
+                                  </div>
+                                )}
 
                               {getCheckoutStatus(b.check_out_date, b.status) ===
                                 'soon' && (
-                                <div>
-                                  <span className="badge bg-warning mt-1 d-inline-block text-dark" style={{ fontSize: '10px', padding: '3px 6px' }}>
-                                    Soon
-                                  </span>
-                                </div>
-                              )}
+                                  <div>
+                                    <span className="badge bg-warning mt-1 d-inline-block text-dark" style={{ fontSize: '10px', padding: '3px 6px' }}>
+                                      Soon
+                                    </span>
+                                  </div>
+                                )}
                             </td>{' '}
                             <td>
                               <span
@@ -1945,13 +1949,12 @@ const BookingMaster = () => {
                             </td>
                             <td>
                               <span
-                                className={`badge ${
-                                  b.payment_status === 'Paid'
-                                    ? 'bg-success'
-                                    : b.payment_status === 'Partial'
-                                      ? 'bg-warning text-dark'
-                                      : 'bg-danger'
-                                }`}
+                                className={`badge ${b.payment_status === 'Paid'
+                                  ? 'bg-success'
+                                  : b.payment_status === 'Partial'
+                                    ? 'bg-warning text-dark'
+                                    : 'bg-danger'
+                                  }`}
                               >
                                 {b.payment_status}
                               </span>
@@ -2111,7 +2114,7 @@ const BookingMaster = () => {
                         Math.ceil(
                           (new Date(viewData.check_out_date) -
                             new Date(viewData.check_in_date)) /
-                            (1000 * 60 * 60 * 24),
+                          (1000 * 60 * 60 * 24),
                         ),
                       )}
                     </td>

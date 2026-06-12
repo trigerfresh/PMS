@@ -30,6 +30,10 @@ import Profile from './pages/Profile'
 import CheckoutOverdue from './pages/CheckoutOverdue'
 import CheckoutSoon from './pages/CheckoutSoon'
 import Reserved from './pages/Reserved'
+import RevenueReport from './pages/RevenueReport'
+import TodayCheckIn from './pages/TodayCheckIn'
+import TodayCheckOut from './pages/TodayCheckOut'
+import Occupiency from './pages/Occupiency'
 
 function App() {
   return (
@@ -61,6 +65,10 @@ function App() {
           <Route path="/master/floors" element={<FloorPage />} />
           <Route path="/master/hotel-inventory" element={<HotelInventory />} />
           <Route path="/master/bookings" element={<BookingMaster />} />
+          <Route path="/master/revenue-report" element={<RevenueReport />} />
+          <Route path="/master/today-checkin" element={<TodayCheckIn />} />
+          <Route path="/master/today-checkout" element={<TodayCheckOut />} />
+          <Route path="/master/occupancy" element={<Occupiency />} />
           {/* ROOM DETAILS (Supports both singular/plural paths to prevent typos) */}
           <Route
             path="/room-details/:hotelId/:status"

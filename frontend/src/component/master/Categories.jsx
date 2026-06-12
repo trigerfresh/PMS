@@ -431,7 +431,7 @@ export default function Categories() {
               style={{ overflow: 'visible', flexWrap: 'wrap' }}
             >
               {/* ACTIVE TAB */}
-              <Tab eventKey="active" title="Active">
+              <Tab eventKey="active" title={`Active (${activeList.length})`}>
                 <>
                   <div className="d-flex justify-content-between align-items-center mb-2">
                     <h5 className="mb-0">Category List</h5>
@@ -543,7 +543,7 @@ export default function Categories() {
               </Tab>
 
               {/* DELETED TAB */}
-              <Tab eventKey="deleted" title="Deleted">
+              <Tab eventKey="deleted" title={`Deleted (${deletedList.length})`}>
                 <>
                   <div className="d-flex justify-content-between align-items-center mb-2">
                     <h5 className="mb-0">Category List</h5>

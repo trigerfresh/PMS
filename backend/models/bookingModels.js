@@ -197,7 +197,8 @@ class BookingModel {
 
   static async searchBookings(queryData) {
     const pool = await poolPromise
-    const { guest_name, guest_email, room_no, status, payment_status } = queryData
+    const { guest_name, guest_email, room_no, status, payment_status } =
+      queryData
 
     let query = `
       SELECT 
@@ -216,31 +217,31 @@ class BookingModel {
     const request = pool.request()
 
     if (guest_name) {
-      query += " AND b.guest_name LIKE @guest_name"
+      query += ' AND b.guest_name LIKE @guest_name'
       request.input('guest_name', sql.VarChar, '%' + guest_name + '%')
     }
 
     if (guest_email) {
-      query += " AND b.guest_email LIKE @guest_email"
+      query += ' AND b.guest_email LIKE @guest_email'
       request.input('guest_email', sql.VarChar, '%' + guest_email + '%')
     }
 
     if (room_no) {
-      query += " AND r.room_no LIKE @room_no"
+      query += ' AND r.room_no LIKE @room_no'
       request.input('room_no', sql.VarChar, '%' + room_no + '%')
     }
 
     if (status) {
-      query += " AND LOWER(b.status) = LOWER(@status)"
+      query += ' AND LOWER(b.status) = LOWER(@status)'
       request.input('status', sql.VarChar, status)
     }
 
     if (payment_status) {
-      query += " AND LOWER(b.payment_status) = LOWER(@payment_status)"
+      query += ' AND LOWER(b.payment_status) = LOWER(@payment_status)'
       request.input('payment_status', sql.VarChar, payment_status)
     }
 
-    query += " ORDER BY b.booking_id DESC"
+    query += ' ORDER BY b.booking_id DESC'
 
     const result = await request.query(query)
     const bookings = result.recordset
@@ -294,29 +295,29 @@ class BookingModel {
     const request = pool.request()
 
     if (guest_name) {
-      query += " AND b.guest_name LIKE @guest_name"
+      query += ' AND b.guest_name LIKE @guest_name'
       request.input('guest_name', sql.VarChar, '%' + guest_name + '%')
     }
 
     if (guest_email) {
-      query += " AND b.guest_email LIKE @guest_email"
+      query += ' AND b.guest_email LIKE @guest_email'
       request.input('guest_email', sql.VarChar, '%' + guest_email + '%')
     }
 
     if (status) {
-      query += " AND LOWER(b.status) = LOWER(@status)"
+      query += ' AND LOWER(b.status) = LOWER(@status)'
       request.input('status', sql.VarChar, status)
     }
 
     if (payment_status) {
-      query += " AND LOWER(b.payment_status) = LOWER(@payment_status)"
+      query += ' AND LOWER(b.payment_status) = LOWER(@payment_status)'
       request.input('payment_status', sql.VarChar, payment_status)
     }
 
-    query += " ORDER BY b.booking_id DESC"
+    query += ' ORDER BY b.booking_id DESC'
 
     const result = await request.query(query)
-    
+
     const formattedData = result.recordset.map((item) => ({
       'Booking ID': item.booking_id,
       'Guest Name': item.guest_name,
@@ -337,7 +338,7 @@ class BookingModel {
     const worksheet = XLSX.utils.json_to_sheet(formattedData)
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Bookings')
-    
+
     return XLSX.write(workbook, {
       bookType: 'xlsx',
       type: 'buffer',
@@ -561,19 +562,24 @@ class BookingModel {
             .input(
               'profile_pic',
               sql.VarChar(sql.MAX),
-              guestProfiles[globalGuestIndex]?.filename || g.old_user_profile_pic || null,
+              guestProfiles[globalGuestIndex]?.filename ||
+                g.old_user_profile_pic ||
+                null,
             )
             .input(
               'adhar_card_pic',
               sql.VarChar(sql.MAX),
-              guestAdhars[globalGuestIndex]?.filename || g.old_adhar_card_pic || null,
+              guestAdhars[globalGuestIndex]?.filename ||
+                g.old_adhar_card_pic ||
+                null,
             )
             .input(
               'pan_card_pic',
               sql.VarChar(sql.MAX),
-              guestPans[globalGuestIndex]?.filename || g.old_pan_card_pic || null,
-            )
-            .query(`
+              guestPans[globalGuestIndex]?.filename ||
+                g.old_pan_card_pic ||
+                null,
+            ).query(`
               INSERT INTO booking_other_guests (
                 booking_id,
                 room_id,
@@ -619,7 +625,7 @@ class BookingModel {
 
   static async deleteBooking(bookingId) {
     const pool = await poolPromise
-    
+
     const bookingResult = await pool
       .request()
       .input('booking_id', sql.Int, bookingId).query(`
@@ -656,7 +662,8 @@ class BookingModel {
           AND LOWER(status) = 'booked'
       `)
 
-    const roomStatus = activeBooking.recordset.length > 0 ? 'Occupied' : 'Available'
+    const roomStatus =
+      activeBooking.recordset.length > 0 ? 'Occupied' : 'Available'
 
     await pool
       .request()
@@ -844,7 +851,8 @@ class BookingModel {
           AND active = '0'
       `)
 
-    if (bookingResult.recordset.length === 0) throw new Error('Booking not found')
+    if (bookingResult.recordset.length === 0)
+      throw new Error('Booking not found')
 
     const roomId = bookingResult.recordset[0].room_id
 
@@ -893,7 +901,8 @@ class BookingModel {
           AND active='1'
       `)
 
-    if (bookingResult.recordset.length === 0) throw new Error('Deleted booking not found')
+    if (bookingResult.recordset.length === 0)
+      throw new Error('Deleted booking not found')
 
     const booking = bookingResult.recordset[0]
     const roomId = booking.room_id
@@ -910,7 +919,7 @@ class BookingModel {
     const roomStatus = roomCheck.recordset[0].status
 
     if (roomStatus === 'Occupied' || roomStatus === 'Reserved') {
-      throw new Error("Cannot restore. Room already " + roomStatus)
+      throw new Error('Cannot restore. Room already ' + roomStatus)
     }
 
     await pool.request().input('booking_id', sql.Int, bookingId).query(`
@@ -934,6 +943,94 @@ class BookingModel {
             updated_on=GETDATE()
         WHERE room_id=@room_id
       `)
+  }
+
+  static async searchBookings(queryData) {
+    const pool = await poolPromise
+
+    const {
+      guest_name,
+      guest_email,
+      room_no,
+      status,
+      payment_status,
+      from_date,
+      to_date,
+    } = queryData
+
+    let query = `
+        SELECT 
+            b.*,
+            h.hotel_name,
+            f.floor_name,
+            r.room_no,
+            r.room_type
+        FROM booking_masters b
+        LEFT JOIN hotel h ON b.hotel_id = h.id
+        LEFT JOIN floor_master f ON b.floor_id = f.floor_id
+        LEFT JOIN room_masters r ON b.room_id = r.room_id
+        WHERE b.active = '0'
+    `
+
+    const request = pool.request()
+
+    if (guest_name) {
+      query += ` AND b.guest_name LIKE @guest_name`
+      request.input('guest_name', sql.VarChar, `%${guest_name}%`)
+    }
+
+    if (guest_email) {
+      query += ` AND b.guest_email LIKE @guest_email`
+      request.input('guest_email', sql.VarChar, `%${guest_email}%`)
+    }
+
+    if (room_no) {
+      query += ` AND r.room_no LIKE @room_no`
+      request.input('room_no', sql.VarChar, `%${room_no}%`)
+    }
+
+    if (status) {
+      query += ` AND LOWER(b.status) = LOWER(@status)`
+      request.input('status', sql.VarChar, status)
+    }
+
+    if (payment_status) {
+      query += ` AND LOWER(b.payment_status) = LOWER(@payment_status)`
+      request.input('payment_status', sql.VarChar, payment_status)
+    }
+
+    // ✅ CREATED_ON DATE FILTER (MAIN FIX)
+    if (from_date && to_date) {
+      query += ` AND CAST(b.created_on AS DATE) BETWEEN @from_date AND @to_date`
+      request.input('from_date', sql.Date, from_date)
+      request.input('to_date', sql.Date, to_date)
+    } else if (from_date) {
+      query += ` AND CAST(b.created_on AS DATE) >= @from_date`
+      request.input('from_date', sql.Date, from_date)
+    } else if (to_date) {
+      query += ` AND CAST(b.created_on AS DATE) <= @to_date`
+      request.input('to_date', sql.Date, to_date)
+    }
+
+    query += ` ORDER BY b.booking_id DESC`
+
+    const result = await request.query(query)
+    const bookings = result.recordset
+
+    // add other guests
+    for (const b of bookings) {
+      const guests = await pool
+        .request()
+        .input('booking_id', sql.Int, b.booking_id).query(`
+                SELECT *
+                FROM booking_other_guests
+                WHERE booking_id = @booking_id
+            `)
+
+      b.other_guests = guests.recordset || []
+    }
+
+    return bookings
   }
 }
 

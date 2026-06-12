@@ -9,6 +9,7 @@ import {
   Row,
   Col,
   Modal,
+  Dropdown,
 } from 'react-bootstrap'
 import { FaArrowLeft } from 'react-icons/fa'
 
@@ -19,6 +20,12 @@ const BookingDetails = () => {
   const navigate = useNavigate()
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
+
+  const [hotels, setHotels] = useState([])
+  const [branches, setBranches] = useState([])
+  const [branchId, setBranchId] = useState(localStorage.getItem('branchId') || '')
+  const [searchHotel, setSearchHotel] = useState('')
+  const [searchBranch, setSearchBranch] = useState('')
   const [overallCounts, setOverallCounts] = useState({
     total: 0,
     booked: 0,
@@ -27,13 +34,74 @@ const BookingDetails = () => {
     soon: 0,
     overdue: 0,
     deleted: 0,
-    vacant: 0
+    checkedout: 0
   })
 
   // Modal states for Info and Checkout
   const [showModal, setShowModal] = useState(false)
   const [selectedDetails, setSelectedDetails] = useState(null)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
+
+  useEffect(() => {
+    fetchHotels()
+    fetchBranches()
+  }, [])
+
+  const fetchHotels = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await axios.get(`${API_URL}/api/hotels`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      setHotels(res.data.data || [])
+    } catch (err) {
+      console.error('Hotel Load Error:', err)
+    }
+  }
+
+  const fetchBranches = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const url = `${API_URL}/api/branch` 
+      const res = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      setBranches(res.data.data || [])
+    } catch (err) {
+      console.error('Branch Load Error:', err)
+    }
+  }
+
+  const handleHotelChange = (e) => {
+    const value = e.target.value
+    let autoBranchId = ''
+    if (value) {
+      localStorage.setItem('hotelId', value)
+      const selectedHotel = hotels.find(h => h.id == value)
+      if (selectedHotel && selectedHotel.branch_id) {
+        autoBranchId = selectedHotel.branch_id
+      }
+    } else {
+      localStorage.removeItem('hotelId')
+    }
+    setBranchId(autoBranchId)
+    if (autoBranchId) {
+      localStorage.setItem('branchId', autoBranchId)
+    } else {
+      localStorage.removeItem('branchId')
+    }
+    navigate(`/booking-details/${value || 'all'}/${statusType}`)
+  }
+
+  const handleBranchChange = (e) => {
+    const value = e.target.value
+    setBranchId(value)
+    if (value) {
+      localStorage.setItem('branchId', value)
+    } else {
+      localStorage.removeItem('branchId')
+    }
+  }
 
   const fetchBookingDetails = async () => {
     try {
@@ -50,51 +118,74 @@ const BookingDetails = () => {
       const allDeleted = deletedRes.data.data || []
       const allRooms = roomsRes.data.data || []
 
-      const hotelBookings = hotelId && hotelId !== 'all' 
+      const branchHotelIds = branchId
+        ? hotels.filter((h) => h.branch_id == branchId).map((h) => Number(h.id))
+        : []
+
+      const hotelBookingsRaw = hotelId && hotelId !== 'all' 
         ? allBookings.filter(b => Number(b.hotel_id) === Number(hotelId)) 
         : allBookings
       
-      const hotelDeleted = hotelId && hotelId !== 'all'
+      const hotelBookings = branchId
+        ? hotelBookingsRaw.filter((b) => branchHotelIds.includes(Number(b.hotel_id)))
+        : hotelBookingsRaw
+
+      const hotelDeletedRaw = hotelId && hotelId !== 'all'
         ? allDeleted.filter(b => Number(b.hotel_id) === Number(hotelId))
         : allDeleted
 
-      const hotelRooms = hotelId && hotelId !== 'all'
+      const hotelDeleted = branchId
+        ? hotelDeletedRaw.filter((b) => branchHotelIds.includes(Number(b.hotel_id)))
+        : hotelDeletedRaw
+
+      const hotelRoomsRaw = hotelId && hotelId !== 'all'
         ? allRooms.filter(r => Number(r.hotel_id) === Number(hotelId))
         : allRooms
+
+      const hotelRooms = branchId
+        ? hotelRoomsRaw.filter((r) => branchHotelIds.includes(Number(r.hotel_id)))
+        : hotelRoomsRaw
 
       const now = new Date()
       const oneDayMs = 24 * 60 * 60 * 1000
       const normalize = (s) => (s || '').toLowerCase().replace(/\s+/g, '')
 
+      const isAboutToCheckout = (checkOutDate, status) => {
+        if (!checkOutDate) return false;
+        const s = status?.toLowerCase().trim();
+        if (s !== 'booked') return false;
+        const todayObj = new Date();
+        todayObj.setHours(0, 0, 0, 0);
+        const checkout = new Date(checkOutDate);
+        checkout.setHours(0, 0, 0, 0);
+        const diffDays = (checkout - todayObj) / (1000 * 60 * 60 * 24);
+        return diffDays >= 0 && diffDays <= 1;
+      };
+
+      const getCheckoutStatus = (checkOutDate, status) => {
+        if (!checkOutDate) return null;
+        const s = status?.toLowerCase().trim();
+        if (s !== 'booked') return null;
+        const todayObj = new Date();
+        todayObj.setHours(0, 0, 0, 0);
+        const checkout = new Date(checkOutDate);
+        checkout.setHours(0, 0, 0, 0);
+        const diffDays = (checkout - todayObj) / (1000 * 60 * 60 * 24);
+        if (diffDays < 0) return 'overdue';
+        if (diffDays <= 1 && diffDays >= 0) return 'soon';
+        return null;
+      };
+      const todayString = now.toISOString().split('T')[0]
       let counts = {
-        total: hotelBookings.length,
-        booked: 0,
-        reserved: 0,
-        cancelled: 0,
-        soon: 0,
-        overdue: 0,
+        total: hotelBookings.length + hotelDeleted.length,
+        booked: hotelBookings.filter(b => b.status?.toLowerCase().trim() === 'booked' && b.check_in_date?.split('T')[0] === todayString).length,
+        reserved: hotelBookings.filter(b => b.status?.toLowerCase().trim() === 'reserved').length,
+        cancelled: hotelBookings.filter(b => b.status?.toLowerCase().trim() === 'cancelled').length,
+        soon: hotelBookings.filter(b => isAboutToCheckout(b.check_out_date, b.status)).length,
+        overdue: hotelBookings.filter(b => getCheckoutStatus(b.check_out_date, b.status) === 'overdue').length,
         deleted: hotelDeleted.length,
-        vacant: hotelRooms.filter(r => {
-          const s = normalize(r.status);
-          return s === 'available' || s === 'vacant' || s === 'avalable';
-        }).length
+        checkedout: hotelBookings.filter(b => b.status?.toLowerCase().trim() === 'checkedout').length,
       }
-
-      hotelBookings.forEach(b => {
-        const status = normalize(b.status)
-        if (status === 'booked' || status === 'occupied') counts.booked++
-        if (status === 'reserved') counts.reserved++
-        if (status === 'cancelled') counts.cancelled++
-
-        const checkout = new Date(b.check_out_date)
-        const diff = checkout - now
-        if (diff > 0 && diff <= oneDayMs && status !== 'cancelled' && status !== 'deleted') {
-          counts.soon++
-        }
-        if (checkout < now && status !== 'cancelled' && status !== 'deleted') {
-          counts.overdue++
-        }
-      })
 
       setOverallCounts(counts)
 
@@ -104,42 +195,37 @@ const BookingDetails = () => {
         data = hotelRooms.filter((room) => normalize(room.status) === 'maintenance')
       } else if (statusType === 'deleted') {
         data = hotelDeleted.map(d => ({ ...d, status: 'deleted' }))
-      } else if (statusType === 'vacant') {
-        data = hotelRooms.filter((room) => {
-          const s = normalize(room.status);
-          return s === 'available' || s === 'vacant' || s === 'avalable';
-        })
       } else if (statusType === 'all') {
         data = hotelBookings
       } else {
         data = hotelBookings.filter((b) => {
           const status = normalize(b.status)
 
+          if (statusType === 'booked') {
+             return b.status?.toLowerCase().trim() === 'booked' && b.check_in_date?.split('T')[0] === todayString;
+          }
+
           if (statusType === 'checkedout') {
             return status === 'checkedout'
           }
 
           if (statusType === 'checkout_soon') {
-            const checkout = new Date(b.check_out_date)
-            const diff = checkout - now
-            const isSoon = diff > 0 && diff <= oneDayMs && status !== 'cancelled' && status !== 'deleted'
+            const isSoon = isAboutToCheckout(b.check_out_date, b.status);
             if (isSoon) b.displayStatus = 'Checkout Soon'
             return isSoon
           }
 
           if (statusType === 'checkout_overdue') {
-            const checkout = new Date(b.check_out_date)
-            const isOverdue = checkout < now && status !== 'cancelled' && status !== 'deleted'
+            const isOverdue = getCheckoutStatus(b.check_out_date, b.status) === 'overdue';
             if (isOverdue) {
-              const today = new Date(now)
-              today.setHours(0, 0, 0, 0)
-              const checkOutDate = new Date(b.check_out_date)
-              checkOutDate.setHours(0, 0, 0, 0)
-              const diffTime = today.getTime() - checkOutDate.getTime()
-              const diffDays = Math.floor(diffTime / oneDayMs)
-
-              b.displayStatus = `Overdue (${diffDays} day${diffDays > 1 ? 's' : ''})`
-              b.statusTypeForColor = 'checkoutoverdue'
+              const todayObj = new Date();
+              todayObj.setHours(0, 0, 0, 0);
+              const checkOutDate = new Date(b.check_out_date);
+              checkOutDate.setHours(0, 0, 0, 0);
+              const diffTime = todayObj.getTime() - checkOutDate.getTime();
+              const diffDays = Math.floor(diffTime / (24 * 60 * 60 * 1000));
+              b.displayStatus = `Overdue (${diffDays} day${diffDays > 1 ? 's' : ''})`;
+              b.statusTypeForColor = 'checkoutoverdue';
             }
             return isOverdue
           }
@@ -160,7 +246,7 @@ const BookingDetails = () => {
     if (hotelId && statusType) {
       fetchBookingDetails()
     }
-  }, [hotelId, statusType])
+  }, [hotelId, statusType, branchId, hotels])
 
   const getTitle = () => {
     switch (statusType) {
@@ -183,6 +269,25 @@ const BookingDetails = () => {
       default:
         return 'All Bookings List'
     }
+  }
+
+  const getCheckoutStatus = (checkOutDate, roomStatus) => {
+    if (!checkOutDate) return null
+    const s = roomStatus?.toLowerCase()
+    if (s === 'cancelled' || s === 'checkedout' || s === 'deleted') return null
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const checkout = new Date(checkOutDate)
+    checkout.setHours(0, 0, 0, 0)
+
+    const diffTime = checkout.getTime() - today.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+    if (checkout < today) return 'crossed'
+    if (diffDays <= 1 && diffDays >= 0) return 'soon'
+    return null
   }
 
   // Color Mapping as per your request
@@ -273,28 +378,186 @@ const BookingDetails = () => {
       minHeight: '100vh',
       transition: 'background-color 0.5s ease',
     }}>
-      {/* Header */}
       <Row className="align-items-center mb-4 pb-3 border-bottom" style={{ borderColor: 'rgba(0,0,0,0.05) !important' }}>
-        <Col className="d-flex align-items-center">
+        <Col md={12} lg={5} xl={6} className="d-flex align-items-center mb-3 mb-lg-0">
           <Button
             variant="light"
             className="shadow-sm rounded-circle d-flex align-items-center justify-content-center me-3"
             onClick={() => navigate(-1)}
-            style={{ width: '45px', height: '45px', border: '1px solid #e2e8f0', transition: 'all 0.2s' }}
+            style={{ width: '45px', height: '45px', border: '1px solid #e2e8f0', transition: 'all 0.2s', flexShrink: 0 }}
             onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
           >
             <span style={{ fontSize: '1.2rem', color: '#64748b' }}>←</span>
           </Button>
-          <div>
+          <div className="d-flex flex-column">
             <h2 className="fw-bold mb-0 text-capitalize d-flex align-items-center gap-3" style={{ color: '#2c3e50', letterSpacing: '-0.5px' }}>
               {getTitle()}
               <span className="badge bg-success bg-opacity-10 text-success rounded-pill fs-6 px-3">{bookings.length}</span>
             </h2>
-            <small className="text-muted fw-bold" style={{ letterSpacing: '0.5px', textTransform: 'uppercase', fontSize: '0.75rem' }}>
+            <small className="text-muted fw-bold d-block mt-1" style={{ letterSpacing: '0.5px', textTransform: 'uppercase', fontSize: '0.75rem' }}>
               Floor & Hotel Wise Details
             </small>
           </div>
+        </Col>
+
+        <Col md={12} lg={7} xl={6} className="d-flex flex-column flex-sm-row gap-3 justify-content-lg-end pe-lg-4">
+          {/* Hotel Dropdown */}
+          <Dropdown align="end" onSelect={(val) => handleHotelChange({ target: { value: val } })} className="flex-fill" style={{ minWidth: 0 }}>
+            <Dropdown.Toggle
+              variant="light"
+              title={hotelId && hotelId !== 'all' ? hotels.find(h => h.id == hotelId)?.hotel_name || 'All Hotels' : 'All Hotels'}
+              className="shadow-sm border-0 rounded-pill px-3 px-md-4 w-100 d-flex justify-content-between align-items-center"
+              style={{
+                backgroundColor: 'white',
+                color: '#495057',
+                fontWeight: '500',
+                fontSize: '1rem',
+                paddingTop: '0.6rem',
+                paddingBottom: '0.6rem',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.04)',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+            >
+              <span className="text-truncate" style={{ maxWidth: '90%' }}>
+                {hotelId && hotelId !== 'all' ? hotels.find(h => h.id == hotelId)?.hotel_name || 'All Hotels' : 'All Hotels'}
+              </span>
+            </Dropdown.Toggle>
+
+            <style>
+              {`
+                .hotel-dropdown-item {
+                  transition: all 0.2s ease;
+                }
+                .hotel-dropdown-item:hover {
+                  background-color: #f1f5f9 !important;
+                  color: #212529 !important;
+                }
+                .hotel-dropdown-item.active, .hotel-dropdown-item.active:hover {
+                  background-color: #0d6efd !important;
+                  color: white !important;
+                }
+                .dropdown-toggle:hover, .dropdown-toggle:focus, .dropdown-toggle:active {
+                  background-color: #f8f9fa !important;
+                  color: #495057 !important;
+                  border-color: transparent !important;
+                }
+              `}
+            </style>
+            <Dropdown.Menu className="w-100 border-0 shadow-lg rounded-4 mt-2 p-2" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+              <div className="px-2 pb-2 mb-2 border-bottom">
+                <input
+                  autoFocus
+                  type="text"
+                  className="form-control form-control-sm rounded-pill px-3"
+                  placeholder="Type to search..."
+                  onChange={(e) => setSearchHotel(e.target.value)}
+                  value={searchHotel}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+              <Dropdown.Item
+                eventKey=""
+                active={!hotelId || hotelId === 'all'}
+                className="hotel-dropdown-item py-2 px-3 fw-medium rounded-3 mb-1"
+                onClick={() => setSearchHotel('')}
+              >
+                All Hotels
+              </Dropdown.Item>
+              {hotels.filter(h => h.hotel_name.toLowerCase().includes(searchHotel.toLowerCase())).map((hotel) => (
+                <Dropdown.Item
+                  key={hotel.id}
+                  eventKey={hotel.id.toString()}
+                  active={hotelId == hotel.id}
+                  className="hotel-dropdown-item py-2 px-3 fw-medium rounded-3 mb-1"
+                  onClick={() => setSearchHotel('')}
+                >
+                  {hotel.hotel_name}
+                </Dropdown.Item>
+              ))}
+              {hotels.filter(h => h.hotel_name.toLowerCase().includes(searchHotel.toLowerCase())).length === 0 && (
+                <div className="text-muted text-center py-2 small">No hotels found</div>
+              )}
+            </Dropdown.Menu>
+          </Dropdown>
+
+          {/* Branch Dropdown */}
+          <Dropdown align="end" onSelect={(val) => handleBranchChange({ target: { value: val } })} className="flex-fill" style={{ minWidth: 0 }}>
+            <Dropdown.Toggle
+              variant="light"
+              title={branchId ? branches.find(b => b.id == branchId)?.branch_name || 'All Branches' : 'All Branches'}
+              className="shadow-sm border-0 rounded-pill px-3 px-md-4 w-100 d-flex justify-content-between align-items-center"
+              style={{
+                backgroundColor: 'white',
+                color: '#495057',
+                fontWeight: '500',
+                fontSize: '1rem',
+                paddingTop: '0.6rem',
+                paddingBottom: '0.6rem',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.04)',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+              disabled={!hotelId || hotelId === 'all'}
+            >
+              <span className="text-truncate" style={{ maxWidth: '90%' }}>
+                {branchId ? branches.find(b => b.id == branchId)?.branch_name || 'All Branches' : 'All Branches'}
+              </span>
+            </Dropdown.Toggle>
+
+            <Dropdown.Menu className="w-100 border-0 shadow-lg rounded-4 mt-2 p-2" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+              <div className="px-2 pb-2 mb-2 border-bottom">
+                <input
+                  autoFocus
+                  type="text"
+                  className="form-control form-control-sm rounded-pill px-3"
+                  placeholder="Type to search..."
+                  onChange={(e) => setSearchBranch(e.target.value)}
+                  value={searchBranch}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+              <Dropdown.Item
+                eventKey=""
+                active={branchId === ''}
+                className="hotel-dropdown-item py-2 px-3 fw-medium rounded-3 mb-1"
+                onClick={() => setSearchBranch('')}
+              >
+                All Branches
+              </Dropdown.Item>
+              {branches
+                .filter(b => b.branch_name.toLowerCase().includes(searchBranch.toLowerCase()))
+                .filter(b => {
+                  if (!hotelId || hotelId === 'all') return true;
+                  const selectedHotel = hotels.find(h => h.id == hotelId);
+                  return selectedHotel && selectedHotel.branch_id ? b.id == selectedHotel.branch_id : true;
+                })
+                .map((branch) => (
+                <Dropdown.Item
+                  key={branch.id}
+                  eventKey={branch.id.toString()}
+                  active={branchId == branch.id}
+                  className="hotel-dropdown-item py-2 px-3 fw-medium rounded-3 mb-1"
+                  onClick={() => setSearchBranch('')}
+                >
+                  {branch.branch_name}
+                </Dropdown.Item>
+              ))}
+              {branches
+                .filter(b => b.branch_name.toLowerCase().includes(searchBranch.toLowerCase()))
+                .filter(b => {
+                  if (!hotelId || hotelId === 'all') return true;
+                  const selectedHotel = hotels.find(h => h.id == hotelId);
+                  return selectedHotel && selectedHotel.branch_id ? b.id == selectedHotel.branch_id : true;
+                })
+                .length === 0 && (
+                <div className="text-muted text-center py-2 small">No branches found</div>
+              )}
+            </Dropdown.Menu>
+          </Dropdown>
         </Col>
       </Row>
 
@@ -376,12 +639,12 @@ const BookingDetails = () => {
 
         {/* Vacant */}
         <div 
-          onClick={() => navigate(`/booking-details/${hotelId}/vacant`)}
+          onClick={() => navigate(`/booking-details/${hotelId}/checkedout`)}
           style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
-          className={`px-2 py-1 rounded-3 d-flex align-items-center gap-1 shadow-sm flex-shrink-0 ${statusType === 'vacant' ? 'bg-success text-white' : 'bg-white text-success'}`}
+          className={`px-2 py-1 rounded-3 d-flex align-items-center gap-1 shadow-sm flex-shrink-0 ${statusType === 'checkedout' ? 'bg-success text-white' : 'bg-white text-success'}`}
         >
           <span className="fw-bold" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Vacant</span>
-          <span className={`badge ${statusType === 'vacant' ? 'bg-white text-success' : 'bg-success'} rounded-pill`} style={{ fontSize: '0.65rem' }}>{overallCounts.vacant}</span>
+          <span className={`badge ${statusType === 'checkedout' ? 'bg-white text-success' : 'bg-success'} rounded-pill`} style={{ fontSize: '0.65rem' }}>{overallCounts.checkedout}</span>
         </div>
       </div>
 
@@ -470,32 +733,49 @@ const BookingDetails = () => {
                 </span>
               </p>
 
-              {/* Conditional Display: Agar Room Booked/Occupied hai to baaki details dikhao */}
-              {selectedDetails.status?.toLowerCase() === 'booked' ||
-                selectedDetails.status?.toLowerCase() === 'occupied' ? (
-                <>
-                  <p className="mb-1">
-                    <strong>Guest Name:</strong>{' '}
-                    {selectedDetails.guest_name || 'N/A'}
-                  </p>
-                  <p className="mb-1">
-                    <strong>Check-In:</strong>{' '}
-                    {selectedDetails.check_in_date?.split('T')[0] || 'N/A'}
-                  </p>
-                  <p className="mb-1">
-                    <strong>Check-Out:</strong>{' '}
-                    {selectedDetails.check_out_date?.split('T')[0] || 'N/A'}
-                  </p>
-                  <p className="mb-0">
-                    <strong>Total Amount:</strong> ₹
-                    {selectedDetails.total_amount || 0}
-                  </p>
-                </>
-              ) : (
-                <p className="text-muted small mb-0">
-                  No active guest details for this status.
+              <div className="mt-2">
+                <p className="mb-1">
+                  <strong>Hotel Name:</strong>{' '}
+                  {selectedDetails.hotel_name || 'N/A'}
                 </p>
-              )}
+                <p className="mb-1">
+                  <strong>Room Type:</strong>{' '}
+                  {selectedDetails.room_type || 'Standard'}
+                </p>
+                <p className="mb-1">
+                  <strong>Guest Name:</strong>{' '}
+                  {selectedDetails.guest_name || 'N/A'}
+                </p>
+                <p className="mb-1">
+                  <strong>Check-In:</strong>{' '}
+                  {selectedDetails.check_in_date ? selectedDetails.check_in_date.split('T')[0] : 'N/A'}
+                </p>
+                <p className="mb-1">
+                  <strong>Check-Out:</strong>{' '}
+                  {selectedDetails.check_out_date ? selectedDetails.check_out_date.split('T')[0] : 'N/A'}
+                </p>
+                <p className="mb-0">
+                  <strong>Charges:</strong> ₹
+                  {selectedDetails.total_amount || selectedDetails.price || selectedDetails.price_per_day || 0}
+                </p>
+
+                {getCheckoutStatus(
+                  selectedDetails.check_out_date,
+                  selectedDetails.status || statusType,
+                ) === 'crossed' && (
+                  <div className="alert alert-danger p-1 mb-0 mt-2 text-center small fw-bold">
+                    ⚠️ Checkout Time Overdue!
+                  </div>
+                )}
+                {getCheckoutStatus(
+                  selectedDetails.check_out_date,
+                  selectedDetails.status || statusType,
+                ) === 'soon' && (
+                  <div className="alert alert-warning p-1 mb-0 mt-2 text-center small fw-bold">
+                    ⚠️ Checkout Soon
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </Modal.Body>

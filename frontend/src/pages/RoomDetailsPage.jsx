@@ -9,7 +9,11 @@ import {
   Row,
   Col,
   Modal,
+  Dropdown,
+  Table,
+  Badge,
 } from 'react-bootstrap'
+import { FaThLarge, FaList } from 'react-icons/fa'
 
 const API_URL = 'http://localhost:5000'
 
@@ -17,9 +21,17 @@ const RoomDetailsPage = () => {
   const { hotelId, status } = useParams()
   const navigate = useNavigate()
 
+  const [viewMode, setViewMode] = useState('grid')
   const [loading, setLoading] = useState(false)
   const [roomsData, setRoomsData] = useState([])
   const [bookingsData, setBookingsData] = useState([])
+
+  const [hotels, setHotels] = useState([])
+  const [branches, setBranches] = useState([])
+  const [branchId, setBranchId] = useState(localStorage.getItem('branchId') || '')
+  const [searchHotel, setSearchHotel] = useState('')
+  const [searchBranch, setSearchBranch] = useState('')
+
   const [overallCounts, setOverallCounts] = useState({
     total: 0,
     available: 0,
@@ -43,10 +55,71 @@ const RoomDetailsPage = () => {
   }
 
   useEffect(() => {
+    fetchHotels()
+    fetchBranches()
+  }, [])
+
+  const fetchHotels = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await axios.get(`${API_URL}/api/hotels`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      setHotels(res.data.data || [])
+    } catch (err) {
+      console.error('Hotel Load Error:', err)
+    }
+  }
+
+  const fetchBranches = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const url = `${API_URL}/api/branch`
+      const res = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      setBranches(res.data.data || [])
+    } catch (err) {
+      console.error('Branch Load Error:', err)
+    }
+  }
+
+  const handleHotelChange = (e) => {
+    const value = e.target.value
+    let autoBranchId = ''
+    if (value) {
+      localStorage.setItem('hotelId', value)
+      const selectedHotel = hotels.find(h => h.id == value)
+      if (selectedHotel && selectedHotel.branch_id) {
+        autoBranchId = selectedHotel.branch_id
+      }
+    } else {
+      localStorage.removeItem('hotelId')
+    }
+    setBranchId(autoBranchId)
+    if (autoBranchId) {
+      localStorage.setItem('branchId', autoBranchId)
+    } else {
+      localStorage.removeItem('branchId')
+    }
+    navigate(`/rooms-details/${value || 'all'}/${status}`)
+  }
+
+  const handleBranchChange = (e) => {
+    const value = e.target.value
+    setBranchId(value)
+    if (value) {
+      localStorage.setItem('branchId', value)
+    } else {
+      localStorage.removeItem('branchId')
+    }
+  }
+
+  useEffect(() => {
     if (hotelId && status) {
       fetchDetailedData()
     }
-  }, [hotelId, status])
+  }, [hotelId, status, branchId, hotels])
 
   const fetchDetailedData = async () => {
     try {
@@ -65,13 +138,25 @@ const RoomDetailsPage = () => {
       const allRooms = roomsRes.data.data || []
       const allBookings = bookingsRes.data.data || []
 
-      const hotelRooms = hotelId === 'all'
+      const branchHotelIds = branchId
+        ? hotels.filter((h) => h.branch_id == branchId).map((h) => Number(h.id))
+        : []
+
+      const hotelRoomsRaw = hotelId === 'all'
         ? allRooms
         : allRooms.filter((room) => Number(room.hotel_id) === Number(hotelId))
 
-      const hotelBookings = hotelId === 'all'
+      const hotelRooms = branchId
+        ? hotelRoomsRaw.filter((room) => branchHotelIds.includes(Number(room.hotel_id)))
+        : hotelRoomsRaw
+
+      const hotelBookingsRaw = hotelId === 'all'
         ? allBookings
         : allBookings.filter((b) => Number(b.hotel_id) === Number(hotelId))
+
+      const hotelBookings = branchId
+        ? hotelBookingsRaw.filter((b) => branchHotelIds.includes(Number(b.hotel_id)))
+        : hotelBookingsRaw
 
       const activeHotelBookings = hotelBookings.filter((b) => isActiveBooking(b))
 
@@ -155,6 +240,8 @@ const RoomDetailsPage = () => {
               room_no: room?.room_no || booking.room_no,
               room_type: room?.room_type,
               floor: room?.floor,
+              price: room?.price || booking?.total_amount,
+              rent: room?.rent,
             }
           })
 
@@ -177,7 +264,7 @@ const RoomDetailsPage = () => {
       case 'reserved':
         return { bg: 'bg-info text-white border-info' } // Blue/Info color (matches Reserved tab)
       case 'cancelled':
-        return { bg: 'bg-dark text-white border-dark' } 
+        return { bg: 'bg-dark text-white border-dark' }
       case 'maintenance':
         return { bg: 'bg-warning text-dark border-warning' } // Yellow color (matches Maintenance tab)
       case 'available':
@@ -214,9 +301,10 @@ const RoomDetailsPage = () => {
   const groupDataByFloor = (dataArray) => {
     const groups = {}
     dataArray.forEach((item) => {
+      const floorNo = Math.floor(Number(item.room_no) / 100)
       const floorRaw =
         item.floor ||
-        `Floor ${Math.floor(Number(item.room_no) / 100)}` ||
+        (floorNo === 1 ? 'Ground Floor' : `Floor ${floorNo}`) ||
         'Other Floor'
 
       const floorName = hotelId === 'all' && item.hotel_name ? `${item.hotel_name} - ${floorRaw}` : floorRaw
@@ -285,18 +373,18 @@ const RoomDetailsPage = () => {
     }}>
       {/* Header */}
       <Row className="align-items-center mb-4 pb-3 border-bottom" style={{ borderColor: 'rgba(0,0,0,0.05) !important' }}>
-        <Col className="d-flex align-items-center">
+        <Col md={12} lg={5} xl={6} className="d-flex align-items-center mb-3 mb-lg-0">
           <Button
             variant="light"
             className="shadow-sm rounded-circle d-flex align-items-center justify-content-center me-3"
             onClick={() => navigate(-1)}
-            style={{ width: '45px', height: '45px', border: '1px solid #e2e8f0', transition: 'all 0.2s' }}
+            style={{ width: '45px', height: '45px', border: '1px solid #e2e8f0', transition: 'all 0.2s', flexShrink: 0 }}
             onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
           >
             <span style={{ fontSize: '1.2rem', color: '#64748b' }}>←</span>
           </Button>
-          <div>
+          <div className="d-flex flex-column">
             <h2 className="fw-bold mb-0 text-capitalize" style={{ color: '#2c3e50', letterSpacing: '-0.5px' }}>
               {status === 'all' ? 'All' : status} Rooms Information
             </h2>
@@ -305,12 +393,172 @@ const RoomDetailsPage = () => {
             </small>
           </div>
         </Col>
+
+        <Col md={12} lg={7} xl={6} className="d-flex flex-column flex-sm-row gap-3 justify-content-lg-end pe-lg-4">
+          {/* Hotel Dropdown */}
+          <Dropdown align="end" onSelect={(val) => handleHotelChange({ target: { value: val } })} className="flex-fill" style={{ minWidth: 0 }}>
+            <Dropdown.Toggle
+              variant="light"
+              title={hotelId && hotelId !== 'all' ? hotels.find(h => h.id == hotelId)?.hotel_name || 'All Hotels' : 'All Hotels'}
+              className="shadow-sm border-0 rounded-pill px-3 px-md-4 w-100 d-flex justify-content-between align-items-center"
+              style={{
+                backgroundColor: 'white',
+                color: '#495057',
+                fontWeight: '500',
+                fontSize: '1rem',
+                paddingTop: '0.6rem',
+                paddingBottom: '0.6rem',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.04)',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+            >
+              <span className="text-truncate" style={{ maxWidth: '90%' }}>
+                {hotelId && hotelId !== 'all' ? hotels.find(h => h.id == hotelId)?.hotel_name || 'All Hotels' : 'All Hotels'}
+              </span>
+            </Dropdown.Toggle>
+
+            <style>
+              {`
+                .hotel-dropdown-item {
+                  transition: all 0.2s ease;
+                }
+                .hotel-dropdown-item:hover {
+                  background-color: #f1f5f9 !important;
+                  color: #212529 !important;
+                }
+                .hotel-dropdown-item.active, .hotel-dropdown-item.active:hover {
+                  background-color: #0d6efd !important;
+                  color: white !important;
+                }
+                .dropdown-toggle:hover, .dropdown-toggle:focus, .dropdown-toggle:active {
+                  background-color: #f8f9fa !important;
+                  color: #495057 !important;
+                  border-color: transparent !important;
+                }
+              `}
+            </style>
+            <Dropdown.Menu className="w-100 border-0 shadow-lg rounded-4 mt-2 p-2" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+              <div className="px-2 pb-2 mb-2 border-bottom">
+                <input
+                  autoFocus
+                  type="text"
+                  className="form-control form-control-sm rounded-pill px-3"
+                  placeholder="Type to search..."
+                  onChange={(e) => setSearchHotel(e.target.value)}
+                  value={searchHotel}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+              <Dropdown.Item
+                eventKey=""
+                active={!hotelId || hotelId === 'all'}
+                className="hotel-dropdown-item py-2 px-3 fw-medium rounded-3 mb-1"
+                onClick={() => setSearchHotel('')}
+              >
+                All Hotels
+              </Dropdown.Item>
+              {hotels.filter(h => h.hotel_name.toLowerCase().includes(searchHotel.toLowerCase())).map((hotel) => (
+                <Dropdown.Item
+                  key={hotel.id}
+                  eventKey={hotel.id.toString()}
+                  active={hotelId == hotel.id}
+                  className="hotel-dropdown-item py-2 px-3 fw-medium rounded-3 mb-1"
+                  onClick={() => setSearchHotel('')}
+                >
+                  {hotel.hotel_name}
+                </Dropdown.Item>
+              ))}
+              {hotels.filter(h => h.hotel_name.toLowerCase().includes(searchHotel.toLowerCase())).length === 0 && (
+                <div className="text-muted text-center py-2 small">No hotels found</div>
+              )}
+            </Dropdown.Menu>
+          </Dropdown>
+
+          {/* Branch Dropdown */}
+          <Dropdown align="end" onSelect={(val) => handleBranchChange({ target: { value: val } })} className="flex-fill" style={{ minWidth: 0 }}>
+            <Dropdown.Toggle
+              variant="light"
+              title={branchId ? branches.find(b => b.id == branchId)?.branch_name || 'All Branches' : 'All Branches'}
+              className="shadow-sm border-0 rounded-pill px-3 px-md-4 w-100 d-flex justify-content-between align-items-center"
+              style={{
+                backgroundColor: 'white',
+                color: '#495057',
+                fontWeight: '500',
+                fontSize: '1rem',
+                paddingTop: '0.6rem',
+                paddingBottom: '0.6rem',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.04)',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+              disabled={!hotelId || hotelId === 'all'}
+            >
+              <span className="text-truncate" style={{ maxWidth: '90%' }}>
+                {branchId ? branches.find(b => b.id == branchId)?.branch_name || 'All Branches' : 'All Branches'}
+              </span>
+            </Dropdown.Toggle>
+
+            <Dropdown.Menu className="w-100 border-0 shadow-lg rounded-4 mt-2 p-2" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+              <div className="px-2 pb-2 mb-2 border-bottom">
+                <input
+                  autoFocus
+                  type="text"
+                  className="form-control form-control-sm rounded-pill px-3"
+                  placeholder="Type to search..."
+                  onChange={(e) => setSearchBranch(e.target.value)}
+                  value={searchBranch}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+              <Dropdown.Item
+                eventKey=""
+                active={branchId === ''}
+                className="hotel-dropdown-item py-2 px-3 fw-medium rounded-3 mb-1"
+                onClick={() => setSearchBranch('')}
+              >
+                All Branches
+              </Dropdown.Item>
+              {branches
+                .filter(b => b.branch_name.toLowerCase().includes(searchBranch.toLowerCase()))
+                .filter(b => {
+                  if (!hotelId || hotelId === 'all') return true;
+                  const selectedHotel = hotels.find(h => h.id == hotelId);
+                  return selectedHotel && selectedHotel.branch_id ? b.id == selectedHotel.branch_id : true;
+                })
+                .map((branch) => (
+                  <Dropdown.Item
+                    key={branch.id}
+                    eventKey={branch.id.toString()}
+                    active={branchId == branch.id}
+                    className="hotel-dropdown-item py-2 px-3 fw-medium rounded-3 mb-1"
+                    onClick={() => setSearchBranch('')}
+                  >
+                    {branch.branch_name}
+                  </Dropdown.Item>
+                ))}
+              {branches
+                .filter(b => b.branch_name.toLowerCase().includes(searchBranch.toLowerCase()))
+                .filter(b => {
+                  if (!hotelId || hotelId === 'all') return true;
+                  const selectedHotel = hotels.find(h => h.id == hotelId);
+                  return selectedHotel && selectedHotel.branch_id ? b.id == selectedHotel.branch_id : true;
+                })
+                .length === 0 && (
+                  <div className="text-muted text-center py-2 small">No branches found</div>
+                )}
+            </Dropdown.Menu>
+          </Dropdown>
+        </Col>
       </Row>
 
       {/* COUNTS NAVIGATION BAR */}
-      <div className="d-flex flex-wrap gap-2 mb-4">
+      <div className="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+        <div className="d-flex flex-wrap gap-2">
         {/* Total Rooms */}
-        <div 
+        <div
           onClick={() => navigate(`/rooms-details/${hotelId}/all`)}
           style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
           className={`px-3 py-2 rounded-3 d-flex align-items-center gap-2 shadow-sm ${status === 'all' ? 'bg-secondary text-white' : 'bg-white text-secondary'}`}
@@ -320,7 +568,7 @@ const RoomDetailsPage = () => {
         </div>
 
         {/* Available Rooms */}
-        <div 
+        <div
           onClick={() => navigate(`/rooms-details/${hotelId}/available`)}
           style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
           className={`px-3 py-2 rounded-3 d-flex align-items-center gap-2 shadow-sm ${status === 'available' ? 'bg-success text-white' : 'bg-white text-success'}`}
@@ -330,7 +578,7 @@ const RoomDetailsPage = () => {
         </div>
 
         {/* Occupied Rooms */}
-        <div 
+        <div
           onClick={() => navigate(`/rooms-details/${hotelId}/occupied`)}
           style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
           className={`px-3 py-2 rounded-3 d-flex align-items-center gap-2 shadow-sm ${status === 'occupied' ? 'bg-danger text-white' : 'bg-white text-danger'}`}
@@ -340,7 +588,7 @@ const RoomDetailsPage = () => {
         </div>
 
         {/* Maintenance Rooms */}
-        <div 
+        <div
           onClick={() => navigate(`/rooms-details/${hotelId}/maintenance`)}
           style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
           className={`px-3 py-2 rounded-3 d-flex align-items-center gap-2 shadow-sm ${status === 'maintenance' ? 'bg-warning text-dark' : 'bg-white text-warning'}`}
@@ -350,13 +598,33 @@ const RoomDetailsPage = () => {
         </div>
 
         {/* Reserved Rooms */}
-        <div 
+        <div
           onClick={() => navigate(`/rooms-details/${hotelId}/reserved`)}
           style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
           className={`px-3 py-2 rounded-3 d-flex align-items-center gap-2 shadow-sm ${status === 'reserved' ? 'bg-info text-white' : 'bg-white text-info'}`}
         >
           <span className="fw-bold" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Reserved</span>
           <span className={`badge ${status === 'reserved' ? 'bg-white text-info' : 'bg-info'} rounded-pill`}>{overallCounts.reserved}</span>
+        </div>
+        </div>
+
+        <div className="d-flex gap-2">
+          <Button 
+            variant={viewMode === 'grid' ? 'primary' : 'light'} 
+            onClick={() => setViewMode('grid')} 
+            className="d-flex align-items-center justify-content-center shadow-sm"
+            style={{ width: '40px', height: '40px' }}
+          >
+            <FaThLarge size={18} />
+          </Button>
+          <Button 
+            variant={viewMode === 'list' ? 'primary' : 'light'} 
+            onClick={() => setViewMode('list')} 
+            className="d-flex align-items-center justify-content-center shadow-sm"
+            style={{ width: '40px', height: '40px' }}
+          >
+            <FaList size={18} />
+          </Button>
         </div>
       </div>
 
@@ -368,7 +636,7 @@ const RoomDetailsPage = () => {
         <p className="text-muted small ps-2">
           No records found under this category.
         </p>
-      ) : (
+      ) : viewMode === 'grid' ? (
         /* FLOOR WISE RENDERING */
         Object.keys(floorWiseData).map((floor) => (
           <div key={floor} className="mb-4">
@@ -420,6 +688,59 @@ const RoomDetailsPage = () => {
             </Row>
           </div>
         ))
+      ) : (
+        /* LIST VIEW RENDERING */
+        <div className="table-responsive shadow-sm rounded-4 border mb-4">
+          <Table hover bordered className="align-middle mb-0 bg-white">
+            <thead className="bg-light text-secondary">
+              <tr>
+                <th className="py-3 px-4 fw-semibold" style={{ borderTopLeftRadius: '16px' }}>Hotel Name</th>
+                <th className="py-3 px-4 fw-semibold">Floor Name</th>
+                <th className="py-3 px-4 fw-semibold">Room No</th>
+                <th className="py-3 px-4 fw-semibold">Type</th>
+                <th className="py-3 px-4 fw-semibold">Price</th>
+                <th className="py-3 px-4 fw-semibold">Status</th>
+                <th className="py-3 px-4 fw-semibold" style={{ borderTopRightRadius: '16px' }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.keys(floorWiseData).flatMap(floor => floorWiseData[floor]).map((item, index) => {
+                const itemStatus = item.status || status;
+                const config = getStatusConfig(itemStatus);
+                const badgeBgClass = config.bg.replace('bg-', '').replace(' text-white', '').replace(' text-dark', '');
+                const hotelName = item.hotel_name || hotels.find(h => h.id == item.hotel_id)?.hotel_name || 'N/A';
+                const floorNo = Math.floor(Number(item.room_no) / 100);
+                const floorName = item.floor || (floorNo === 1 ? 'Ground Floor' : `Floor ${floorNo}`);
+                return (
+                  <tr key={index}>
+                    <td className="px-4 py-3 text-secondary">{hotelName}</td>
+                    <td className="px-4 py-3 text-secondary">{floorName}</td>
+                    <td className="px-4 py-3 fw-bold text-dark">{item.room_no}</td>
+                    <td className="px-4 py-3 text-secondary">{item.room_type || 'Standard'}</td>
+                    <td className="px-4 py-3 text-secondary">₹{item.price || item.rent || 0}</td>
+                    <td className="px-4 py-3">
+                      <Badge bg={badgeBgClass} className="px-3 py-2 rounded-pill">
+                        {itemStatus.charAt(0).toUpperCase() + itemStatus.slice(1)}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Dropdown align="end">
+                        <Dropdown.Toggle variant="outline-primary" size="sm" className="rounded-pill px-3 py-1">
+                          Action
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu className="border-0 shadow-sm rounded-3">
+                          <Dropdown.Item onClick={() => handleCardClick(item)}>
+                            View
+                          </Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </Table>
+        </div>
       )}
 
       {/* DETAILED ROOM INFO & CHECKOUT MODAL */}
@@ -445,51 +766,53 @@ const RoomDetailsPage = () => {
                 </span>
               </p>
 
-              {/* Conditional Data Display for Booked/Occupied Rooms */}
-              {(selectedDetails.status || status)?.toLowerCase() === 'booked' ||
-                (selectedDetails.status || status)?.toLowerCase() ===
-                'occupied' ? (
-                <>
-                  <p className="mb-1">
-                    <strong>Guest Name:</strong>{' '}
-                    {selectedDetails.guest_name || 'N/A'}
-                  </p>
-                  <p className="mb-1">
-                    <strong>Check-In:</strong>{' '}
-                    {selectedDetails.check_in_date?.split('T')[0] || 'N/A'}
-                  </p>
-                  <p className="mb-1">
-                    <strong>Check-Out:</strong>{' '}
-                    {selectedDetails.check_out_date?.split('T')[0] || 'N/A'}
-                  </p>
-                  <p className="mb-0">
-                    <strong>Total Amount:</strong> ₹
-                    {selectedDetails.total_amount || selectedDetails.price || 0}
-                  </p>
+              <div className="mt-2">
+                <p className="mb-1">
+                  <strong>Hotel Name:</strong>{' '}
+                  {selectedDetails.hotel_name || 'N/A'}
+                </p>
+                <p className="mb-1">
+                  <strong>Room Type:</strong>{' '}
+                  {selectedDetails.room_type || 'Standard'}
+                </p>
+                {((selectedDetails.status || status)?.toLowerCase() === 'occupied' || (selectedDetails.status || status)?.toLowerCase() === 'booked') && (
+                  <>
+                    <p className="mb-1">
+                      <strong>Guest Name:</strong>{' '}
+                      {selectedDetails.guest_name || 'N/A'}
+                    </p>
+                    <p className="mb-1">
+                      <strong>Check-In:</strong>{' '}
+                      {selectedDetails.check_in_date ? selectedDetails.check_in_date.split('T')[0] : 'N/A'}
+                    </p>
+                    <p className="mb-1">
+                      <strong>Check-Out:</strong>{' '}
+                      {selectedDetails.check_out_date ? selectedDetails.check_out_date.split('T')[0] : 'N/A'}
+                    </p>
+                  </>
+                )}
+                <p className="mb-0">
+                  <strong>Charges:</strong> ₹
+                  {selectedDetails.total_amount || selectedDetails.price || selectedDetails.price_per_day || 0}
+                </p>
 
-                  {getCheckoutStatus(
-                    selectedDetails.check_out_date,
-                    selectedDetails.status || status,
-                  ) === 'crossed' && (
-                      <div className="alert alert-danger p-1 mb-0 mt-2 text-center small fw-bold">
-                        ⚠️ Checkout Time Overdue!
-                      </div>
-                    )}
-                </>
-              ) : (
-                <div className="text-muted small">
-                  <p className="mb-1">
-                    <strong>Room Type:</strong>{' '}
-                    {selectedDetails.room_type || 'Standard'}
-                  </p>
-                  <p className="mb-0">
-                    <strong>Price / Day:</strong> ₹
-                    {selectedDetails.price ||
-                      selectedDetails.price_per_day ||
-                      'N/A'}
-                  </p>
-                </div>
-              )}
+                {getCheckoutStatus(
+                  selectedDetails.check_out_date,
+                  selectedDetails.status || status,
+                ) === 'crossed' && (
+                    <div className="alert alert-danger p-1 mb-0 mt-2 text-center small fw-bold">
+                      ⚠️ Checkout Time Overdue!
+                    </div>
+                  )}
+                {getCheckoutStatus(
+                  selectedDetails.check_out_date,
+                  selectedDetails.status || status,
+                ) === 'soon' && (
+                    <div className="alert alert-warning p-1 mb-0 mt-2 text-center small fw-bold">
+                      ⚠️ Checkout Soon
+                    </div>
+                  )}
+              </div>
             </div>
           )}
         </Modal.Body>

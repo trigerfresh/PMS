@@ -41,7 +41,7 @@ const BranchPage = () => {
   const [viewData, setViewData] = useState(null)
   const [pageSize, setPageSize] = useState(10)
 
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('approved')
   const [currentPage, setCurrentPage] = useState(1)
   const [counts, setCounts] = useState({
     totalBranches: 0,

@@ -84,7 +84,7 @@ const FilterPanel = ({
             </Col>
 
             {/* ONLY render Date/Month-Year filters on the FIRST row */}
-            {/* {index === 0 && filterMode === 'date' && (
+            {index === 0 && filterMode === 'date' && (
               <>
                 <Col xs={6} md={2}>
                   <Form.Control
@@ -109,7 +109,7 @@ const FilterPanel = ({
                   />
                 </Col>
               </>
-            )} */}
+            )}
 
             {index === 0 && filterMode === 'month-year' && (
               <>
