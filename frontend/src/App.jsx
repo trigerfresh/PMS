@@ -21,7 +21,7 @@ import BookingMaster from './component/master/BookingMaster'
 import Dashboard from './component/master/Dashboard'
 import RoomDetailsPage from './pages/RoomDetailsPAge'
 import BookingDetails from './pages/BookingDetails'
-import FoodMaster from './component/master/FoodMaster'
+import ViewBookingDetails from './pages/Booking Masters/ViewBookingDetails'
 import PrimaryCategories from './component/master/PrimaryCategories'
 import Categories from './component/master/Categories'
 import SubCategories from './component/master/SubCategories'
@@ -30,6 +30,7 @@ import Profile from './pages/Profile'
 import CheckoutOverdue from './pages/CheckoutOverdue'
 import CheckoutSoon from './pages/CheckoutSoon'
 import Reserved from './pages/Reserved'
+import FoodOrders from './pages/orders/foodOrders/FoodOrders'
 import RevenueReport from './pages/RevenueReport'
 import TodayCheckIn from './pages/TodayCheckIn'
 import TodayCheckOut from './pages/TodayCheckOut'
@@ -89,6 +90,11 @@ function App() {
           />
 
           <Route
+            path="/master/view-booking"
+            element={<ViewBookingDetails />}
+          />
+
+          <Route
             path="/master/primaryCategories"
             element={<PrimaryCategories />}
           />
@@ -98,8 +104,9 @@ function App() {
           <Route path="/master/subcategories" element={<SubCategories />} />
 
           <Route path="/master/categories" element={<Categories />} />
+          
+          <Route path="/master/food-orders" element={<FoodOrders />} />
 
-          <Route path="/master/foodMaster" element={<FoodMaster />} />
         </Route>
       </Routes>
     </BrowserRouter>

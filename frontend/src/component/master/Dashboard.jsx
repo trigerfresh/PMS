@@ -295,7 +295,8 @@ const Dashboard = () => {
 
       const todayCheckIn = branchBookings.filter((b) => {
         const checkIn = b.check_in_date?.split('T')[0]
-        return checkIn === today
+        const status = b.status?.toLowerCase().trim()
+        return checkIn === today && status === 'booked'
       }).length
 
       const todayCheckOut = branchBookings.filter((b) => {
@@ -418,7 +419,8 @@ const Dashboard = () => {
 
       const todayBookings = branchBookings.filter((booking) => {
         const checkInDate = booking.check_in_date?.split('T')[0]
-        return checkInDate === today
+        const status = booking.status?.toLowerCase().trim()
+        return checkInDate === today && status === 'booked'
       })
 
       const latestBookings = [...todayBookings]

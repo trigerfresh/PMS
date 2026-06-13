@@ -554,72 +554,72 @@ const RoomDetailsPage = () => {
         </Col>
       </Row>
 
-      {/* COUNTS NAVIGATION BAR */}
-      <div className="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
-        <div className="d-flex flex-wrap gap-2">
-        {/* Total Rooms */}
-        <div
-          onClick={() => navigate(`/rooms-details/${hotelId}/all`)}
-          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
-          className={`px-3 py-2 rounded-3 d-flex align-items-center gap-2 shadow-sm ${status === 'all' ? 'bg-secondary text-white' : 'bg-white text-secondary'}`}
-        >
-          <span className="fw-bold" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Total</span>
-          <span className={`badge ${status === 'all' ? 'bg-white text-secondary' : 'bg-secondary'} rounded-pill`}>{overallCounts.total}</span>
+      {/* COUNTS NAVIGATION BAR and VIEW TOGGLES */}
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 mt-2 gap-3 gap-md-0">
+        <div className="d-flex flex-nowrap gap-2 pb-1 flex-grow-1 pe-md-3 w-100 overflow-auto">
+          {/* Total Rooms */}
+          <div
+            onClick={() => navigate(`/rooms-details/${hotelId}/all`)}
+            style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+            className={`px-3 py-2 rounded-3 d-flex align-items-center gap-2 shadow-sm ${status === 'all' ? 'bg-secondary text-white' : 'bg-white text-secondary'}`}
+          >
+            <span className="fw-bold" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Total</span>
+            <span className={`badge ${status === 'all' ? 'bg-white text-secondary' : 'bg-secondary'} rounded-pill`}>{overallCounts.total}</span>
+          </div>
+
+          {/* Available Rooms */}
+          <div
+            onClick={() => navigate(`/rooms-details/${hotelId}/available`)}
+            style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+            className={`px-3 py-2 rounded-3 d-flex align-items-center gap-2 shadow-sm ${status === 'available' ? 'bg-success text-white' : 'bg-white text-success'}`}
+          >
+            <span className="fw-bold" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Available</span>
+            <span className={`badge ${status === 'available' ? 'bg-white text-success' : 'bg-success'} rounded-pill`}>{overallCounts.available}</span>
+          </div>
+
+          {/* Occupied Rooms */}
+          <div
+            onClick={() => navigate(`/rooms-details/${hotelId}/occupied`)}
+            style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+            className={`px-3 py-2 rounded-3 d-flex align-items-center gap-2 shadow-sm ${status === 'occupied' ? 'bg-danger text-white' : 'bg-white text-danger'}`}
+          >
+            <span className="fw-bold" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Occupied</span>
+            <span className={`badge ${status === 'occupied' ? 'bg-white text-danger' : 'bg-danger'} rounded-pill`}>{overallCounts.occupied}</span>
+          </div>
+
+          {/* Maintenance Rooms */}
+          <div
+            onClick={() => navigate(`/rooms-details/${hotelId}/maintenance`)}
+            style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+            className={`px-3 py-2 rounded-3 d-flex align-items-center gap-2 shadow-sm ${status === 'maintenance' ? 'bg-warning text-dark' : 'bg-white text-warning'}`}
+          >
+            <span className="fw-bold" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Maintenance</span>
+            <span className={`badge ${status === 'maintenance' ? 'bg-white text-warning' : 'bg-warning text-dark'} rounded-pill`}>{overallCounts.maintenance}</span>
+          </div>
+
+          {/* Reserved Rooms */}
+          <div
+            onClick={() => navigate(`/rooms-details/${hotelId}/reserved`)}
+            style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+            className={`px-3 py-2 rounded-3 d-flex align-items-center gap-2 shadow-sm ${status === 'reserved' ? 'bg-info text-white' : 'bg-white text-info'}`}
+          >
+            <span className="fw-bold" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Reserved</span>
+            <span className={`badge ${status === 'reserved' ? 'bg-white text-info' : 'bg-info'} rounded-pill`}>{overallCounts.reserved}</span>
+          </div>
         </div>
 
-        {/* Available Rooms */}
-        <div
-          onClick={() => navigate(`/rooms-details/${hotelId}/available`)}
-          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
-          className={`px-3 py-2 rounded-3 d-flex align-items-center gap-2 shadow-sm ${status === 'available' ? 'bg-success text-white' : 'bg-white text-success'}`}
-        >
-          <span className="fw-bold" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Available</span>
-          <span className={`badge ${status === 'available' ? 'bg-white text-success' : 'bg-success'} rounded-pill`}>{overallCounts.available}</span>
-        </div>
-
-        {/* Occupied Rooms */}
-        <div
-          onClick={() => navigate(`/rooms-details/${hotelId}/occupied`)}
-          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
-          className={`px-3 py-2 rounded-3 d-flex align-items-center gap-2 shadow-sm ${status === 'occupied' ? 'bg-danger text-white' : 'bg-white text-danger'}`}
-        >
-          <span className="fw-bold" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Occupied</span>
-          <span className={`badge ${status === 'occupied' ? 'bg-white text-danger' : 'bg-danger'} rounded-pill`}>{overallCounts.occupied}</span>
-        </div>
-
-        {/* Maintenance Rooms */}
-        <div
-          onClick={() => navigate(`/rooms-details/${hotelId}/maintenance`)}
-          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
-          className={`px-3 py-2 rounded-3 d-flex align-items-center gap-2 shadow-sm ${status === 'maintenance' ? 'bg-warning text-dark' : 'bg-white text-warning'}`}
-        >
-          <span className="fw-bold" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Maintenance</span>
-          <span className={`badge ${status === 'maintenance' ? 'bg-white text-warning' : 'bg-warning text-dark'} rounded-pill`}>{overallCounts.maintenance}</span>
-        </div>
-
-        {/* Reserved Rooms */}
-        <div
-          onClick={() => navigate(`/rooms-details/${hotelId}/reserved`)}
-          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
-          className={`px-3 py-2 rounded-3 d-flex align-items-center gap-2 shadow-sm ${status === 'reserved' ? 'bg-info text-white' : 'bg-white text-info'}`}
-        >
-          <span className="fw-bold" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Reserved</span>
-          <span className={`badge ${status === 'reserved' ? 'bg-white text-info' : 'bg-info'} rounded-pill`}>{overallCounts.reserved}</span>
-        </div>
-        </div>
-
-        <div className="d-flex gap-2">
-          <Button 
-            variant={viewMode === 'grid' ? 'primary' : 'light'} 
-            onClick={() => setViewMode('grid')} 
+        <div className="d-flex gap-2 flex-shrink-0 align-self-end align-self-md-auto mt-3 mt-md-0">
+          <Button
+            variant={viewMode === 'grid' ? 'primary' : 'light'}
+            onClick={() => setViewMode('grid')}
             className="d-flex align-items-center justify-content-center shadow-sm"
             style={{ width: '40px', height: '40px' }}
           >
             <FaThLarge size={18} />
           </Button>
-          <Button 
-            variant={viewMode === 'list' ? 'primary' : 'light'} 
-            onClick={() => setViewMode('list')} 
+          <Button
+            variant={viewMode === 'list' ? 'primary' : 'light'}
+            onClick={() => setViewMode('list')}
             className="d-flex align-items-center justify-content-center shadow-sm"
             style={{ width: '40px', height: '40px' }}
           >

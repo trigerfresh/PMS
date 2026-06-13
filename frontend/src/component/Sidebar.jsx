@@ -220,26 +220,20 @@ const Sidebar = () => {
                     </a>
                   </li>
 
-                  {/* <li>
+                  <li>
+                    <a href="#!" onClick={() => handleNavigate('/products')}>
+                      <FaBox className="submenu-icon me-1" />
+                      <span>Food</span>
+                    </a>
+                  </li>
+
+                  <li>
                     <a onClick={() => handleNavigate('/master/rooms')}>
                       {' '}
                       <FaBed className="submenu-icon me-1" />
                       <span>Rooms</span>
                     </a>
-                  </li> */}
-
-                  {/* <li>
-                    <a onClick={() => handleNavigate('/master/foodMaster')}>
-                      <FaHotel className="submenu-icon me-1" />
-                      Food
-                    </a>
-                  </li> */}
-
-                  {/* <li>
-                    <a onClick={() => handleNavigate('/master/booking')}>
-                      Bookings
-                    </a>
-                  </li> */}
+                  </li>
 
                   <li>
                     <a onClick={() => handleNavigate('/master/roles')}>
@@ -258,7 +252,6 @@ const Sidebar = () => {
               )}
             </li>
 
-            {/* SALES */}
             <li className={openMenu === 'sales' ? 'active' : ''}>
               <a
                 href="#!"
@@ -266,7 +259,7 @@ const Sidebar = () => {
                 onClick={() => toggleMenu('sales')}
               >
                 <FaChartLine className="submenu-icon me-3" />
-                <span>Orders</span>
+                <span>Room Bookings</span>
 
                 {openMenu === 'sales' ? (
                   <FaAngleDown className="pull-right" />
@@ -278,24 +271,38 @@ const Sidebar = () => {
               {openMenu === 'sales' && (
                 <ul className="sidebar-submenu">
                   <li>
-                    <a href="#!" onClick={() => handleNavigate('/products')}>
-                      <FaBox className="submenu-icon me-1" />
-                      <span>Food</span>
-                    </a>
-                  </li>
-
-                  <li>
-                    <a onClick={() => handleNavigate('/master/rooms')}>
-                      {' '}
-                      <FaBed className="submenu-icon me-1" />
-                      <span>Rooms</span>
-                    </a>
-                  </li>
-
-                  <li>
                     <a onClick={() => handleNavigate('/master/bookings')}>
                       <FaHotel className="submenu-icon me-1" />
                       <span>Bookings</span>
+                    </a>
+                  </li>
+                </ul>
+              )}
+            </li>
+
+            {/* SALES */}
+            <li className={openMenu === 'orders' ? 'active' : ''}>
+              <a
+                href="#!"
+                className="sidebar-header"
+                onClick={() => toggleMenu('orders')}
+              >
+                <FaChartLine className="submenu-icon me-3" />
+                <span>Orders</span>
+
+                {openMenu === 'orders' ? (
+                  <FaAngleDown className="pull-right" />
+                ) : (
+                  <FaAngleRight className="pull-right" />
+                )}
+              </a>
+
+              {openMenu === 'orders' && (
+                <ul className="sidebar-submenu">
+                  <li>
+                    <a onClick={() => handleNavigate('/master/food-orders')}>
+                      <FaHotel className="submenu-icon me-1" />
+                      <span>Food Orders</span>
                     </a>
                   </li>
                 </ul>

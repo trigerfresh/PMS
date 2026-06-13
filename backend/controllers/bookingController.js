@@ -104,9 +104,10 @@ exports.getBookings = async (req, res) => {
       SELECT 
         b.*,
         r.room_no,
-        r.room_type
-      FROM booking_master b
-      LEFT JOIN room_master r ON b.room_id = r.room_id
+        r.room_type,
+        r.floor_id
+      FROM booking_masters b
+      LEFT JOIN room_masters r ON b.room_id = r.room_id
       WHERE b.active = '0'
       ORDER BY b.booking_id DESC
     `)

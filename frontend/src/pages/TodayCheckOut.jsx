@@ -381,71 +381,76 @@ const TodayCheckOut = () => {
 
             <Card className="shadow-sm border-0 rounded-4 mb-4">
                 <Card.Body className="p-4">
-                    <div className="d-flex flex-wrap justify-content-between align-items-center mb-3">
-                    <div className="d-flex gap-3">
-                        <Dropdown align="start" onSelect={(val) => handleHotelChange({ target: { value: val } })}>
-                            <Dropdown.Toggle variant="light" className="shadow-sm border-0 rounded-pill px-3 text-start d-flex justify-content-between align-items-center" style={{ minWidth: '220px' }}>
-                                {hotelId ? hotels.find(h => h.id == hotelId)?.hotel_name || 'All Hotels' : 'All Hotels'}
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu className="border-0 shadow-lg rounded-4 p-2" style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                                <div className="px-2 pb-2 mb-2 border-bottom">
-                                    <input type="text" className="form-control form-control-sm rounded-pill" placeholder="Search..." onChange={(e) => setSearchHotel(e.target.value)} value={searchHotel} onClick={(e) => e.stopPropagation()} />
-                                </div>
-                                <Dropdown.Item eventKey="" active={hotelId === ''} onClick={() => setSearchHotel('')}>All Hotels</Dropdown.Item>
-                                {hotels.filter(h => h.hotel_name.toLowerCase().includes(searchHotel.toLowerCase())).map((hotel) => (
-                                    <Dropdown.Item key={hotel.id} eventKey={hotel.id.toString()} active={hotelId == hotel.id} onClick={() => setSearchHotel('')}>{hotel.hotel_name}</Dropdown.Item>
-                                ))}
-                            </Dropdown.Menu>
-                        </Dropdown>
+                    <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-3 gap-3">
+                        <div className="d-flex flex-column flex-sm-row gap-3 w-100 w-lg-auto">
+                            <Dropdown align="start" onSelect={(val) => handleHotelChange({ target: { value: val } })} className="flex-fill">
+                                <Dropdown.Toggle variant="light" className="shadow-sm border-0 rounded-pill px-3 text-start d-flex justify-content-between align-items-center w-100">
+                                    {hotelId ? hotels.find(h => h.id == hotelId)?.hotel_name || 'All Hotels' : 'All Hotels'}
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu className="border-0 shadow-lg rounded-4 p-2" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                                    <div className="px-2 pb-2 mb-2 border-bottom">
+                                        <input type="text" className="form-control form-control-sm rounded-pill" placeholder="Search..." onChange={(e) => setSearchHotel(e.target.value)} value={searchHotel} onClick={(e) => e.stopPropagation()} />
+                                    </div>
+                                    <Dropdown.Item eventKey="" active={hotelId === ''} onClick={() => setSearchHotel('')}>All Hotels</Dropdown.Item>
+                                    {hotels.filter(h => h.hotel_name.toLowerCase().includes(searchHotel.toLowerCase())).map((hotel) => (
+                                        <Dropdown.Item key={hotel.id} eventKey={hotel.id.toString()} active={hotelId == hotel.id} onClick={() => setSearchHotel('')}>{hotel.hotel_name}</Dropdown.Item>
+                                    ))}
+                                </Dropdown.Menu>
+                            </Dropdown>
 
-                        <Dropdown align="start" onSelect={(val) => handleBranchChange({ target: { value: val } })}>
-                            <Dropdown.Toggle variant="light" className="shadow-sm border-0 rounded-pill px-3 text-start d-flex justify-content-between align-items-center" style={{ minWidth: '220px' }}>
-                                {branchId ? branches.find(b => b.id == branchId)?.branch_name || 'All Branches' : 'All Branches'}
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu className="border-0 shadow-lg rounded-4 p-2" style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                                <div className="px-2 pb-2 mb-2 border-bottom">
-                                    <input type="text" className="form-control form-control-sm rounded-pill" placeholder="Search..." onChange={(e) => setSearchBranch(e.target.value)} value={searchBranch} onClick={(e) => e.stopPropagation()} />
-                                </div>
-                                <Dropdown.Item eventKey="" active={branchId === ''} onClick={() => setSearchBranch('')}>All Branches</Dropdown.Item>
-                                {branches.filter(b => b.branch_name.toLowerCase().includes(searchBranch.toLowerCase())).filter(b => !hotelId || (hotels.find(h => h.id == hotelId)?.branch_id == b.id)).map((branch) => (
-                                    <Dropdown.Item key={branch.id} eventKey={branch.id.toString()} active={branchId == branch.id} onClick={() => setSearchBranch('')}>{branch.branch_name}</Dropdown.Item>
-                                ))}
-                            </Dropdown.Menu>
-                        </Dropdown>
-                    </div>
-                    <div className="d-flex align-items-center mt-3 mt-md-0">
-                        <Button
-                            variant="outline-primary"
-                            size="sm"
-                            style={{
-                                padding: '3px 10px',
-                                fontSize: '12px',
-                                borderRadius: '6px',
-                            }}
-                            onClick={() => setShowSearchPanel(!showSearchPanel)}
-                        >
-                            <FaSearch className="me-1" size={12} />
-                            Search
-                        </Button>
+                            <Dropdown align="start" onSelect={(val) => handleBranchChange({ target: { value: val } })} className="flex-fill">
+                                <Dropdown.Toggle variant="light" className="shadow-sm border-0 rounded-pill px-3 text-start d-flex justify-content-between align-items-center w-100">
+                                    {branchId ? branches.find(b => b.id == branchId)?.branch_name || 'All Branches' : 'All Branches'}
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu className="border-0 shadow-lg rounded-4 p-2" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                                    <div className="px-2 pb-2 mb-2 border-bottom">
+                                        <input type="text" className="form-control form-control-sm rounded-pill" placeholder="Search..." onChange={(e) => setSearchBranch(e.target.value)} value={searchBranch} onClick={(e) => e.stopPropagation()} />
+                                    </div>
+                                    <Dropdown.Item eventKey="" active={branchId === ''} onClick={() => setSearchBranch('')}>All Branches</Dropdown.Item>
+                                    {branches.filter(b => b.branch_name.toLowerCase().includes(searchBranch.toLowerCase())).filter(b => !hotelId || (hotels.find(h => h.id == hotelId)?.branch_id == b.id)).map((branch) => (
+                                        <Dropdown.Item key={branch.id} eventKey={branch.id.toString()} active={branchId == branch.id} onClick={() => setSearchBranch('')}>{branch.branch_name}</Dropdown.Item>
+                                    ))}
+                                </Dropdown.Menu>
+                            </Dropdown>
+                        </div>
+                        <div className="d-flex align-items-center mt-3 mt-md-0">
+                            <button
+                                type="button"
+                                className="search-btn shadow-sm rounded-3"
+                                onClick={() => setShowSearchPanel(!showSearchPanel)}
+                                style={{
+                                    padding: '6px 16px',
+                                    backgroundColor: '#00baf2',
+                                    border: 'none',
+                                    color: '#fff',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    fontWeight: '500',
+                                    transition: 'all 0.2s',
+                                }}
+                            >
+                                <FaSearch /> {showSearchPanel ? 'Hide' : 'Search'}
+                            </button>
 
-                        <span className="text-muted small ms-3 fs-6">Show:</span>
-                        <Form.Select
-                            size="sm"
-                            value={itemsPerPage}
-                            onChange={(e) => {
-                                setItemsPerPage(Number(e.target.value))
-                                setCurrentPage(1)
-                            }}
-                            style={{
-                                width: '80px',
-                                display: 'inline-block',
-                            }}
-                        >
-                            <option value={10}>10</option>
-                            <option value={50}>50</option>
-                            <option value={100}>100</option>
-                            <option value={150}>150</option>
-                        </Form.Select>
+                            <span className="text-muted small ms-3 fs-6">Show:</span>
+                            <Form.Select
+                                size="sm"
+                                value={itemsPerPage}
+                                onChange={(e) => {
+                                    setItemsPerPage(Number(e.target.value))
+                                    setCurrentPage(1)
+                                }}
+                                style={{
+                                    width: '80px',
+                                    display: 'inline-block',
+                                }}
+                            >
+                                <option value={10}>10</option>
+                                <option value={50}>50</option>
+                                <option value={100}>100</option>
+                                <option value={150}>150</option>
+                            </Form.Select>
                         </div>
                     </div>
 

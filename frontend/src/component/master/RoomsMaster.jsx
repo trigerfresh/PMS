@@ -47,7 +47,7 @@ const RoomsMaster = () => {
   })
   const [showViewModal, setShowViewModal] = useState(false)
   const [selectedRoom, setSelectedRoom] = useState(null)
-  const [showSettingsModal, setShowSettingsModal] = useState(false)
+  const [currentStep, setCurrentStep] = useState(1)
   const [deletedRooms, setDeletedRooms] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
@@ -365,10 +365,14 @@ const RoomsMaster = () => {
     return `http://localhost:5000/${cleanPath}`
   }
 
-  // Pehle validation pass karega aur popup open karega
-  const handleSaveAndNext = (e) => {
+  // Proceed to Step 2
+  const handleNextStep = (e) => {
     e.preventDefault()
-    setShowSettingsModal(true) // Settings popup ko open karega
+    setCurrentStep(2)
+  }
+
+  const handlePrevStep = () => {
+    setCurrentStep(1)
   }
 
   // Final submit tab hoga jab modal me details save hongi
@@ -414,7 +418,7 @@ const RoomsMaster = () => {
         })
       }
 
-      setShowSettingsModal(false)
+      setCurrentStep(1)
       setShowForm(false)
       setIsEditing(false)
       resetForm()
@@ -460,6 +464,7 @@ const RoomsMaster = () => {
 
     if (room.hotel_id) fetchFloors(room.hotel_id)
 
+    setCurrentStep(1)
     setIsEditing(true)
     setShowForm(true)
   }
@@ -592,12 +597,27 @@ const RoomsMaster = () => {
 
       {showForm ? (
         <div>
+          {/* STEPPER HEADER */}
+          <div className="d-flex justify-content-center mb-2 mt-2">
+            <div className="d-flex align-items-center">
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: currentStep >= 1 ? '#eac146' : '#e9ecef', color: currentStep >= 1 ? '#fff' : '#6c757d', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>1</div>
+              <div style={{ height: '4px', width: '100px', backgroundColor: currentStep >= 2 ? '#eac146' : '#e9ecef', margin: '0 10px' }}></div>
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: currentStep >= 2 ? '#eac146' : '#e9ecef', color: currentStep >= 2 ? '#fff' : '#6c757d', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>2</div>
+            </div>
+          </div>
+          <div className="d-flex justify-content-center mb-4 text-muted" style={{ fontSize: '14px', gap: '60px' }}>
+            <span style={{ fontWeight: currentStep >= 1 ? '600' : 'normal', color: currentStep >= 1 ? '#eac146' : 'inherit' }}>Select Information</span>
+            <span style={{ fontWeight: currentStep >= 2 ? '600' : 'normal', color: currentStep >= 2 ? '#eac146' : 'inherit' }}>Room Details</span>
+          </div>
+
           <Card className="dashboard-card shadow-sm border-0 rounded-4 overflow-hidden mb-4" style={{ transition: 'all 0.3s ease' }}>
             <Card.Body className="p-4">
-              <h2 className="mb-4 fw-bold text-secondary" style={{ fontSize: '1.5rem' }}>
-                {isEditing ? 'Edit Room Details' : 'Add New Room'}
-              </h2>
-              <Form onSubmit={handleSaveAndNext}>
+              {currentStep === 1 && (
+                <>
+                  <h2 className="mb-4 fw-bold text-secondary" style={{ fontSize: '1.5rem' }}>
+                    {isEditing ? 'Edit Room Details' : 'Add New Room'}
+                  </h2>
+                  <Form onSubmit={handleNextStep}>
                 <Row className="g-3">
                   <Col md={4}>
                     <Form.Label>Hotel</Form.Label>
@@ -704,26 +724,16 @@ const RoomsMaster = () => {
                   </Button>
                 </div>
               </Form>
-            </Card.Body>
-          </Card>
+                </>
+              )}
 
-          {/* ROOM SETTINGS MODAL (Triggered via Save & Next) */}
-          <Modal
-            show={showSettingsModal}
-            onHide={() => setShowSettingsModal(false)}
-            size="lg"
-            centered
-            backdrop="static" // User click karke bahar modal band na kar sake, data safe rahega
-          >
-            <Modal.Header closeButton>
-              <Modal.Title>
-                <FaCog className="me-2" />
-                Room Advanced Configuration
-              </Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              <Form>
-                <h5 className="mb-3 text-secondary">Room Details</h5>
+              {currentStep === 2 && (
+                <>
+                  <h2 className="mb-4 fw-bold text-secondary" style={{ fontSize: '1.5rem' }}>
+                    Room Advanced Configuration
+                  </h2>
+                  <Form>
+                    <h5 className="mb-3 text-secondary">Room Details</h5>
                 <Row className="g-3 mb-4">
                   <Col md={4}>
                     <Form.Label>BHK</Form.Label>
@@ -844,20 +854,19 @@ const RoomsMaster = () => {
                     </Col>
                   ))}
                 </Row>
-              </Form>
-            </Modal.Body>
-            <Modal.Footer>
-              <Button
-                variant="secondary"
-                onClick={() => setShowSettingsModal(false)}
-              >
-                Back to Main Form
-              </Button>
-              <Button variant="primary" onClick={handleFinalSubmit}>
-                Save Room Data
-              </Button>
-            </Modal.Footer>
-          </Modal>
+                  <div className="mt-4 d-flex gap-2">
+                    <Button variant="secondary" onClick={handlePrevStep}>
+                      Back
+                    </Button>
+                    <Button variant="primary" onClick={handleFinalSubmit}>
+                      Save Room Data
+                    </Button>
+                  </div>
+                </Form>
+                </>
+              )}
+            </Card.Body>
+          </Card>
         </div>
       ) : (
         /* TABLE LIST SCREEN */

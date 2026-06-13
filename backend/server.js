@@ -40,6 +40,7 @@ app.use('/api', require('./routes/categoriesRoutes'))
 app.use('/api', require('./routes/subCategoriesRoutes'))
 
 app.use('/api', require('./routes/productRoutes'))
+app.use('/api', require('./routes/foodOrderRoutes'))
 
 app.get('/', (req, res) => {
   res.send('API Running')

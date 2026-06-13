@@ -14,7 +14,7 @@ import {
   Dropdown,
 } from 'react-bootstrap'
 import { useNavigate } from 'react-router-dom'
-import { FaArrowLeft } from 'react-icons/fa'
+import { FaArrowLeft, FaThLarge, FaList } from 'react-icons/fa'
 
 const API_URL = 'http://localhost:5000'
 
@@ -22,6 +22,7 @@ const CheckoutSoon = () => {
   const navigate = useNavigate()
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
+  const [viewMode, setViewMode] = useState('grid')
 
   const [hotelId, setHotelId] = useState(localStorage.getItem('hotelId') || '')
   const [branchId, setBranchId] = useState(localStorage.getItem('branchId') || '')
@@ -459,69 +460,89 @@ const CheckoutSoon = () => {
         </Col>
       </Row>
 
-      {/* COUNTS NAVIGATION BAR */}
-      <div 
-        className="d-flex flex-nowrap gap-2 mb-4 mt-2 pb-1" 
-        style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}
-      >
-        <style>{`.d-flex::-webkit-scrollbar { display: none; }`}</style>
-        {/* Total Bookings */}
-        <div 
-          onClick={() => navigate(`/booking-details/${hotelId || 'all'}/all`)}
-          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
-          className="px-2 py-1 rounded-3 d-flex align-items-center gap-1 shadow-sm flex-shrink-0 bg-white text-secondary"
+      {/* COUNTS NAVIGATION BAR and VIEW TOGGLES */}
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 mt-2 gap-3 gap-md-0">
+        <div
+          className="d-flex flex-nowrap gap-2 pb-1 flex-grow-1 pe-md-3 w-100"
+          style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}
         >
-          <span className="fw-bold" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Total</span>
-          <span className="badge bg-secondary rounded-pill" style={{ fontSize: '0.65rem' }}>{overallCounts.total}</span>
-        </div>
+          <style>{`.d-flex::-webkit-scrollbar { display: none; }`}</style>
+          {/* Total Bookings */}
+          <div
+            onClick={() => navigate(`/booking-details/${hotelId || 'all'}/all`)}
+            style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+            className="px-2 py-1 rounded-3 d-flex align-items-center gap-1 shadow-sm flex-shrink-0 bg-white text-secondary"
+          >
+            <span className="fw-bold" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Total</span>
+            <span className="badge bg-secondary rounded-pill" style={{ fontSize: '0.65rem' }}>{overallCounts.total}</span>
+          </div>
 
-        {/* Booked */}
-        <div 
-          onClick={() => navigate(`/booking-details/${hotelId || 'all'}/booked`)}
-          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
-          className="px-2 py-1 rounded-3 d-flex align-items-center gap-1 shadow-sm flex-shrink-0 bg-white text-danger"
-        >
-          <span className="fw-bold" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Booked</span>
-          <span className="badge bg-danger rounded-pill" style={{ fontSize: '0.65rem' }}>{overallCounts.booked}</span>
-        </div>
+          {/* Booked */}
+          <div
+            onClick={() => navigate(`/booking-details/${hotelId || 'all'}/booked`)}
+            style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+            className="px-2 py-1 rounded-3 d-flex align-items-center gap-1 shadow-sm flex-shrink-0 bg-white text-danger"
+          >
+            <span className="fw-bold" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Booked</span>
+            <span className="badge bg-danger rounded-pill" style={{ fontSize: '0.65rem' }}>{overallCounts.booked}</span>
+          </div>
 
-        {/* Reserved */}
-        <div 
-          onClick={() => navigate(`/booking-details/${hotelId || 'all'}/reserved`)}
-          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
-          className="px-2 py-1 rounded-3 d-flex align-items-center gap-1 shadow-sm flex-shrink-0 bg-white text-info"
-        >
-          <span className="fw-bold" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Reserved</span>
-          <span className="badge bg-info rounded-pill" style={{ fontSize: '0.65rem' }}>{overallCounts.reserved}</span>
-        </div>
+          {/* Reserved */}
+          <div
+            onClick={() => navigate(`/booking-details/${hotelId || 'all'}/reserved`)}
+            style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+            className="px-2 py-1 rounded-3 d-flex align-items-center gap-1 shadow-sm flex-shrink-0 bg-white text-info"
+          >
+            <span className="fw-bold" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Reserved</span>
+            <span className="badge bg-info rounded-pill" style={{ fontSize: '0.65rem' }}>{overallCounts.reserved}</span>
+          </div>
 
-        {/* Cancelled */}
-        <div 
-          onClick={() => navigate(`/booking-details/${hotelId || 'all'}/cancelled`)}
-          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
-          className="px-2 py-1 rounded-3 d-flex align-items-center gap-1 shadow-sm flex-shrink-0 bg-white text-dark"
-        >
-          <span className="fw-bold" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Cancelled</span>
-          <span className="badge bg-dark rounded-pill" style={{ fontSize: '0.65rem' }}>{overallCounts.cancelled}</span>
-        </div>
+          {/* Cancelled */}
+          <div
+            onClick={() => navigate(`/booking-details/${hotelId || 'all'}/cancelled`)}
+            style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+            className="px-2 py-1 rounded-3 d-flex align-items-center gap-1 shadow-sm flex-shrink-0 bg-white text-dark"
+          >
+            <span className="fw-bold" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Cancelled</span>
+            <span className="badge bg-dark rounded-pill" style={{ fontSize: '0.65rem' }}>{overallCounts.cancelled}</span>
+          </div>
 
-        {/* Checkout Soon */}
-        <div 
-          style={{ cursor: 'default', transition: '0.2s', border: '1px solid #e2e8f0' }}
-          className="px-2 py-1 rounded-3 d-flex align-items-center gap-1 shadow-sm flex-shrink-0 bg-warning text-dark"
-        >
-          <span className="fw-bold" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Checkout Soon</span>
-          <span className="badge bg-white text-warning rounded-pill" style={{ fontSize: '0.65rem' }}>{overallCounts.soon}</span>
-        </div>
+          {/* Checkout Soon */}
+          <div
+            style={{ cursor: 'default', transition: '0.2s', border: '1px solid #e2e8f0' }}
+            className="px-2 py-1 rounded-3 d-flex align-items-center gap-1 shadow-sm flex-shrink-0 bg-warning text-dark"
+          >
+            <span className="fw-bold" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Checkout Soon</span>
+            <span className="badge bg-white text-warning rounded-pill" style={{ fontSize: '0.65rem' }}>{overallCounts.soon}</span>
+          </div>
 
-        {/* Checkout Overdue */}
-        <div 
-          onClick={() => navigate(`/booking-details/${hotelId || 'all'}/checkout_overdue`)}
-          style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
-          className="px-2 py-1 rounded-3 d-flex align-items-center gap-1 shadow-sm flex-shrink-0 bg-white text-danger"
-        >
-          <span className="fw-bold" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Overdue</span>
-          <span className="badge bg-danger rounded-pill" style={{ fontSize: '0.65rem' }}>{overallCounts.overdue}</span>
+          {/* Checkout Overdue */}
+          <div
+            onClick={() => navigate(`/booking-details/${hotelId || 'all'}/checkout_overdue`)}
+            style={{ cursor: 'pointer', transition: '0.2s', border: '1px solid #e2e8f0' }}
+            className="px-2 py-1 rounded-3 d-flex align-items-center gap-1 shadow-sm flex-shrink-0 bg-white text-danger"
+          >
+            <span className="fw-bold" style={{ fontSize: '0.7rem', textTransform: 'uppercase' }}>Overdue</span>
+            <span className="badge bg-danger rounded-pill" style={{ fontSize: '0.65rem' }}>{overallCounts.overdue}</span>
+          </div>
+        </div>
+        <div className="d-flex gap-2 flex-shrink-0 align-self-end align-self-md-auto mt-3 mt-md-0">
+          <Button
+            variant={viewMode === 'grid' ? 'primary' : 'light'}
+            onClick={() => setViewMode('grid')}
+            className="d-flex align-items-center justify-content-center shadow-sm"
+            style={{ width: '40px', height: '40px' }}
+          >
+            <FaThLarge size={18} />
+          </Button>
+          <Button
+            variant={viewMode === 'list' ? 'primary' : 'light'}
+            onClick={() => setViewMode('list')}
+            className="d-flex align-items-center justify-content-center shadow-sm"
+            style={{ width: '40px', height: '40px' }}
+          >
+            <FaList size={18} />
+          </Button>
         </div>
       </div>
 
@@ -533,7 +554,7 @@ const CheckoutSoon = () => {
         <div className="text-center py-5">
           <h5 className="text-muted fw-bold">No bookings available for this hotel</h5>
         </div>
-      ) : (
+      ) : viewMode === 'grid' ? (
         Object.values(grouped).map((g, i) => (
           <div key={i} className="mb-4">
             <h5 className="text-secondary fw-bold mb-2 border-bottom pb-1">{g.hotel} - {g.floor}</h5>
@@ -547,7 +568,7 @@ const CheckoutSoon = () => {
                     <Card
                       onClick={() => handleClick(item)}
                       className="border-warning shadow-sm"
-                      style={{ cursor: 'pointer', minWidth: '150px', transition: 'all 0.3s ease' }}
+                      style={{ cursor: 'pointer', minWidth: '95px', maxWidth: '135px', transition: 'all 0.3s ease' }}
                       onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.classList.add('shadow'); }}
                       onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.classList.remove('shadow'); }}
                     >
@@ -569,6 +590,61 @@ const CheckoutSoon = () => {
             </Row>
           </div>
         ))
+      ) : (
+        /* LIST VIEW RENDERING */
+        <div className="table-responsive shadow-sm rounded-4 border mb-4">
+          <Table hover bordered className="align-middle mb-0 bg-white">
+            <thead className="bg-light text-secondary">
+              <tr>
+                <th className="py-3 px-4 fw-semibold" style={{ borderTopLeftRadius: '16px' }}>Hotel Name</th>
+                <th className="py-3 px-4 fw-semibold">Floor Name</th>
+                <th className="py-3 px-4 fw-semibold">Room No</th>
+                <th className="py-3 px-4 fw-semibold">Guest Name</th>
+                <th className="py-3 px-4 fw-semibold">Check In</th>
+                <th className="py-3 px-4 fw-semibold">Check Out</th>
+                <th className="py-3 px-4 fw-semibold">Amount</th>
+                <th className="py-3 px-4 fw-semibold">Status</th>
+                <th className="py-3 px-4 fw-semibold" style={{ borderTopRightRadius: '16px' }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.values(grouped).flatMap(g => g.items).map((item, index) => {
+                const hotelName = item.hotel_name || hotels.find(h => h.id == item.hotel_id)?.hotel_name || 'N/A';
+                const floorName = item.floor_name || item.floor || 'N/A';
+                const amount = item.total_amount || item.price || item.price_per_day || 0;
+
+                return (
+                  <tr key={item.booking_id || item.id || index}>
+                    <td className="px-4 py-3 text-secondary">{hotelName}</td>
+                    <td className="px-4 py-3 text-secondary">{floorName}</td>
+                    <td className="px-4 py-3 fw-bold text-dark">{item.room_no || 'N/A'}</td>
+                    <td className="px-4 py-3 text-secondary">{item.guest_name || 'N/A'}</td>
+                    <td className="px-4 py-3 text-secondary">{item.check_in_date ? item.check_in_date.split('T')[0] : 'N/A'}</td>
+                    <td className="px-4 py-3 text-secondary">{item.check_out_date ? item.check_out_date.split('T')[0] : 'N/A'}</td>
+                    <td className="px-4 py-3 text-secondary">₹{amount}</td>
+                    <td className="px-4 py-3">
+                      <Badge bg="warning" text="dark" className="px-3 py-2 rounded-pill text-capitalize">
+                        Checkout Soon
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Dropdown align="end">
+                        <Dropdown.Toggle variant="outline-primary" size="sm" className="rounded-pill px-3 py-1">
+                          Action
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu className="border-0 shadow-sm rounded-3">
+                          <Dropdown.Item onClick={() => handleClick(item)}>
+                            View
+                          </Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </Table>
+        </div>
       )}
 
       {/* =========================
